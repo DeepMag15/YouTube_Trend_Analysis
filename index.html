@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrendPulse — YouTube Trends Analyzer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #FF1F1F;
+    --red-dark: #CC0000;
+    --black: #0A0A0A;
+    --dark: #111111;
+    --card: #1A1A1A;
+    --border: #2A2A2A;
+    --text: #F0F0F0;
+    --muted: #888;
+    --gold: #FFD700;
+    --accent: #FF6B35;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--black);
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--dark); }
+  ::-webkit-scrollbar-thumb { background: var(--red); border-radius: 3px; }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; width: 100%; z-index: 1000;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 48px;
+    background: rgba(10,10,10,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px; letter-spacing: 3px;
+    color: var(--text);
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none;
+  }
+  .nav-logo span { color: var(--red); }
+  .logo-dot {
+    width: 10px; height: 10px;
+    background: var(--red);
+    border-radius: 50%;
+    animation: pulse-dot 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%,100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.4); opacity: 0.7; }
+  }
+  .nav-links { display: flex; align-items: center; gap: 32px; }
+  .nav-links a {
+    color: var(--muted); text-decoration: none;
+    font-size: 14px; font-weight: 500; letter-spacing: 0.5px;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta {
+    display: flex; gap: 12px;
+  }
+  .btn-ghost {
+    padding: 9px 22px; border: 1px solid var(--border);
+    background: transparent; color: var(--text);
+    border-radius: 6px; font-size: 14px; font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: all 0.2s;
+    text-decoration: none; display: inline-flex; align-items: center;
+  }
+  .btn-ghost:hover { border-color: var(--red); color: var(--red); }
+  .btn-primary {
+    padding: 9px 22px; background: var(--red);
+    border: none; color: white; border-radius: 6px;
+    font-size: 14px; font-weight: 600; font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: all 0.2s;
+    text-decoration: none; display: inline-flex; align-items: center;
+  }
+  .btn-primary:hover { background: var(--red-dark); transform: translateY(-1px); }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 120px 48px 80px;
+    position: relative; overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 70% 60% at 60% 40%, rgba(255,31,31,0.12) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 40% at 10% 80%, rgba(255,107,53,0.08) 0%, transparent 60%);
+  }
+  .hero-grid {
+    position: absolute; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+  }
+  .hero-content { position: relative; z-index: 1; max-width: 780px; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,31,31,0.1); border: 1px solid rgba(255,31,31,0.3);
+    padding: 6px 14px; border-radius: 100px; margin-bottom: 32px;
+    font-size: 12px; font-family: 'Space Mono', monospace; color: var(--red);
+    letter-spacing: 1px;
+  }
+  .live-dot {
+    width: 7px; height: 7px; background: var(--red);
+    border-radius: 50%; animation: pulse-dot 1s infinite;
+  }
+  .hero h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(64px, 9vw, 130px);
+    line-height: 0.92; letter-spacing: 2px;
+    margin-bottom: 28px;
+  }
+  .hero h1 .line2 { color: var(--red); }
+  .hero p {
+    font-size: 18px; color: var(--muted); line-height: 1.7;
+    max-width: 520px; margin-bottom: 44px;
+  }
+  .hero-actions { display: flex; gap: 16px; flex-wrap: wrap; }
+  .btn-large {
+    padding: 16px 36px; font-size: 16px; font-weight: 600;
+    border-radius: 8px; cursor: pointer; font-family: 'DM Sans', sans-serif;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 10px;
+    transition: all 0.25s;
+  }
+  .btn-large.red {
+    background: var(--red); color: white; border: none;
+  }
+  .btn-large.red:hover { background: var(--red-dark); transform: translateY(-2px); box-shadow: 0 12px 40px rgba(255,31,31,0.3); }
+  .btn-large.outline {
+    background: transparent; color: var(--text);
+    border: 1.5px solid var(--border);
+  }
+  .btn-large.outline:hover { border-color: var(--text); }
+
+  /* ── FLOATING STATS ── */
+  .hero-stats {
+    display: flex; gap: 48px; margin-top: 64px;
+    padding-top: 48px; border-top: 1px solid var(--border);
+  }
+  .stat-item {}
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 42px; color: var(--text); letter-spacing: 1px;
+  }
+  .stat-num span { color: var(--red); }
+  .stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  /* ── FEATURES SECTION ── */
+  .section { padding: 100px 48px; }
+  .section-label {
+    font-family: 'Space Mono', monospace; font-size: 11px;
+    letter-spacing: 3px; color: var(--red); text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(40px, 5vw, 68px); letter-spacing: 2px;
+    line-height: 1; margin-bottom: 60px;
+  }
+  .features-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px;
+  }
+  .feature-card {
+    background: var(--card); padding: 40px 36px;
+    border: 1px solid var(--border);
+    transition: all 0.3s;
+    position: relative; overflow: hidden;
+  }
+  .feature-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--red);
+    transform: scaleX(0); transition: transform 0.3s; transform-origin: left;
+  }
+  .feature-card:hover { background: #1f1f1f; }
+  .feature-card:hover::before { transform: scaleX(1); }
+  .feature-icon { font-size: 32px; margin-bottom: 20px; }
+  .feature-card h3 {
+    font-family: 'Bebas Neue', sans-serif; font-size: 24px;
+    letter-spacing: 1px; margin-bottom: 12px;
+  }
+  .feature-card p { font-size: 14px; color: var(--muted); line-height: 1.7; }
+
+  /* ── PREVIEW MOCKUP ── */
+  .preview-section {
+    padding: 80px 48px; background: var(--dark);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .preview-inner {
+    max-width: 1200px; margin: 0 auto;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
+  }
+  .preview-text .section-title { margin-bottom: 20px; }
+  .preview-text p { color: var(--muted); line-height: 1.8; margin-bottom: 32px; }
+  .preview-features { display: flex; flex-direction: column; gap: 16px; }
+  .pf-item {
+    display: flex; align-items: center; gap: 14px;
+    font-size: 14px; color: var(--muted);
+  }
+  .pf-icon {
+    width: 32px; height: 32px;
+    background: rgba(255,31,31,0.1); border: 1px solid rgba(255,31,31,0.2);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+
+  /* ── MOCKUP DASHBOARD ── */
+  .mock-dashboard {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+    animation: float 4s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+  .mock-header {
+    background: var(--dark); padding: 16px 20px;
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .mock-dots { display: flex; gap: 6px; }
+  .mock-dot { width: 12px; height: 12px; border-radius: 50%; }
+  .mock-dot:nth-child(1) { background: #FF5F57; }
+  .mock-dot:nth-child(2) { background: #FFBD2E; }
+  .mock-dot:nth-child(3) { background: #28C840; }
+  .mock-title {
+    flex: 1; text-align: center; font-size: 12px;
+    color: var(--muted); font-family: 'Space Mono', monospace;
+  }
+  .mock-body { padding: 20px; }
+  .mock-stats-row {
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px;
+  }
+  .mock-stat {
+    background: var(--dark); border-radius: 8px; padding: 14px 12px;
+    border: 1px solid var(--border);
+  }
+  .mock-stat-num {
+    font-family: 'Bebas Neue', sans-serif; font-size: 22px;
+    color: var(--red);
+  }
+  .mock-stat-label { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .mock-chart {
+    background: var(--dark); border-radius: 8px; padding: 16px;
+    border: 1px solid var(--border); margin-bottom: 16px; height: 100px;
+    display: flex; align-items: flex-end; gap: 4px;
+  }
+  .mock-bar {
+    flex: 1; background: var(--red); border-radius: 3px 3px 0 0;
+    opacity: 0.7;
+  }
+  .mock-videos { display: flex; flex-direction: column; gap: 8px; }
+  .mock-video {
+    background: var(--dark); border-radius: 6px; padding: 10px 12px;
+    display: flex; align-items: center; gap: 10px;
+    border: 1px solid var(--border);
+  }
+  .mock-thumb { width: 40px; height: 28px; background: var(--border); border-radius: 4px; flex-shrink: 0; }
+  .mock-info { flex: 1; }
+  .mock-vt { font-size: 11px; background: var(--border); height: 8px; border-radius: 4px; margin-bottom: 5px; }
+  .mock-vc { font-size: 11px; background: rgba(255,31,31,0.2); height: 6px; width: 60%; border-radius: 4px; }
+  .mock-rank { font-family: 'Space Mono', monospace; font-size: 16px; color: var(--red); font-weight: 700; }
+
+  /* ── CATEGORIES PREVIEW ── */
+  .categories-section { padding: 100px 48px; }
+  .cats-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 48px; }
+  .cat-chip {
+    padding: 10px 20px; background: var(--card);
+    border: 1px solid var(--border); border-radius: 100px;
+    font-size: 13px; color: var(--muted);
+    display: flex; align-items: center; gap: 8px;
+    transition: all 0.2s; cursor: default;
+  }
+  .cat-chip:hover { border-color: var(--red); color: var(--text); }
+
+  /* ── REGIONS STRIP ── */
+  .regions-section {
+    padding: 60px 0; overflow: hidden;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .regions-track {
+    display: flex; gap: 24px; animation: scroll-left 40s linear infinite;
+    width: max-content;
+  }
+  .regions-track:hover { animation-play-state: paused; }
+  @keyframes scroll-left {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  .region-flag {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--card); border: 1px solid var(--border);
+    padding: 8px 20px; border-radius: 8px; white-space: nowrap;
+    font-size: 13px; color: var(--muted);
+    transition: all 0.2s; cursor: default;
+  }
+  .region-flag:hover { border-color: var(--red); color: var(--text); }
+  .region-flag .flag { font-size: 18px; }
+
+  /* ── CTA ── */
+  .cta-section {
+    padding: 120px 48px; text-align: center;
+    background: var(--dark);
+    border-top: 1px solid var(--border);
+  }
+  .cta-inner { max-width: 640px; margin: 0 auto; }
+  .cta-section h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 6vw, 80px); letter-spacing: 2px;
+    margin-bottom: 20px; line-height: 1;
+  }
+  .cta-section p { color: var(--muted); font-size: 17px; margin-bottom: 40px; }
+  .cta-btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 40px 48px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 16px;
+  }
+  footer .logo-text {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px; letter-spacing: 3px; color: var(--muted);
+  }
+  footer .logo-text span { color: var(--red); }
+  footer p { font-size: 13px; color: var(--muted); }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+  }
+  .modal-overlay.active { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 48px; width: 90%; max-width: 440px;
+    transform: translateY(20px); transition: transform 0.3s;
+    position: relative;
+  }
+  .modal-overlay.active .modal { transform: translateY(0); }
+  .modal-close {
+    position: absolute; top: 20px; right: 20px;
+    background: var(--dark); border: 1px solid var(--border);
+    color: var(--muted); width: 32px; height: 32px;
+    border-radius: 50%; cursor: pointer; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .modal-close:hover { color: var(--text); border-color: var(--text); }
+  .modal h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px; letter-spacing: 2px; margin-bottom: 8px;
+  }
+  .modal p.sub { color: var(--muted); font-size: 14px; margin-bottom: 32px; }
+  .modal-tabs { display: flex; gap: 0; margin-bottom: 32px; border-bottom: 1px solid var(--border); }
+  .modal-tab {
+    flex: 1; padding: 12px; text-align: center;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    color: var(--muted); border-bottom: 2px solid transparent;
+    transition: all 0.2s; background: none; border-top: none; border-left: none; border-right: none;
+    font-family: 'DM Sans', sans-serif;
+    margin-bottom: -1px;
+  }
+  .modal-tab.active { color: var(--text); border-bottom-color: var(--red); }
+  .form-group { margin-bottom: 20px; }
+  .form-group label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 8px; letter-spacing: 0.5px; }
+  .form-group input {
+    width: 100%; padding: 12px 16px;
+    background: var(--dark); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text); font-size: 15px;
+    font-family: 'DM Sans', sans-serif; outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus { border-color: var(--red); }
+  .form-group input::placeholder { color: #555; }
+  .form-submit {
+    width: 100%; padding: 14px; background: var(--red);
+    border: none; color: white; border-radius: 8px;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s; margin-top: 8px;
+  }
+  .form-submit:hover { background: var(--red-dark); }
+  .modal-footer {
+    text-align: center; margin-top: 20px;
+    font-size: 13px; color: var(--muted);
+  }
+  .modal-footer a { color: var(--red); text-decoration: none; }
+  .msg { padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; }
+  .msg.error { background: rgba(255,31,31,0.1); border: 1px solid rgba(255,31,31,0.3); color: #ff6b6b; }
+  .msg.success { background: rgba(40,200,100,0.1); border: 1px solid rgba(40,200,100,0.3); color: #52d68a; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    nav { padding: 16px 24px; }
+    .nav-links { display: none; }
+    .hero { padding: 100px 24px 60px; }
+    .hero-stats { gap: 24px; flex-wrap: wrap; }
+    .section, .categories-section, .cta-section { padding: 60px 24px; }
+    .features-grid { grid-template-columns: 1fr; }
+    .preview-inner { grid-template-columns: 1fr; gap: 40px; }
+    footer { padding: 30px 24px; flex-direction: column; text-align: center; }
+  }
+
+  /* ── SCROLL REVEAL ── */
+  .reveal {
+    opacity: 0; transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="nav-logo">
+    <div class="logo-dot"></div>
+    TREND<span>PULSE</span>
+  </a>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#categories">Categories</a>
+    <a href="#regions">Regions</a>
+    <a href="dashboard.html">Dashboard</a>
+  </div>
+  <div class="nav-cta">
+    <button class="btn-ghost" onclick="openModal('login')">Log In</button>
+    <button class="btn-primary" onclick="openModal('signup')">Get Started</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <div class="live-dot"></div>
+      LIVE YOUTUBE DATA
+    </div>
+    <h1>
+      TRACK WHAT'S<br>
+      <span class="line2">TRENDING</span><br>
+      RIGHT NOW
+    </h1>
+    <p>Real-time YouTube trend analysis across 100+ countries, all categories, and historical time ranges. Know what the world is watching.</p>
+    <div class="hero-actions">
+      <button class="btn-large red" onclick="openModal('signup')">
+        ▶ Start Analyzing Free
+      </button>
+      <a href="#features" class="btn-large outline">
+        See How It Works →
+      </a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-num">100<span>+</span></div>
+        <div class="stat-label">Countries & Regions</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">44<span>+</span></div>
+        <div class="stat-label">Video Categories</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">3</div>
+        <div class="stat-label">API Keys (Auto-Rotation)</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">∞</div>
+        <div class="stat-label">Trend History</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div style="max-width:1200px; margin:0 auto;">
+    <div class="section-label reveal">WHAT YOU GET</div>
+    <div class="section-title reveal">EVERY FEATURE<br>YOU NEED</div>
+    <div class="features-grid reveal">
+      <div class="feature-card">
+        <div class="feature-icon">🔥</div>
+        <h3>Live Trending Videos</h3>
+        <p>See YouTube's top 50 trending videos for any country the moment they start climbing. Direct links open the video instantly.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Trend Graph Analysis</h3>
+        <p>Visualize trending patterns over 7 days, 1 month, 3 months, or 1 year. Filter by category: Sports, Music, Gaming, and 40+ more.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🌍</div>
+        <h3>100+ Region Support</h3>
+        <p>Compare trends across the US, India, Japan, UK, Brazil, and 95+ other countries all from one unified dashboard.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📺</div>
+        <h3>Channel Insights</h3>
+        <p>Discover which YouTube channels dominate trending charts. Track their consistency and identify rising stars.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔑</div>
+        <h3>Triple API Key Rotation</h3>
+        <p>Never hit a quota limit. TrendPulse automatically rotates between 3 YouTube Data API keys ensuring 99.9% uptime.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔖</div>
+        <h3>Save & Bookmark</h3>
+        <p>Bookmark trending videos to revisit later. Build your own trend archive for research or content strategy.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PREVIEW -->
+<section class="preview-section">
+  <div class="preview-inner">
+    <div class="preview-text reveal">
+      <div class="section-label">THE DASHBOARD</div>
+      <div class="section-title">YOUR TREND<br>COMMAND<br>CENTER</div>
+      <p>A powerful, clean dashboard that puts trending data at your fingertips. Filter by region and category, track metrics, and jump directly to any video.</p>
+      <div class="preview-features">
+        <div class="pf-item"><div class="pf-icon">📈</div> Live view, like & comment counts</div>
+        <div class="pf-item"><div class="pf-icon">🎯</div> Filter by category + region combination</div>
+        <div class="pf-item"><div class="pf-icon">⏱️</div> Time-range trend graphs (7d, 1m, 3m, 1y)</div>
+        <div class="pf-item"><div class="pf-icon">🔗</div> One-click redirect to YouTube video</div>
+        <div class="pf-item"><div class="pf-icon">📱</div> Responsive on all devices</div>
+      </div>
+      <br>
+      <button class="btn-large red" onclick="openModal('signup')" style="margin-top: 8px;">
+        Open Dashboard →
+      </button>
+    </div>
+    <div class="mock-dashboard reveal">
+      <div class="mock-header">
+        <div class="mock-dots">
+          <div class="mock-dot"></div>
+          <div class="mock-dot"></div>
+          <div class="mock-dot"></div>
+        </div>
+        <div class="mock-title">trendpulse.io/dashboard</div>
+      </div>
+      <div class="mock-body">
+        <div class="mock-stats-row">
+          <div class="mock-stat"><div class="mock-stat-num">2.4B</div><div class="mock-stat-label">TOTAL VIEWS</div></div>
+          <div class="mock-stat"><div class="mock-stat-num">50</div><div class="mock-stat-label">TRENDING NOW</div></div>
+          <div class="mock-stat"><div class="mock-stat-num">🇺🇸</div><div class="mock-stat-label">REGION</div></div>
+        </div>
+        <div class="mock-chart">
+          <div class="mock-bar" style="height:40%"></div>
+          <div class="mock-bar" style="height:60%"></div>
+          <div class="mock-bar" style="height:50%"></div>
+          <div class="mock-bar" style="height:75%"></div>
+          <div class="mock-bar" style="height:55%"></div>
+          <div class="mock-bar" style="height:90%"></div>
+          <div class="mock-bar" style="height:70%"></div>
+          <div class="mock-bar" style="height:85%"></div>
+          <div class="mock-bar" style="height:65%"></div>
+          <div class="mock-bar" style="height:95%; opacity:1;"></div>
+          <div class="mock-bar" style="height:80%"></div>
+          <div class="mock-bar" style="height:72%"></div>
+        </div>
+        <div class="mock-videos">
+          <div class="mock-video"><div class="mock-rank">#1</div><div class="mock-thumb"></div><div class="mock-info"><div class="mock-vt"></div><div class="mock-vc"></div></div></div>
+          <div class="mock-video"><div class="mock-rank">#2</div><div class="mock-thumb"></div><div class="mock-info"><div class="mock-vt" style="width:80%"></div><div class="mock-vc" style="width:45%"></div></div></div>
+          <div class="mock-video"><div class="mock-rank">#3</div><div class="mock-thumb"></div><div class="mock-info"><div class="mock-vt" style="width:65%"></div><div class="mock-vc" style="width:55%"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CATEGORIES -->
+<section class="categories-section" id="categories">
+  <div style="max-width:1200px; margin:0 auto;">
+    <div class="section-label reveal">ALL CONTENT TYPES</div>
+    <div class="section-title reveal">44 CATEGORIES<br>COVERED</div>
+    <div class="cats-grid reveal" id="categoriesGrid"></div>
+  </div>
+</section>
+
+<!-- REGIONS STRIP -->
+<section class="regions-section" id="regions">
+  <div class="regions-track" id="regionsTrack"></div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-inner reveal">
+    <h2>READY TO FIND<br>WHAT'S <span style="color:var(--red)">VIRAL</span>?</h2>
+    <p>Join thousands of creators and analysts using TrendPulse to stay ahead of the curve.</p>
+    <div class="cta-btns">
+      <button class="btn-large red" onclick="openModal('signup')">
+        Create Free Account →
+      </button>
+      <button class="btn-large outline" onclick="openModal('login')">
+        Sign In
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="logo-text">TREND<span>PULSE</span></div>
+  <p>Built with YouTube Data API v3 · Real-time global trends</p>
+  <p style="font-size:12px; color:#444;">© 2025 TrendPulse. Not affiliated with YouTube or Google.</p>
+</footer>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="authModal" onclick="handleModalClick(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h2 id="modalTitle">WELCOME BACK</h2>
+    <p class="sub" id="modalSub">Sign in to access your trend dashboard</p>
+
+    <div class="modal-tabs">
+      <button class="modal-tab active" id="loginTab" onclick="switchTab('login')">Sign In</button>
+      <button class="modal-tab" id="signupTab" onclick="switchTab('signup')">Create Account</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="tab-content active" id="loginForm">
+      <div id="loginMsg"></div>
+      <div class="form-group">
+        <label>EMAIL ADDRESS</label>
+        <input type="email" id="loginEmail" placeholder="you@example.com">
+      </div>
+      <div class="form-group">
+        <label>PASSWORD</label>
+        <input type="password" id="loginPassword" placeholder="••••••••">
+      </div>
+      <button class="form-submit" onclick="handleLogin()">Sign In →</button>
+      <div class="modal-footer">
+        Don't have an account? <a href="#" onclick="switchTab('signup')">Sign up free</a>
+      </div>
+    </div>
+
+    <!-- SIGNUP -->
+    <div class="tab-content" id="signupForm">
+      <div id="signupMsg"></div>
+      <div class="form-group">
+        <label>USERNAME</label>
+        <input type="text" id="signupUsername" placeholder="trendwatcher">
+      </div>
+      <div class="form-group">
+        <label>EMAIL ADDRESS</label>
+        <input type="email" id="signupEmail" placeholder="you@example.com">
+      </div>
+      <div class="form-group">
+        <label>PASSWORD</label>
+        <input type="password" id="signupPassword" placeholder="Min. 8 characters">
+      </div>
+      <button class="form-submit" onclick="handleSignup()">Create Account →</button>
+      <div class="modal-footer">
+        Already have an account? <a href="#" onclick="switchTab('login')">Sign in</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const CATEGORIES = [
+  {id:1, name:'Film & Animation', icon:'🎬'},{id:2, name:'Autos & Vehicles', icon:'🚗'},
+  {id:10, name:'Music', icon:'🎵'},{id:15, name:'Pets & Animals', icon:'🐾'},
+  {id:17, name:'Sports', icon:'⚽'},{id:19, name:'Travel & Events', icon:'✈️'},
+  {id:20, name:'Gaming', icon:'🎮'},{id:22, name:'People & Blogs', icon:'👤'},
+  {id:23, name:'Comedy', icon:'😂'},{id:24, name:'Entertainment', icon:'🎭'},
+  {id:25, name:'News & Politics', icon:'📰'},{id:26, name:'Howto & Style', icon:'💄'},
+  {id:27, name:'Education', icon:'📚'},{id:28, name:'Science & Tech', icon:'🔬'},
+  {id:29, name:'Nonprofits', icon:'🌍'},{id:30, name:'Movies', icon:'🍿'},
+  {id:31, name:'Anime', icon:'🎌'},{id:32, name:'Action/Adventure', icon:'⚔️'},
+  {id:33, name:'Classics', icon:'🏛️'},{id:34, name:'Comedy (Film)', icon:'🎪'},
+  {id:35, name:'Documentary', icon:'🎥'},{id:36, name:'Drama', icon:'🎭'},
+  {id:37, name:'Family', icon:'👨‍👩‍👧‍👦'},{id:38, name:'Foreign', icon:'🌐'},
+  {id:39, name:'Horror', icon:'👻'},{id:40, name:'Sci-Fi/Fantasy', icon:'🚀'},
+  {id:41, name:'Thriller', icon:'🔪'},{id:42, name:'Shorts', icon:'⚡'},
+  {id:43, name:'Shows', icon:'📺'},{id:44, name:'Trailers', icon:'🎬'},
+  {id:21, name:'Videoblogging', icon:'📹'},{id:18, name:'Short Movies', icon:'🎞️'},
+];
+
+const REGIONS = [
+  {code:'US',name:'United States',flag:'🇺🇸'},{code:'IN',name:'India',flag:'🇮🇳'},
+  {code:'GB',name:'United Kingdom',flag:'🇬🇧'},{code:'JP',name:'Japan',flag:'🇯🇵'},
+  {code:'BR',name:'Brazil',flag:'🇧🇷'},{code:'DE',name:'Germany',flag:'🇩🇪'},
+  {code:'KR',name:'South Korea',flag:'🇰🇷'},{code:'FR',name:'France',flag:'🇫🇷'},
+  {code:'AU',name:'Australia',flag:'🇦🇺'},{code:'MX',name:'Mexico',flag:'🇲🇽'},
+  {code:'CA',name:'Canada',flag:'🇨🇦'},{code:'IT',name:'Italy',flag:'🇮🇹'},
+  {code:'RU',name:'Russia',flag:'🇷🇺'},{code:'ES',name:'Spain',flag:'🇪🇸'},
+  {code:'AR',name:'Argentina',flag:'🇦🇷'},{code:'SG',name:'Singapore',flag:'🇸🇬'},
+  {code:'ID',name:'Indonesia',flag:'🇮🇩'},{code:'TR',name:'Turkey',flag:'🇹🇷'},
+  {code:'SA',name:'Saudi Arabia',flag:'🇸🇦'},{code:'AE',name:'UAE',flag:'🇦🇪'},
+  {code:'EG',name:'Egypt',flag:'🇪🇬'},{code:'PH',name:'Philippines',flag:'🇵🇭'},
+  {code:'PK',name:'Pakistan',flag:'🇵🇰'},{code:'TH',name:'Thailand',flag:'🇹🇭'},
+  {code:'NG',name:'Nigeria',flag:'🇳🇬'},{code:'ZA',name:'South Africa',flag:'🇿🇦'},
+  {code:'NL',name:'Netherlands',flag:'🇳🇱'},{code:'SE',name:'Sweden',flag:'🇸🇪'},
+  {code:'PL',name:'Poland',flag:'🇵🇱'},{code:'UA',name:'Ukraine',flag:'🇺🇦'},
+];
+
+// Populate categories
+const catGrid = document.getElementById('categoriesGrid');
+CATEGORIES.forEach(c => {
+  const el = document.createElement('div');
+  el.className = 'cat-chip';
+  el.innerHTML = `${c.icon} ${c.name}`;
+  catGrid.appendChild(el);
+});
+
+// Populate regions strip (doubled for seamless loop)
+const regTrack = document.getElementById('regionsTrack');
+const allRegions = [...REGIONS, ...REGIONS];
+allRegions.forEach(r => {
+  const el = document.createElement('div');
+  el.className = 'region-flag';
+  el.innerHTML = `<span class="flag">${r.flag}</span> ${r.name}`;
+  regTrack.appendChild(el);
+});
+
+// Auth Modal
+function openModal(type = 'login') {
+  document.getElementById('authModal').classList.add('active');
+  switchTab(type);
+}
+function closeModal() {
+  document.getElementById('authModal').classList.remove('active');
+}
+function handleModalClick(e) {
+  if (e.target === document.getElementById('authModal')) closeModal();
+}
+function switchTab(tab) {
+  const isLogin = tab === 'login';
+  document.getElementById('loginTab').classList.toggle('active', isLogin);
+  document.getElementById('signupTab').classList.toggle('active', !isLogin);
+  document.getElementById('loginForm').classList.toggle('active', isLogin);
+  document.getElementById('signupForm').classList.toggle('active', !isLogin);
+  document.getElementById('modalTitle').textContent = isLogin ? 'WELCOME BACK' : 'GET STARTED';
+  document.getElementById('modalSub').textContent = isLogin
+    ? 'Sign in to access your trend dashboard'
+    : 'Create a free account in seconds';
+}
+
+// ── CREDENTIALS ──────────────────────────────
+const ADMIN_EMAIL = 'deepmagar505@gmail.com';
+const ADMIN_PASS  = 'Deep#1234';
+const USER_DAILY_LIMIT = 3;
+
+function getUsers() {
+  return JSON.parse(localStorage.getItem('tp_users_db') || '{}');
+}
+function saveUsers(db) {
+  localStorage.setItem('tp_users_db', JSON.stringify(db));
+}
+// ─────────────────────────────────────────────
+
+async function handleLogin() {
+  const email   = document.getElementById('loginEmail').value.trim().toLowerCase();
+  const pass    = document.getElementById('loginPassword').value;
+  const msgEl   = document.getElementById('loginMsg');
+
+  if (!email || !pass) { showMsg(msgEl, 'Please fill in all fields', 'error'); return; }
+
+  // ── Admin check ──
+  if (email === ADMIN_EMAIL.toLowerCase() && pass === ADMIN_PASS) {
+    localStorage.setItem('tp_user', JSON.stringify({ email, username: 'Admin', role: 'admin' }));
+    localStorage.setItem('tp_token', 'admin_' + Date.now());
+    showMsg(msgEl, 'Welcome, Admin! Redirecting...', 'success');
+    setTimeout(() => window.location.href = 'admin.html', 900);
+    return;
+  }
+
+  // ── Regular user check ──
+  const db = getUsers();
+  if (!db[email]) { showMsg(msgEl, 'No account found. Please sign up first.', 'error'); return; }
+  if (db[email].password !== pass) { showMsg(msgEl, 'Incorrect password.', 'error'); return; }
+
+  // Check if blocked for today
+  const today = new Date().toDateString();
+  const calls = db[email].calls || {};
+  if ((calls[today] || 0) >= USER_DAILY_LIMIT) {
+    showMsg(msgEl, `Daily limit reached (${USER_DAILY_LIMIT} refreshes/day). Try again tomorrow.`, 'error');
+    return;
+  }
+
+  localStorage.setItem('tp_user', JSON.stringify({ email, username: db[email].username, role: 'user' }));
+  localStorage.setItem('tp_token', 'user_' + Date.now());
+  showMsg(msgEl, 'Welcome back! Redirecting...', 'success');
+  setTimeout(() => window.location.href = 'dashboard.html', 800);
+}
+
+async function handleSignup() {
+  const username = document.getElementById('signupUsername').value.trim();
+  const email    = document.getElementById('signupEmail').value.trim().toLowerCase();
+  const pass     = document.getElementById('signupPassword').value;
+  const msgEl    = document.getElementById('signupMsg');
+
+  if (!username || !email || !pass) { showMsg(msgEl, 'Please fill in all fields', 'error'); return; }
+  if (pass.length < 8) { showMsg(msgEl, 'Password must be at least 8 characters', 'error'); return; }
+  if (email === ADMIN_EMAIL.toLowerCase()) { showMsg(msgEl, 'This email is not available.', 'error'); return; }
+
+  const db = getUsers();
+  if (db[email]) { showMsg(msgEl, 'An account with this email already exists.', 'error'); return; }
+
+  db[email] = { username, password: pass, joinedAt: new Date().toISOString(), calls: {} };
+  saveUsers(db);
+
+  localStorage.setItem('tp_user', JSON.stringify({ email, username, role: 'user' }));
+  localStorage.setItem('tp_token', 'user_' + Date.now());
+  showMsg(msgEl, 'Account created! Redirecting...', 'success');
+  setTimeout(() => window.location.href = 'dashboard.html', 1000);
+}
+
+function showMsg(el, msg, type) {
+  el.innerHTML = `<div class="msg ${type}">${msg}</div>`;
+}
+
+// Scroll reveal
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Check if already logged in
+if (localStorage.getItem('tp_token')) {
+  const _u = JSON.parse(localStorage.getItem('tp_user') || '{}');
+  const _dest = _u.role === 'admin' ? 'admin.html' : 'dashboard.html';
+  document.querySelectorAll('.nav-cta').forEach(el => {
+    el.innerHTML = `<a href="${_dest}" class="btn-primary">→ Go to Dashboard</a>`;
+  });
+}
+
+// Keyboard shortcut
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+</script>
+</body>
+</html>
