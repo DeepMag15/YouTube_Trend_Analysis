@@ -386,6 +386,10 @@
     <button class="nav-item active" onclick="setView('overview',this)">
       <span class="ni">📊</span> Dashboard
     </button>
+    <button class="nav-item" onclick="setView('prefetch',this)">
+      <span class="ni">📡</span> Pre-fetch Data
+      <span class="nav-pill pill-green" id="sbCacheCount">–</span>
+    </button>
     <button class="nav-item" onclick="setView('apikeys',this)">
       <span class="ni">🔑</span> API Keys
       <span class="nav-pill pill-green" id="sbKeyCount">3</span>
@@ -497,11 +501,22 @@ let STATE = {
 
 // Load/Init data from localStorage (simulates DB for pure-frontend demo)
 function loadData() {
-  STATE.apiKeys = JSON.parse(localStorage.getItem('admin_api_keys') || 'null') || [
-    { id:1, name:'Primary Key',   value:'AIzaSy-key-1-here', priority:1, quota:10000, used:2340, status:'active',  requests:847,  errors:3,  lastUsed: new Date(Date.now()-120000).toISOString(), addedAt:'2025-01-10' },
-    { id:2, name:'Secondary Key', value:'AIzaSy-key-2-here', priority:2, quota:10000, used:7890, status:'warning', requests:312,  errors:12, lastUsed: new Date(Date.now()-3600000).toISOString(),addedAt:'2025-01-10' },
-    { id:3, name:'Tertiary Key',  value:'AIzaSy-key-3-here', priority:3, quota:10000, used:180,  status:'active',  requests:45,   errors:0,  lastUsed: new Date(Date.now()-86400000).toISOString(),addedAt:'2025-01-10' },
+  // ── Clean up any stale placeholder keys left in user-facing storage ──
+  try {
+    const stale = JSON.parse(localStorage.getItem('tp_api_keys') || '[]');
+    const cleaned = stale.filter(k => isRealKey(k));
+    localStorage.setItem('tp_api_keys', JSON.stringify(cleaned));
+  } catch(e) { localStorage.setItem('tp_api_keys', '[]'); }
+
+  const savedKeys = JSON.parse(localStorage.getItem('admin_api_keys') || 'null');
+  STATE.apiKeys = savedKeys || [
+    { id:1, name:'Primary Key',   value:'', priority:1, quota:10000, used:0, status:'active',  requests:0, errors:0, lastUsed: new Date().toISOString(), addedAt: new Date().toISOString().split('T')[0] },
+    { id:2, name:'Secondary Key', value:'', priority:2, quota:10000, used:0, status:'active',  requests:0, errors:0, lastUsed: new Date().toISOString(), addedAt: new Date().toISOString().split('T')[0] },
+    { id:3, name:'Tertiary Key',  value:'', priority:3, quota:10000, used:0, status:'active',  requests:0, errors:0, lastUsed: new Date().toISOString(), addedAt: new Date().toISOString().split('T')[0] },
   ];
+
+  // Only persist real keys to user-facing storage — never placeholders
+  syncUserKeys();
 
   STATE.users = JSON.parse(localStorage.getItem('admin_users') || 'null') || [
     { id:1, username:'johndoe',    email:'john@example.com',    region:'US', joined:'2025-01-12', lastLogin:'2025-03-05', bookmarks:14, status:'active'  },
@@ -513,14 +528,51 @@ function loadData() {
   ];
 
   STATE.logs = generateLogs();
-  saveKeys();
+  updateSidebarCounts();
+}
+
+function isRealKey(value) {
+  // A real YouTube Data API key starts with 'AIza' and is ~39 chars long
+  return value && value.startsWith('AIza') && value.length >= 30 && !value.includes('here') && !value.includes('key-');
+}
+
+function syncUserKeys() {
+  // Only write REAL, non-placeholder, active keys to tp_api_keys
+  const realKeys = STATE.apiKeys
+    .filter(k => k.status !== 'disabled' && isRealKey(k.value))
+    .map(k => k.value);
+  localStorage.setItem('tp_api_keys', JSON.stringify(realKeys));
+}
+
+function updateSidebarCounts() {
+  const realActive = STATE.apiKeys.filter(k => k.status !== 'disabled' && isRealKey(k.value)).length;
+  const sbKey = document.getElementById('sbKeyCount');
+  const sbLog = document.getElementById('sbLogCount');
+  const sbUsr = document.getElementById('sbUserCount');
+  if (sbKey) sbKey.textContent = realActive;
+  if (sbLog) sbLog.textContent = STATE.logs?.length || 0;
+  if (sbUsr) sbUsr.textContent = STATE.users?.length || 0;
+  updateCacheCount();
 }
 
 function saveKeys() {
   localStorage.setItem('admin_api_keys', JSON.stringify(STATE.apiKeys));
-  document.getElementById('sbKeyCount').textContent = STATE.apiKeys.filter(k=>k.status!=='disabled').length;
-  document.getElementById('sbLogCount').textContent = STATE.logs.length;
-  document.getElementById('sbUserCount').textContent = STATE.users.length;
+  syncUserKeys();
+  updateSidebarCounts();
+}
+
+function updateCacheCount() {
+  const cache = JSON.parse(localStorage.getItem('tp_prefetch_cache') || 'null');
+  const el = document.getElementById('sbCacheCount');
+  if (!el) return;
+  if (cache && cache.categories) {
+    const n = Object.keys(cache.categories).length;
+    el.textContent = n + ' cats';
+    el.className = 'nav-pill pill-green';
+  } else {
+    el.textContent = 'none';
+    el.className = 'nav-pill pill-orange';
+  }
 }
 
 function generateLogs() {
@@ -552,6 +604,7 @@ document.addEventListener('DOMContentLoaded', () => {
   checkAdminAuth();
   loadData();
   startClock();
+  updateCacheCount();
   setView('overview');
 });
 
@@ -585,6 +638,7 @@ function setView(view, el) {
 
   const titles = {
     overview:'📊 ADMIN DASHBOARD', apikeys:'🔑 API KEY MANAGER',
+    prefetch:'📡 PRE-FETCH DATA CACHE',
     usage:'📈 USAGE LOGS', users:'👥 USER MANAGEMENT',
     regions:'🌍 REGIONS', categories:'🏷️ CATEGORIES', settings:'⚙️ SETTINGS'
   };
@@ -597,7 +651,7 @@ function setView(view, el) {
   const c = document.getElementById('content');
   c.innerHTML = '';
 
-  const views = { overview:renderOverview, apikeys:renderApiKeys, usage:renderUsage, users:renderUsers, regions:renderRegions, categories:renderCategories, settings:renderSettings };
+  const views = { overview:renderOverview, apikeys:renderApiKeys, prefetch:renderPrefetch, usage:renderUsage, users:renderUsers, regions:renderRegions, categories:renderCategories, settings:renderSettings };
   (views[view] || renderOverview)();
 }
 
@@ -889,27 +943,46 @@ function renderKeyCards() {
   const priorityClass = ['p1','p2','p3'];
   const dotClass = { active:'dot-green', warning:'dot-orange', disabled:'dot-grey', dead:'dot-red' };
 
-  grid.innerHTML = STATE.apiKeys.sort((a,b)=>a.priority-b.priority).map(k => {
-    const pct = (k.used/k.quota)*100;
+  const hasRealKeys = STATE.apiKeys.some(k => isRealKey(k.value) && k.status !== 'disabled');
+
+  let warningBanner = '';
+  if (!hasRealKeys) {
+    warningBanner = `
+      <div style="background:rgba(255,215,0,.07);border:1px solid rgba(255,215,0,.25);border-radius:10px;padding:16px 20px;margin-bottom:18px;display:flex;align-items:center;gap:14px;">
+        <div style="font-size:28px;">⚠️</div>
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:#FFD700;margin-bottom:3px;">NO VALID API KEY CONFIGURED</div>
+          <div style="font-size:12px;color:#888;line-height:1.6;">Users cannot load trending data until you add a real YouTube Data API v3 key. Click <strong style="color:#fff;">+ Add API Key</strong> in the top bar.</div>
+        </div>
+      </div>
+    `;
+  }
+
+  grid.innerHTML = warningBanner + STATE.apiKeys.sort((a,b)=>a.priority-b.priority).map(k => {
+    const realKey = isRealKey(k.value);
+    const pct = realKey ? (k.used/k.quota)*100 : 0;
     const fillCls = pct<70?'fill-green': pct<90?'fill-orange':'fill-red';
-    const cardCls = k.status==='active'?'active-key': k.status==='warning'?'warn-key': k.status==='disabled'?'dead-key':'';
-    const isActive = STATE.apiKeys.find(x=>x.status==='active')?.id === k.id;
-    const maskedKey = k.value.length > 12 ? k.value.substring(0,8) + '••••••••' + k.value.slice(-4) : '••••••••';
+    const cardCls = !realKey ? 'dead-key' : k.status==='active'?'active-key': k.status==='warning'?'warn-key': k.status==='disabled'?'dead-key':'';
+    const isActiveKey = realKey && STATE.apiKeys.find(x => x.status==='active' && isRealKey(x.value))?.id === k.id;
+    const maskedKey = realKey
+      ? k.value.substring(0,8) + '••••••••' + k.value.slice(-4)
+      : '— not set —';
 
     return `
       <div class="api-key-card ${cardCls}" id="keyCard${k.id}">
-        ${isActive ? '<div class="active-indicator">● ACTIVE</div>' : ''}
+        ${isActiveKey ? '<div class="active-indicator">● ACTIVE</div>' : ''}
         <div class="key-header">
           <div>
             <div class="key-priority ${priorityClass[k.priority-1] || 'p3'}">PRIORITY ${k.priority}</div>
           </div>
-          <div class="key-status-dot ${dotClass[k.status] || 'dot-grey'}"></div>
+          <div class="key-status-dot ${realKey ? (dotClass[k.status] || 'dot-grey') : 'dot-grey'}"></div>
         </div>
         <div class="key-name">${escHtml(k.name)}</div>
         <div class="key-value">
-          <span id="keyval${k.id}">${maskedKey}</span>
-          <button class="copy-btn" onclick="toggleReveal(${k.id})" title="Reveal/Copy">👁</button>
+          <span id="keyval${k.id}" style="color:${realKey?'inherit':'var(--muted)'};">${maskedKey}</span>
+          ${realKey ? `<button class="copy-btn" onclick="toggleReveal(${k.id})" title="Reveal/Copy">👁</button>` : ''}
         </div>
+        ${realKey ? `
         <div class="quota-block">
           <div class="quota-row">
             <span class="quota-label">Daily Quota</span>
@@ -941,10 +1014,11 @@ function renderKeyCards() {
             <div class="km-lbl">Status</div>
           </div>
         </div>
+        ` : `<div style="padding:18px 0;text-align:center;font-size:12px;color:var(--muted);">No key set — click Edit to add one</div>`}
         <div class="key-actions">
           <button class="key-btn edit" onclick="openEditKeyModal(${k.id})">✏ Edit</button>
-          <button class="key-btn rotate" onclick="resetQuota(${k.id})">↺ Reset</button>
-          <button class="key-btn disable" onclick="toggleKeyStatus(${k.id})">${k.status==='disabled'?'▶ Enable':'⏸ Disable'}</button>
+          ${realKey ? `<button class="key-btn rotate" onclick="resetQuota(${k.id})">↺ Reset</button>` : ''}
+          ${realKey ? `<button class="key-btn disable" onclick="toggleKeyStatus(${k.id})">${k.status==='disabled'?'▶ Enable':'⏸ Disable'}</button>` : ''}
         </div>
       </div>
     `;
@@ -1276,7 +1350,394 @@ function renderCategories() {
 }
 
 // ═══════════════════════════════════════════════
-// SETTINGS VIEW
+// PRE-FETCH DATA CACHE
+// ═══════════════════════════════════════════════
+const PREFETCH_CATS = [
+  { id: '',   name: 'Overall Trending',  icon: '🔥' },
+  { id: '17', name: 'Sports',            icon: '⚽' },
+  { id: '10', name: 'Music',             icon: '🎵' },
+  { id: '20', name: 'Gaming',            icon: '🎮' },
+  { id: '28', name: 'Science & Tech',    icon: '🔬' },
+  { id: '24', name: 'Entertainment',     icon: '🎭' },
+  { id: '25', name: 'News & Politics',   icon: '📰' },
+  { id: '27', name: 'Education',         icon: '📚' },
+  { id: '22', name: 'People & Blogs',    icon: '👤' },
+  { id: '23', name: 'Comedy',            icon: '😂' },
+  { id: '1',  name: 'Film & Animation',  icon: '🎬' },
+  { id: '2',  name: 'Autos & Vehicles',  icon: '🚗' },
+  { id: '15', name: 'Pets & Animals',    icon: '🐾' },
+  { id: '19', name: 'Travel & Events',   icon: '✈️' },
+  { id: '26', name: 'Howto & Style',     icon: '💄' },
+];
+
+let FETCH_ABORT = false;
+
+function renderPrefetch() {
+  const cache = JSON.parse(localStorage.getItem('tp_prefetch_cache') || 'null');
+  const lastFetch = cache?.fetchedAt ? new Date(cache.fetchedAt).toLocaleString() : 'Never';
+  const cachedRegion = cache?.region || '–';
+  const catsDone = cache?.categories ? Object.keys(cache.categories).length : 0;
+
+  const activeKeys = STATE.apiKeys.filter(k => k.status !== 'disabled' && k.value && !k.value.includes('here'));
+  const hasRealKeys = activeKeys.length > 0;
+
+  // Build region options for REGIONS list (reuse from dashboard context via hardcoded top ones)
+  const topRegions = [
+    ['US','🇺🇸 United States'],['IN','🇮🇳 India'],['GB','🇬🇧 United Kingdom'],
+    ['JP','🇯🇵 Japan'],['BR','🇧🇷 Brazil'],['DE','🇩🇪 Germany'],
+    ['FR','🇫🇷 France'],['KR','🇰🇷 South Korea'],['AU','🇦🇺 Australia'],
+    ['MX','🇲🇽 Mexico'],['CA','🇨🇦 Canada'],['ID','🇮🇩 Indonesia'],
+    ['RU','🇷🇺 Russia'],['TR','🇹🇷 Turkey'],['IT','🇮🇹 Italy'],
+  ];
+
+  document.getElementById('content').innerHTML = `
+    <div class="stats-row" style="grid-template-columns:repeat(4,1fr);">
+      <div class="stat-card">
+        <div class="stat-icon-wrap" style="background:rgba(0,212,106,.08);">📦</div>
+        <div class="stat-num">${catsDone}</div>
+        <div class="stat-lbl">CATEGORIES CACHED</div>
+        <div class="stat-delta ${catsDone===PREFETCH_CATS.length?'delta-up':'delta-down'}">${catsDone===PREFETCH_CATS.length?'✓ Complete':'of '+PREFETCH_CATS.length+' total'}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-wrap" style="background:rgba(59,130,246,.08);">🌍</div>
+        <div class="stat-num" style="font-size:20px;">${cachedRegion}</div>
+        <div class="stat-lbl">CACHED REGION</div>
+        <div class="stat-delta delta-up">${cache ? 'Data available' : 'No cache yet'}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-wrap" style="background:rgba(249,115,22,.08);">🕒</div>
+        <div class="stat-num" style="font-size:13px;letter-spacing:0;">${cache ? timeSince(cache.fetchedAt) : '–'}</div>
+        <div class="stat-lbl">LAST FETCHED</div>
+        <div class="stat-delta" style="color:var(--muted);">${lastFetch}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-wrap" style="background:rgba(168,85,247,.08);">📹</div>
+        <div class="stat-num">${cache ? Object.values(cache.categories||{}).reduce((s,v)=>s+v.length,0) : 0}</div>
+        <div class="stat-lbl">TOTAL VIDEOS CACHED</div>
+        <div class="stat-delta delta-up">20 per category</div>
+      </div>
+    </div>
+
+    ${!hasRealKeys ? `
+      <div style="background:rgba(255,31,31,.06);border:1px solid rgba(255,31,31,.2);border-radius:10px;padding:20px;margin-bottom:18px;display:flex;gap:14px;align-items:flex-start;">
+        <div style="font-size:24px;">⚠️</div>
+        <div>
+          <div style="font-weight:600;margin-bottom:4px;">No real API keys configured</div>
+          <div style="font-size:13px;color:var(--muted);">Go to <strong style="color:var(--text);">API Keys</strong> and add valid YouTube Data API v3 keys before pre-fetching. The placeholder keys won't work.</div>
+        </div>
+      </div>
+    ` : ''}
+
+    <div class="panel grid-full" style="margin-bottom:18px;">
+      <div class="ph">
+        <div class="pt">🚀 FETCH CONFIGURATION</div>
+      </div>
+      <div class="pb">
+        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:14px;align-items:flex-end;">
+          <div>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;">Region to Fetch</label>
+            <select id="prefetchRegion" style="width:100%;background:var(--dark);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;outline:none;">
+              ${topRegions.map(([code,label])=>`<option value="${code}" ${code==='US'?'selected':''}>${label}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;">Max Videos Per Category</label>
+            <select id="prefetchMax" style="width:100%;background:var(--dark);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;outline:none;">
+              <option value="10">10 videos</option>
+              <option value="20" selected>20 videos (recommended)</option>
+              <option value="50">50 videos</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button id="fetchBtn" onclick="startPrefetch()" ${!hasRealKeys?'disabled':''} style="padding:11px 24px;background:${hasRealKeys?'var(--red)':'#2a2a2a'};border:none;color:${hasRealKeys?'white':'var(--muted)'};border-radius:8px;font-size:13px;font-weight:600;cursor:${hasRealKeys?'pointer':'not-allowed'};font-family:'DM Sans',sans-serif;transition:all .2s;white-space:nowrap;">
+              📡 Fetch All Categories
+            </button>
+            ${cache ? `<button onclick="clearCache()" style="padding:11px 16px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">🗑 Clear</button>` : ''}
+          </div>
+        </div>
+
+        <!-- PROGRESS AREA -->
+        <div id="fetchProgress" style="display:none;margin-top:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <div style="font-size:13px;font-weight:600;" id="fetchStatusText">Preparing...</div>
+            <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);" id="fetchCounter">0 / ${PREFETCH_CATS.length}</div>
+          </div>
+          <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:16px;">
+            <div id="fetchBar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--red),var(--orange));border-radius:4px;transition:width .4s ease;"></div>
+          </div>
+          <div id="fetchCatGrid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;"></div>
+          <button onclick="abortPrefetch()" id="abortBtn" style="margin-top:14px;padding:8px 20px;background:transparent;border:1px solid rgba(255,31,31,.3);color:var(--red);border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;">✕ Stop Fetch</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CACHE BROWSER -->
+    <div id="cacheBrowser">
+      ${cache ? renderCacheBrowser(cache) : `
+        <div class="panel grid-full">
+          <div class="pb" style="text-align:center;padding:48px;color:var(--muted);">
+            <div style="font-size:40px;margin-bottom:12px;">📭</div>
+            <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px;">No cache yet</div>
+            <div style="font-size:13px;">Click "Fetch All Categories" above to pull real YouTube data.<br>Users will see these videos as pre-loaded content on their dashboard.</div>
+          </div>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+function renderCacheBrowser(cache) {
+  const cats = cache.categories || {};
+  return `
+    <div class="panel grid-full">
+      <div class="ph">
+        <div class="pt">📦 CACHED DATA — ${cache.region || 'US'} · ${new Date(cache.fetchedAt).toLocaleString()}</div>
+        <span style="font-size:11px;color:var(--green);font-family:'Space Mono',monospace;">✓ ${Object.keys(cats).length} categories ready for users</span>
+      </div>
+      <div class="pb">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+          ${PREFETCH_CATS.map(cat => {
+            const vids = cats[cat.id] || [];
+            const ok   = vids.length > 0;
+            return `
+              <div style="background:var(--dark);border:1px solid ${ok?'var(--border)':'rgba(255,31,31,.15)'};border-radius:8px;padding:14px;cursor:pointer;" onclick="toggleCatPreview('cat_${cat.id.replace('','all')}')">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                  <div style="font-size:13px;font-weight:600;">${cat.icon} ${cat.name}</div>
+                  <span style="font-size:10px;font-family:'Space Mono',monospace;padding:2px 8px;border-radius:4px;background:${ok?'rgba(0,212,106,.1)':'rgba(255,31,31,.1)'};color:${ok?'var(--green)':'var(--red)'};">${ok?vids.length+' videos':'empty'}</span>
+                </div>
+                ${ok ? `
+                  <div style="display:flex;flex-direction:column;gap:3px;">
+                    ${vids.slice(0,3).map((v,i)=>`
+                      <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                        <span style="color:var(--red);font-family:'Space Mono',monospace;font-size:10px;">#${i+1}</span> ${escHtml(v.title)}
+                      </div>
+                    `).join('')}
+                    ${vids.length>3?`<div style="font-size:10px;color:var(--muted);">+${vids.length-3} more...</div>`:''}
+                  </div>
+                ` : '<div style="font-size:11px;color:var(--red);">Failed to fetch</div>'}
+              </div>
+              <div id="cat_${cat.id.replace('','all')}" style="display:none;grid-column:1/-1;"></div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function toggleCatPreview(elId) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (el.style.display === 'none') {
+    const catId = elId.replace('cat_','').replace('all','');
+    const cache = JSON.parse(localStorage.getItem('tp_prefetch_cache') || 'null');
+    const vids  = cache?.categories?.[catId] || [];
+    el.style.display = 'block';
+    el.innerHTML = `
+      <div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:-8px;margin-bottom:4px;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead>
+            <tr style="color:var(--muted);font-family:'Space Mono',monospace;font-size:10px;">
+              <th style="text-align:left;padding:4px 8px;">#</th>
+              <th style="text-align:left;padding:4px 8px;">TITLE</th>
+              <th style="text-align:left;padding:4px 8px;">CHANNEL</th>
+              <th style="text-align:right;padding:4px 8px;">VIEWS</th>
+              <th style="text-align:right;padding:4px 8px;">DURATION</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${vids.map((v,i)=>`
+              <tr style="border-top:1px solid var(--border);">
+                <td style="padding:6px 8px;color:var(--red);font-family:'Space Mono',monospace;">${i+1}</td>
+                <td style="padding:6px 8px;max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(v.title)}</td>
+                <td style="padding:6px 8px;color:var(--muted);">${escHtml(v.channel)}</td>
+                <td style="padding:6px 8px;text-align:right;font-family:'Space Mono',monospace;">${fmtNum(v.views)}</td>
+                <td style="padding:6px 8px;text-align:right;font-family:'Space Mono',monospace;color:var(--gold);">${v.duration}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+// ─── FETCH ENGINE ───
+async function startPrefetch() {
+  const activeKeys = STATE.apiKeys.filter(k => k.status !== 'disabled' && k.value && !k.value.includes('here'));
+  if (!activeKeys.length) { toast('Add valid API keys first', 'e'); return; }
+
+  const region  = document.getElementById('prefetchRegion').value;
+  const maxVids = parseInt(document.getElementById('prefetchMax').value);
+  FETCH_ABORT   = false;
+
+  // Show progress UI
+  document.getElementById('fetchProgress').style.display = 'block';
+  document.getElementById('fetchBtn').disabled = true;
+  document.getElementById('fetchBtn').textContent = '⏳ Fetching...';
+
+  // Init category pill grid
+  const grid = document.getElementById('fetchCatGrid');
+  grid.innerHTML = PREFETCH_CATS.map(cat => `
+    <div id="pill_${cat.id||'all'}" style="background:var(--dark);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:11px;display:flex;align-items:center;gap:6px;transition:all .3s;">
+      <span id="pill_icon_${cat.id||'all'}" style="font-size:14px;">⏳</span>
+      <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${cat.name}</span>
+    </div>
+  `).join('');
+
+  let keyIndex = 0;
+  const result = { region, fetchedAt: new Date().toISOString(), categories: {} };
+
+  for (let i = 0; i < PREFETCH_CATS.length; i++) {
+    if (FETCH_ABORT) { toast('Fetch stopped', 'i'); break; }
+
+    const cat = PREFETCH_CATS[i];
+    const pillId = cat.id || 'all';
+
+    // Update progress bar
+    const pct = Math.round((i / PREFETCH_CATS.length) * 100);
+    document.getElementById('fetchBar').style.width = pct + '%';
+    document.getElementById('fetchCounter').textContent = `${i} / ${PREFETCH_CATS.length}`;
+    document.getElementById('fetchStatusText').textContent = `Fetching: ${cat.icon} ${cat.name}...`;
+    setPillState(pillId, 'loading', cat.icon);
+
+    try {
+      let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&chart=mostPopular&regionCode=${region}&maxResults=${maxVids}&hl=en_US`;
+      if (cat.id) url += `&videoCategoryId=${cat.id}`;
+
+      const data = await adminFetchWithRotation(url, activeKeys, keyIndex);
+      keyIndex = data._keyIndex;
+
+      const videos = (data.items || []).map((item, idx) => ({
+        id:          item.id,
+        title:       item.snippet.title,
+        channel:     item.snippet.channelTitle,
+        thumbnail:   item.snippet.thumbnails.maxres?.url || item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || '',
+        views:       parseInt(item.statistics?.viewCount  || 0),
+        likes:       parseInt(item.statistics?.likeCount  || 0),
+        comments:    parseInt(item.statistics?.commentCount || 0),
+        duration:    adminFmtDuration(item.contentDetails?.duration),
+        durationSec: adminParseDurSec(item.contentDetails?.duration),
+        categoryId:  item.snippet.categoryId,
+        publishedAt: item.snippet.publishedAt,
+        url:         `https://www.youtube.com/watch?v=${item.id}`,
+        rank:        idx + 1,
+      }));
+
+      result.categories[cat.id] = videos;
+      setPillState(pillId, 'done', cat.icon, videos.length);
+
+      // Track units used on admin key
+      const usedKey = activeKeys[keyIndex % activeKeys.length];
+      const adminKey = STATE.apiKeys.find(k => k.value === usedKey?.value);
+      if (adminKey) { adminKey.used += 100; adminKey.requests += 1; adminKey.lastUsed = new Date().toISOString(); }
+
+    } catch (err) {
+      result.categories[cat.id] = [];
+      setPillState(pillId, 'error', cat.icon);
+      toast(`Failed: ${cat.name} — ${err.message}`, 'e');
+    }
+
+    // Small delay to avoid hammering API
+    await new Promise(r => setTimeout(r, 300));
+  }
+
+  if (!FETCH_ABORT) {
+    // Save to localStorage for user dashboard
+    localStorage.setItem('tp_prefetch_cache', JSON.stringify(result));
+    saveKeys(); // update quota counters
+
+    document.getElementById('fetchBar').style.width = '100%';
+    document.getElementById('fetchCounter').textContent = `${PREFETCH_CATS.length} / ${PREFETCH_CATS.length}`;
+    document.getElementById('fetchStatusText').innerHTML = '<span style="color:var(--green);">✓ All categories fetched and cached!</span>';
+    document.getElementById('abortBtn').style.display = 'none';
+
+    setTimeout(() => {
+      toast(`✓ ${Object.keys(result.categories).length} categories cached for ${region}!`, 's');
+      updateCacheCount();
+      renderPrefetch();
+    }, 800);
+  }
+
+  document.getElementById('fetchBtn').disabled = false;
+  document.getElementById('fetchBtn').textContent = '📡 Fetch All Categories';
+}
+
+function abortPrefetch() {
+  FETCH_ABORT = true;
+  document.getElementById('fetchBtn').disabled = false;
+  document.getElementById('fetchBtn').textContent = '📡 Fetch All Categories';
+}
+
+function clearCache() {
+  if (!confirm('Clear the pre-fetched cache? Users will see demo data until you fetch again.')) return;
+  localStorage.removeItem('tp_prefetch_cache');
+  updateCacheCount();
+  toast('Cache cleared', 'i');
+  renderPrefetch();
+}
+
+function setPillState(id, state, icon, count) {
+  const pill = document.getElementById('pill_' + id);
+  const iconEl = document.getElementById('pill_icon_' + id);
+  if (!pill || !iconEl) return;
+  if (state === 'loading') {
+    pill.style.borderColor = 'var(--orange)';
+    iconEl.textContent = '⟳';
+  } else if (state === 'done') {
+    pill.style.borderColor = 'var(--green)';
+    pill.style.background  = 'rgba(0,212,106,.05)';
+    iconEl.textContent = icon;
+    if (count !== undefined) {
+      const span = pill.querySelector('span:last-child');
+      if (span) span.textContent += ` (${count})`;
+    }
+  } else if (state === 'error') {
+    pill.style.borderColor = 'var(--red)';
+    pill.style.background  = 'rgba(255,31,31,.05)';
+    iconEl.textContent = '✕';
+  }
+}
+
+async function adminFetchWithRotation(url, keys, startIndex) {
+  for (let attempt = 0; attempt < keys.length; attempt++) {
+    const idx  = (startIndex + attempt) % keys.length;
+    const key  = keys[idx].value;
+    const full = url + (url.includes('?') ? '&' : '?') + 'key=' + key;
+
+    const resp = await fetch(full);
+    const data = await resp.json();
+
+    if (data.error) {
+      if (data.error.code === 403 || data.error.status === 'RESOURCE_EXHAUSTED') {
+        toast(`Key quota exceeded, rotating...`, 'i');
+        continue;
+      }
+      throw new Error(data.error.message || 'API error');
+    }
+    data._keyIndex = idx;
+    return data;
+  }
+  throw new Error('All API keys exhausted');
+}
+
+function adminFmtDuration(iso) {
+  if (!iso) return '0:00';
+  const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  const h = parseInt(m?.[1]||0), mi = parseInt(m?.[2]||0), s = parseInt(m?.[3]||0);
+  return h > 0 ? `${h}:${String(mi).padStart(2,'0')}:${String(s).padStart(2,'0')}` : `${mi}:${String(s).padStart(2,'0')}`;
+}
+
+function adminParseDurSec(iso) {
+  if (!iso) return 0;
+  const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  return parseInt(m?.[1]||0)*3600 + parseInt(m?.[2]||0)*60 + parseInt(m?.[3]||0);
+}
+
+// ═══════════════════════════════════════════════
+// SETTINGS
 // ═══════════════════════════════════════════════
 function renderSettings() {
   document.getElementById('content').innerHTML = `
@@ -1357,28 +1818,31 @@ function openEditKeyModal(id) {
 function closeModal() { document.getElementById('keyModal').classList.remove('open'); }
 
 function saveKey() {
-  const name = document.getElementById('mKeyName').value.trim();
-  const value = document.getElementById('mKeyValue').value.trim();
+  const name     = document.getElementById('mKeyName').value.trim();
+  const value    = document.getElementById('mKeyValue').value.trim();
   const priority = parseInt(document.getElementById('mKeyPriority').value);
-  const quota = parseInt(document.getElementById('mKeyQuota').value);
+  const quota    = parseInt(document.getElementById('mKeyQuota').value);
 
   if (!name || !value) { toast('Fill in all fields', 'e'); return; }
-  if (!value.startsWith('AIza') && !confirm('Key does not start with "AIza". Add anyway?')) return;
+  if (!value.startsWith('AIza')) { toast('API key must start with "AIza"', 'e'); return; }
+  if (value.length < 30)         { toast('API key looks too short — check it', 'e'); return; }
 
   if (STATE.editingKeyId) {
-    const k = STATE.apiKeys.find(x=>x.id===STATE.editingKeyId);
-    if (k) { k.name=name; k.value=value; k.priority=priority; k.quota=quota; }
+    const k = STATE.apiKeys.find(x => x.id === STATE.editingKeyId);
+    if (k) { k.name = name; k.value = value; k.priority = priority; k.quota = quota; }
     toast('Key updated!', 's');
   } else {
-    const newId = Math.max(0,...STATE.apiKeys.map(k=>k.id)) + 1;
-    STATE.apiKeys.push({ id:newId, name, value, priority, quota, used:0, status:'active', requests:0, errors:0, lastUsed:new Date().toISOString(), addedAt:new Date().toISOString().split('T')[0] });
+    const newId = Math.max(0, ...STATE.apiKeys.map(k => k.id)) + 1;
+    STATE.apiKeys.push({
+      id: newId, name, value, priority, quota,
+      used: 0, status: 'active', requests: 0, errors: 0,
+      lastUsed: new Date().toISOString(),
+      addedAt: new Date().toISOString().split('T')[0],
+    });
     toast('Key added!', 's');
-    // Also save to user-facing localStorage
-    const userKeys = STATE.apiKeys.map(k=>k.value);
-    localStorage.setItem('tp_api_keys', JSON.stringify(userKeys));
   }
 
-  saveKeys();
+  saveKeys(); // persists to admin_api_keys AND syncs real keys to tp_api_keys
   closeModal();
   renderApiKeys();
 }
