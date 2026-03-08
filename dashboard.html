@@ -600,7 +600,9 @@ document.addEventListener('DOMContentLoaded', () => {
   checkAuth();
   populateSelects();
   checkApiKeys();
-  loadTrending();
+  updateCallsBadge(getTodayCalls());
+  checkRateLimit(false);
+  renderView(); // render empty state — no API call on load
 });
 
 function checkAuth() {
@@ -775,84 +777,87 @@ async function fetchWithKeyRotation(url) {
 }
 
 // ═══════════════════════════════════════════════
-// FETCH TRENDING — fetches ALL categories on refresh
+// FETCH TRENDING — only called when user clicks Refresh
 // ═══════════════════════════════════════════════
-async function loadTrending(forceRefresh = false) {
+const FETCH_CATS = [
+  { id: '',   name: 'Overall Trending', icon: '🔥' },
+  { id: '17', name: 'Sports',           icon: '⚽' },
+  { id: '10', name: 'Music',            icon: '🎵' },
+  { id: '20', name: 'Gaming',           icon: '🎮' },
+  { id: '28', name: 'Science & Tech',   icon: '🔬' },
+  { id: '24', name: 'Entertainment',    icon: '🎭' },
+  { id: '25', name: 'News & Politics',  icon: '📰' },
+  { id: '27', name: 'Education',        icon: '📚' },
+  { id: '22', name: 'People & Blogs',   icon: '👤' },
+  { id: '23', name: 'Comedy',           icon: '😂' },
+  { id: '1',  name: 'Film & Animation', icon: '🎬' },
+  { id: '2',  name: 'Autos & Vehicles', icon: '🚗' },
+  { id: '15', name: 'Pets & Animals',   icon: '🐾' },
+  { id: '19', name: 'Travel & Events',  icon: '✈️' },
+  { id: '26', name: 'Howto & Style',    icon: '💄' },
+];
+
+async function loadTrending() {
   if (STATE.loading) return;
 
-  // Rate limit check — one call per refresh (covers all categories)
+  // Refresh API keys in case admin just added them
+  checkApiKeys();
+
+  // Must have at least one API key
+  if (!STATE.apiKeys.length) {
+    showToast('No API key configured. Ask admin to add a YouTube Data API key.', 'error');
+    return;
+  }
+
+  // Rate limit — one Refresh = one call (covers all 15 categories)
   if (!checkRateLimit(true)) return;
 
   STATE.loading = true;
   const btn = document.getElementById('refreshBtn');
-  if (btn) { btn.classList.add('loading'); document.getElementById('refreshIcon').textContent = '⟳'; }
+  if (btn) {
+    btn.disabled = true;
+    btn.classList.add('loading');
+    document.getElementById('refreshIcon').textContent = '⟳';
+  }
 
-  // Categories to fetch top-20 for (key sidebar categories + overall)
-  const FETCH_CATS = [
-    { id: '',   name: 'All',              icon: '🌐' },
-    { id: '17', name: 'Sports',           icon: '⚽' },
-    { id: '10', name: 'Music',            icon: '🎵' },
-    { id: '20', name: 'Gaming',           icon: '🎮' },
-    { id: '28', name: 'Science & Tech',   icon: '🔬' },
-    { id: '24', name: 'Entertainment',    icon: '🎭' },
-    { id: '25', name: 'News & Politics',  icon: '📰' },
-    { id: '27', name: 'Education',        icon: '📚' },
-    { id: '22', name: 'People & Blogs',   icon: '👤' },
-    { id: '23', name: 'Comedy',           icon: '😂' },
-    { id: '1',  name: 'Film & Animation', icon: '🎬' },
-    { id: '2',  name: 'Autos & Vehicles', icon: '🚗' },
-    { id: '15', name: 'Pets & Animals',   icon: '🐾' },
-    { id: '19', name: 'Travel & Events',  icon: '✈️' },
-    { id: '26', name: 'Howto & Style',    icon: '💄' },
-  ];
+  // Show a loading skeleton while fetching
+  showFetchingState();
 
   try {
+    incrementCall();
+    updateCallsBadge(getTodayCalls());
+
     STATE.categoryCache = {};
 
-    if (STATE.apiKeys.length > 0) {
-      // Real API: fetch each category sequentially (rotating keys)
-      incrementCall();
-      updateCallsBadge(getTodayCalls());
+    // Fetch all 15 categories. Each call costs 1 quota unit (videos.list with chart=mostPopular).
+    // We fire them with a tiny stagger so we don't hammer the same key simultaneously.
+    for (const cat of FETCH_CATS) {
+      try {
+        // Build URL: snippet for title/channel/thumbnail/publishedAt,
+        //            statistics for views/likes/comments,
+        //            contentDetails for duration
+        let url = `https://www.googleapis.com/youtube/v3/videos`
+          + `?part=snippet,statistics,contentDetails`
+          + `&chart=mostPopular`
+          + `&regionCode=${encodeURIComponent(STATE.region)}`
+          + `&maxResults=${TOP_PER_CATEGORY}`
+          + `&hl=en`;
+        if (cat.id) url += `&videoCategoryId=${encodeURIComponent(cat.id)}`;
 
-      for (const cat of FETCH_CATS) {
-        try {
-          let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&chart=mostPopular&regionCode=${STATE.region}&maxResults=${TOP_PER_CATEGORY}&hl=en_US`;
-          if (cat.id) url += `&videoCategoryId=${cat.id}`;
-          const data = await fetchWithKeyRotation(url);
-          STATE.categoryCache[cat.id] = (data.items || []).map((item, i) => mapVideo(item, i));
-        } catch(e) {
+        const data = await fetchWithKeyRotation(url);
+        if (data && data.items) {
+          STATE.categoryCache[cat.id] = data.items.map((item, i) => mapVideo(item, i));
+        } else {
           STATE.categoryCache[cat.id] = [];
         }
-      }
-      showToast(`Loaded trending videos for ${STATE.region} — ${FETCH_CATS.length} categories`, 'success');
-
-    } else {
-      // Check for admin pre-fetched cache first
-      const prefetch = JSON.parse(localStorage.getItem('tp_prefetch_cache') || 'null');
-
-      if (prefetch && prefetch.categories && Object.keys(prefetch.categories).length > 0) {
-        // Use admin-cached real YouTube data — counts as a user call
-        incrementCall();
-        updateCallsBadge(getTodayCalls());
-
-        const cacheAge = Math.round((Date.now() - new Date(prefetch.fetchedAt)) / 60000);
-        for (const cat of FETCH_CATS) {
-          STATE.categoryCache[cat.id] = (prefetch.categories[cat.id] || []).slice(0, TOP_PER_CATEGORY);
-        }
-        showToast(`Loaded pre-fetched data for ${prefetch.region || 'your region'} · cached ${cacheAge}m ago`, 'success');
-
-      } else {
-        // No API keys, no cache — fallback to demo data
-        incrementCall();
-        updateCallsBadge(getTodayCalls());
-        for (const cat of FETCH_CATS) {
-          STATE.categoryCache[cat.id] = generateDemoVideos(TOP_PER_CATEGORY, cat.id, cat.name);
-        }
-        showToast('Demo data loaded — admin can pre-fetch real data from the admin panel', 'info');
+      } catch (catErr) {
+        // One category failed — keep others, log silently
+        STATE.categoryCache[cat.id] = [];
+        console.warn(`Category ${cat.id} failed:`, catErr.message);
       }
     }
 
-    // Flatten all videos (deduplicated by id) for charts/channels
+    // Build flat deduplicated video list for charts/channels views
     const seen = new Set();
     STATE.videos = [];
     for (const vids of Object.values(STATE.categoryCache)) {
@@ -861,40 +866,62 @@ async function loadTrending(forceRefresh = false) {
       }
     }
 
-    document.getElementById('trendingCount').textContent = STATE.categoryCache['']?.length || STATE.videos.length;
+    const totalLoaded = STATE.categoryCache['']?.length || 0;
+    document.getElementById('trendingCount').textContent = totalLoaded;
+
+    const regionObj = REGIONS.find(r => r.code === STATE.region);
+    showToast(`✓ Loaded trending for ${regionObj?.flag || ''} ${regionObj?.name || STATE.region}`, 'success');
     renderView();
 
-  } catch(err) {
-    showToast('Failed to load: ' + err.message, 'error');
-    // Fallback demo on error
-    for (const cat of FETCH_CATS) {
-      STATE.categoryCache[cat.id] = generateDemoVideos(TOP_PER_CATEGORY, cat.id, cat.name);
-    }
-    STATE.videos = STATE.categoryCache[''] || [];
-    renderView();
+  } catch (err) {
+    showToast('Failed to load: ' + (err.message || 'Unknown error'), 'error');
+    renderView(); // render empty state
   } finally {
     STATE.loading = false;
-    if (btn) { btn.classList.remove('loading'); document.getElementById('refreshIcon').textContent = '↺'; }
+    if (btn) {
+      btn.disabled = false;
+      btn.classList.remove('loading');
+      document.getElementById('refreshIcon').textContent = '↺';
+    }
+    checkRateLimit(false); // re-check limit to disable button if now at 3
   }
 }
 
+function showFetchingState() {
+  const content = document.getElementById('mainContent');
+  if (!content) return;
+  content.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;gap:20px;">
+      <div style="width:52px;height:52px;border:3px solid var(--border);border-top-color:var(--red);border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+      <div style="font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:2px;">FETCHING LIVE DATA...</div>
+      <div style="font-size:11px;color:#444;text-align:center;">Pulling top ${TOP_PER_CATEGORY} videos across ${FETCH_CATS.length} categories<br>from YouTube Data API for <strong style="color:var(--text);">${STATE.region}</strong></div>
+    </div>
+    <style>@keyframes spin{to{transform:rotate(360deg);}}</style>
+  `;
+}
+
 function mapVideo(item, i) {
+  const sn   = item.snippet       || {};
+  const st   = item.statistics    || {};
+  const cd   = item.contentDetails|| {};
+  const tn   = sn.thumbnails      || {};
+
+  // Pick highest-quality thumbnail available
+  const thumb = (tn.maxres || tn.standard || tn.high || tn.medium || tn.default || {}).url || '';
+
   return {
     id:          item.id,
-    title:       item.snippet.title,
-    channel:     item.snippet.channelTitle,
-    channelId:   item.snippet.channelId,
-    thumbnail:   item.snippet.thumbnails.maxres?.url
-                 || item.snippet.thumbnails.high?.url
-                 || item.snippet.thumbnails.medium?.url,
-    views:       parseInt(item.statistics.viewCount  || 0),
-    likes:       parseInt(item.statistics.likeCount  || 0),
-    comments:    parseInt(item.statistics.commentCount || 0),
-    duration:    formatDuration(item.contentDetails.duration),
-    durationSec: parseDurationSec(item.contentDetails.duration),
-    categoryId:  item.snippet.categoryId,
-    publishedAt: item.snippet.publishedAt,
-    description: (item.snippet.description || '').substring(0, 200),
+    title:       sn.title        || '(no title)',
+    channel:     sn.channelTitle || '',
+    channelId:   sn.channelId    || '',
+    thumbnail:   thumb,
+    views:       parseInt(st.viewCount    || 0),
+    likes:       parseInt(st.likeCount    || 0),
+    comments:    parseInt(st.commentCount || 0),
+    duration:    formatDuration(cd.duration),
+    durationSec: parseDurationSec(cd.duration),
+    categoryId:  sn.categoryId   || '',
+    publishedAt: sn.publishedAt  || '',
     url:         `https://www.youtube.com/watch?v=${item.id}`,
     rank:        i + 1,
   };
@@ -940,380 +967,6 @@ function timeSince(dateStr) {
 }
 
 // ═══════════════════════════════════════════════
-// DEMO DATA — Real YouTube video IDs per category
-// Thumbnails: https://img.youtube.com/vi/{ID}/hqdefault.jpg
-// Links:      https://www.youtube.com/watch?v={ID}
-// ═══════════════════════════════════════════════
-const REAL_VIDEOS = {
-  // Overall / Viral
-  '': [
-    { id:'dQw4w9WgXcQ', title:'Rick Astley - Never Gonna Give You Up (Official Video)', channel:'Rick Astley', views:1500000000, likes:16000000, dur:'3:33', durSec:213 },
-    { id:'9bZkp7q19f0', title:'PSY - GANGNAM STYLE(강남스타일) M/V', channel:'officialpsy', views:5200000000, likes:24000000, dur:'4:13', durSec:253 },
-    { id:'kJQP7kiw5Fk', title:'Luis Fonsi - Despacito ft. Daddy Yankee', channel:'LuisFonsiVEVO', views:8300000000, likes:50000000, dur:'4:42', durSec:282 },
-    { id:'fJ9rUzIMcZQ', title:'Queen – Bohemian Rhapsody (Official Video)', channel:'Queen Official', views:1800000000, likes:11000000, dur:'5:55', durSec:355 },
-    { id:'JGwWNGJdvx8', title:'Ed Sheeran - Shape of You (Official Music Video)', channel:'Ed Sheeran', views:6000000000, likes:30000000, dur:'4:24', durSec:264 },
-    { id:'ru0K8uYEZWw', title:'MrBeast - I Spent 50 Hours Buried Alive', channel:'MrBeast', views:280000000, likes:9000000, dur:'14:25', durSec:865 },
-    { id:'OPf0YbXqDm0', title:'Mark Ronson - Uptown Funk ft. Bruno Mars', channel:'MarkRonsonVEVO', views:4900000000, likes:26000000, dur:'4:30', durSec:270 },
-    { id:'YQHsXMglC9A', title:'Adele - Hello (Official Music Video)', channel:'Adele', views:3300000000, likes:18000000, dur:'6:07', durSec:367 },
-    { id:'CevxZvSJLk8', title:'Katy Perry - Roar (Official)', channel:'KatyPerryVEVO', views:3700000000, likes:18000000, dur:'4:34', durSec:274 },
-    { id:'lp-EO5I60KA', title:'Wiz Khalifa - See You Again ft. Charlie Puth', channel:'WizKhalifaVEVO', views:6000000000, likes:32000000, dur:'3:57', durSec:237 },
-    { id:'7PCkvCPvDXk', title:'MrBeast - $1 vs $1,000,000 Hotel Room', channel:'MrBeast', views:190000000, likes:8000000, dur:'17:52', durSec:1072 },
-    { id:'HQmmM_qwG4k', title:'Ice Spice & Nicki Minaj - Barbie World', channel:'Nicki Minaj', views:350000000, likes:4500000, dur:'2:56', durSec:176 },
-    { id:'nfWlot6h_JM', title:'Taylor Swift - Shake It Off', channel:'TaylorSwiftVEVO', views:3700000000, likes:22000000, dur:'4:05', durSec:245 },
-    { id:'SlPhMPnQ58k', title:'Eminem - Without Me (Official Video)', channel:'EminemVEVO', views:900000000, likes:8000000, dur:'4:50', durSec:290 },
-    { id:'hT_nvWreIhg', title:'OneRepublic - Counting Stars', channel:'OneRepublicVEVO', views:3400000000, likes:18000000, dur:'4:17', durSec:257 },
-    { id:'YkgkThdzX-8', title:'Pink Floyd - Another Brick In The Wall', channel:'Pink Floyd', views:890000000, likes:5500000, dur:'3:59', durSec:239 },
-    { id:'2Vv-BfVoq4g', title:'Ed Sheeran - Perfect (Official Music Video)', channel:'Ed Sheeran', views:3500000000, likes:18000000, dur:'4:40', durSec:280 },
-    { id:'RgKAFK5djSk', title:'Wiz Khalifa - Black and Yellow (Official)', channel:'WizKhalifaVEVO', views:690000000, likes:3800000, dur:'3:43', durSec:223 },
-    { id:'0KSOMA3QBU0', title:'Speed Racer - Living Legends', channel:'MrBeast Gaming', views:120000000, likes:4000000, dur:'18:32', durSec:1112 },
-    { id:'92cwKCU8Z5c', title:'Pharrell Williams - Happy (Official Music Video)', channel:'Pharrell Williams', views:1100000000, likes:6000000, dur:'3:53', durSec:233 },
-  ],
-  // Sports (17)
-  '17': [
-    { id:'OaXvXLQcuqo', title:'Cristiano Ronaldo Top 10 Goals 2024', channel:'Goal', views:45000000, likes:1200000, dur:'8:42', durSec:522 },
-    { id:'mXTefaEMqGw', title:'NBA Best Plays Of The Week', channel:'NBA', views:12000000, likes:380000, dur:'7:15', durSec:435 },
-    { id:'LIU-8NU7XEY', title:'Neymar vs Messi vs Ronaldo - Best Skills 2024', channel:'SkillTwins', views:34000000, likes:870000, dur:'10:20', durSec:620 },
-    { id:'UvGRmMQC7UA', title:'Greatest NFL Plays of All Time', channel:'NFL', views:28000000, likes:600000, dur:'12:44', durSec:764 },
-    { id:'GkZ5OqNmfMk', title:'LeBron James - King of the Court Highlights', channel:'House of Highlights', views:22000000, likes:540000, dur:'9:33', durSec:573 },
-    { id:'iECkfxdq1Do', title:'Lionel Messi - World Class 2024 Compilation', channel:'Goals Land', views:18000000, likes:420000, dur:'11:05', durSec:665 },
-    { id:'iDu9A_HZ0zk', title:'Roger Federer - Greatest Shots Ever', channel:'ATP Tour', views:15000000, likes:310000, dur:'6:48', durSec:408 },
-    { id:'r_UJBNp1BJo', title:'UFC Best KOs and Submissions 2024', channel:'UFC', views:30000000, likes:780000, dur:'8:56', durSec:536 },
-    { id:'WPp9PPJRL0c', title:'100m World Record - Noah Lyles Tokyo', channel:'World Athletics', views:9000000, likes:210000, dur:'2:14', durSec:134 },
-    { id:'TsS-BOlMC_I', title:'Formula 1 - Most Insane Overtakes 2024', channel:'Formula 1', views:17000000, likes:430000, dur:'9:12', durSec:552 },
-    { id:'CJfVnougFiI', title:'Simone Biles - Olympic Gold Highlights', channel:'Olympics', views:14000000, likes:330000, dur:'5:47', durSec:347 },
-    { id:'kYnHWAoFPrQ', title:'NBA Finals Game 7 - Best Moments', channel:'NBA', views:25000000, likes:590000, dur:'13:22', durSec:802 },
-    { id:'VdiUANTpOkE', title:'Shohei Ohtani - Best At Bats 2024', channel:'MLB', views:11000000, likes:270000, dur:'7:38', durSec:458 },
-    { id:'5PIiKnWBPAI', title:'Erling Haaland - 50 Goals Season Compilation', channel:'Premier League', views:20000000, likes:510000, dur:'10:15', durSec:615 },
-    { id:'yq64fNXmEcY', title:'Tyson Fury vs Oleksandr Usyk - Fight Highlights', channel:'ESPN Boxing', views:16000000, likes:390000, dur:'6:30', durSec:390 },
-    { id:'dMH0bHeiRNg', title:'Steph Curry - All 50-Point Games', channel:'House of Highlights', views:13000000, likes:320000, dur:'8:07', durSec:487 },
-    { id:'YCuBnHPeqiE', title:'Paris Olympics 2024 - Top Moments', channel:'Olympics', views:19000000, likes:460000, dur:'12:05', durSec:725 },
-    { id:'rDVHuOPMgD0', title:'Tiger Woods - Greatest Golf Shots', channel:'PGA Tour', views:8000000, likes:195000, dur:'7:55', durSec:475 },
-    { id:'5t1vTLU7s40', title:'Women World Cup 2024 Best Goals', channel:'FIFA', views:14000000, likes:350000, dur:'9:40', durSec:580 },
-    { id:'J5_5V6mbnlY', title:'Anthony Joshua Comeback KO Highlights', channel:'Sky Sports Boxing', views:12000000, likes:290000, dur:'5:19', durSec:319 },
-  ],
-  // Music (10)
-  '10': [
-    { id:'kTJczUoc26U', title:'Taylor Swift - Anti-Hero (Official Music Video)', channel:'Taylor Swift', views:800000000, likes:7000000, dur:'3:21', durSec:201 },
-    { id:'H7HmzwI67ec', title:'Billie Eilish - What Was I Made For?', channel:'Billie Eilish', views:620000000, likes:5500000, dur:'3:42', durSec:222 },
-    { id:'DyDfgMOUjCI', title:'SZA - Kill Bill (Official Video)', channel:'SZA', views:290000000, likes:3200000, dur:'2:33', durSec:153 },
-    { id:'gKT9xSFf8os', title:'Miley Cyrus - Flowers (Official Video)', channel:'Miley Cyrus', views:1100000000, likes:8200000, dur:'3:33', durSec:213 },
-    { id:'FQlAEiCb8m0', title:'Doja Cat - Paint The Town Red (Official Video)', channel:'Doja Cat', views:330000000, likes:3800000, dur:'3:14', durSec:194 },
-    { id:'IaYUUGdBGAY', title:'PinkPantheress - Boy\'s a liar Pt. 2 ft. Ice Spice', channel:'PinkPantheress', views:280000000, likes:2700000, dur:'2:24', durSec:144 },
-    { id:'k6rkxfEFqt4', title:'Olivia Rodrigo - vampire (Official Video)', channel:'Olivia Rodrigo', views:400000000, likes:4100000, dur:'3:39', durSec:219 },
-    { id:'v_e0LBwqLZ4', title:'Dua Lipa - Levitating Featuring DaBaby', channel:'Dua Lipa', views:900000000, likes:7600000, dur:'3:23', durSec:203 },
-    { id:'JjIfYLUqYa4', title:'The Weeknd - Blinding Lights (Official Video)', channel:'The Weeknd', views:1200000000, likes:10000000, dur:'3:22', durSec:202 },
-    { id:'7wtfhZwyrcc', title:'Rema, Selena Gomez - Calm Down (Official Video)', channel:'Rema', views:700000000, likes:5200000, dur:'3:59', durSec:239 },
-    { id:'bCuhuePlP4o', title:'Post Malone, Swae Lee - Sunflower', channel:'Post Malone', views:1100000000, likes:8800000, dur:'2:38', durSec:158 },
-    { id:'SlPhMPnQ58k', title:'Eminem - Rap God (Explicit)', channel:'EminemVEVO', views:700000000, likes:6500000, dur:'6:04', durSec:364 },
-    { id:'nfWlot6h_JM', title:'Taylor Swift - Shake It Off (Official HD Video)', channel:'TaylorSwiftVEVO', views:3700000000, likes:22000000, dur:'4:05', durSec:245 },
-    { id:'OPf0YbXqDm0', title:'Bruno Mars, Anderson .Paak - Leave The Door Open', channel:'BrunoMarsVEVO', views:550000000, likes:4700000, dur:'4:02', durSec:242 },
-    { id:'ME2l2VE2vHo', title:'Lil Nas X - Industry Baby ft. Jack Harlow', channel:'LilNasXVEVO', views:600000000, likes:5500000, dur:'3:32', durSec:212 },
-    { id:'3AtDnEC4zak', title:'NewJeans - Hype Boy (Official MV)', channel:'HYBE LABELS', views:410000000, likes:4000000, dur:'3:39', durSec:219 },
-    { id:'4NRXx6poa_A', title:'BLACKPINK - Pink Venom (Official Music Video)', channel:'BLACKPINK', views:580000000, likes:5400000, dur:'3:29', durSec:209 },
-    { id:'mXvmSaE0JXA', title:'Doja Cat - Say So (Official Video)', channel:'Doja Cat', views:700000000, likes:5900000, dur:'3:57', durSec:237 },
-    { id:'JRfuAukYTKg', title:'Harry Styles - As It Was (Official Video)', channel:'Harry Styles', views:900000000, likes:7400000, dur:'2:37', durSec:157 },
-    { id:'jFGKJBPFdUA', title:'Bad Bunny - Me Porto Bonito', channel:'Bad Bunny', views:870000000, likes:6800000, dur:'2:52', durSec:172 },
-  ],
-  // Gaming (20)
-  '20': [
-    { id:'m9FIU8MbdnE', title:'GTA 6 - Official Trailer 2', channel:'Rockstar Games', views:180000000, likes:6500000, dur:'1:31', durSec:91 },
-    { id:'FkklG9_UMqg', title:'Minecraft - Every Update Is Insane', channel:'Dream', views:45000000, likes:1800000, dur:'22:14', durSec:1334 },
-    { id:'xvFZjo5PgG0', title:'The Most Satisfying Minecraft Build Ever', channel:'MrBeast Gaming', views:60000000, likes:2100000, dur:'18:44', durSec:1124 },
-    { id:'CBpAFR4ZIBY', title:'Elden Ring - All Boss Fights No Hit', channel:'Let Me Solo Her', views:28000000, likes:980000, dur:'1:12:33', durSec:4353 },
-    { id:'CiOZcEJAOFo', title:'Fortnite Season 5 - Everything New', channel:'SypherPK', views:22000000, likes:760000, dur:'24:08', durSec:1448 },
-    { id:'2SqeHjIHbZo', title:'Pokémon Scarlet - Full Pokedex Complete', channel:'TheGamer', views:15000000, likes:490000, dur:'31:20', durSec:1880 },
-    { id:'kAV5bj3Di9E', title:'Ninja reacts to MrBeast Gaming', channel:'Ninja', views:19000000, likes:650000, dur:'16:55', durSec:1015 },
-    { id:'uUCUkBFBF_s', title:'Baldurs Gate 3 - Funniest Moments', channel:'Jacksepticeye', views:17000000, likes:580000, dur:'29:44', durSec:1784 },
-    { id:'1ZEG1xMeJ1Q', title:'Minecraft Speedrun World Record 1.16', channel:'TechnoGamerzOfficial', views:30000000, likes:1100000, dur:'14:56', durSec:896 },
-    { id:'3csuNr7TFrA', title:'Call of Duty - Best Warzone Moments 2024', channel:'Drift0r', views:11000000, likes:370000, dur:'18:23', durSec:1103 },
-    { id:'8jPQjjsBbIc', title:'League of Legends - Worlds Finals Highlights', channel:'League of Legends', views:25000000, likes:890000, dur:'20:15', durSec:1215 },
-    { id:'YHkh9N_MFLI', title:'Hogwarts Legacy - 100% Completion Guide', channel:'WoW Quests', views:13000000, likes:420000, dur:'45:12', durSec:2712 },
-    { id:'Ix62HH3xSZM', title:'Valheim - From Zero to Endgame', channel:'IGN', views:9000000, likes:290000, dur:'33:44', durSec:2024 },
-    { id:'wXiRl84XPpM', title:'Markiplier Plays Five Nights at Freddys Security Breach', channel:'Markiplier', views:16000000, likes:550000, dur:'52:31', durSec:3151 },
-    { id:'nU-IaM0WQMU', title:'Among Us - When 100 Players Play Together', channel:'SSundee', views:20000000, likes:700000, dur:'17:42', durSec:1062 },
-    { id:'lVkn4GoZjhA', title:'Apex Legends Season 20 - New Legend Gameplay', channel:'Shroud', views:12000000, likes:400000, dur:'21:58', durSec:1318 },
-    { id:'pZyRMXBFAb0', title:'Red Dead Redemption 2 - Perfect Ending', channel:'MKIceAndFire', views:14000000, likes:460000, dur:'28:17', durSec:1697 },
-    { id:'VUvTTbw7UEk', title:'Stardew Valley 1.6 Update - Everything New', channel:'ConcernedApe', views:8000000, likes:260000, dur:'12:30', durSec:750 },
-    { id:'dJv2EZY5Bkk', title:'Roblox Games That Actually Slap', channel:'KreekCraft', views:18000000, likes:630000, dur:'15:44', durSec:944 },
-    { id:'8_GKrMOP0IQ', title:'Spider-Man 2 PS5 - Ultimate Review', channel:'IGN', views:10000000, likes:330000, dur:'19:05', durSec:1145 },
-  ],
-  // Science & Tech (28)
-  '28': [
-    { id:'aircAruvnKk', title:'But what is a neural network? | Deep learning chapter 1', channel:'3Blue1Brown', views:17000000, likes:500000, dur:'19:13', durSec:1153 },
-    { id:'cdiD-9ezbeo', title:'Google Gemini Demo: Hands-On With Our Largest AI Model', channel:'Google', views:22000000, likes:450000, dur:'6:36', durSec:396 },
-    { id:'WXuK6gekU1Y', title:'AlphaFold 3: A Major Leap for Biology', channel:'DeepMind', views:8000000, likes:240000, dur:'11:28', durSec:688 },
-    { id:'j2KANeSlROM', title:'James Webb Space Telescope - Best Images 2024', channel:'NASA Goddard', views:12000000, likes:380000, dur:'14:52', durSec:892 },
-    { id:'hc0ZDaAZQT0', title:'The Story of Quantum Mechanics (Full Documentary)', channel:'PBS Space Time', views:6500000, likes:190000, dur:'31:45', durSec:1905 },
-    { id:'r2eZ7lhqzNE', title:'Why OpenAI GPT-4o Is A Huge Deal', channel:'Fireship', views:9000000, likes:280000, dur:'11:03', durSec:663 },
-    { id:'ZSt9tm3RoUU', title:'Tesla Optimus Robot - What We Know So Far', channel:'MKBHD', views:14000000, likes:420000, dur:'16:20', durSec:980 },
-    { id:'LqbZpur38nw', title:'Vision Pro vs Meta Quest 3 - Full Comparison', channel:'Linus Tech Tips', views:11000000, likes:320000, dur:'22:44', durSec:1364 },
-    { id:'nFTQ7kHQWtc', title:'Explaining The Full Self-Driving Controversy', channel:'Veritasium', views:8500000, likes:250000, dur:'25:18', durSec:1518 },
-    { id:'OzT8P0lkakM', title:'Quantum Computers Explained – Limits of Human Technology', channel:'Kurzgesagt', views:21000000, likes:640000, dur:'7:35', durSec:455 },
-    { id:'8hly31xKli0', title:'Why Nuclear Energy Is The Only Solution', channel:'Real Engineering', views:7000000, likes:210000, dur:'19:44', durSec:1184 },
-    { id:'NbuUW9i-mHs', title:'This New Battery Changes Everything', channel:'Mark Rober', views:13000000, likes:400000, dur:'18:30', durSec:1110 },
-    { id:'Xc4xYacTu-E', title:'Inside The Apollo Guidance Computer', channel:'Scott Manley', views:4500000, likes:140000, dur:'22:15', durSec:1335 },
-    { id:'Ks-_Mh1QhMc', title:'The Science of Thinking', channel:'Vsauce', views:19000000, likes:570000, dur:'15:09', durSec:909 },
-    { id:'6jQ7y_qQYCo', title:'Starship Flight 4 - Full Broadcast', channel:'SpaceX', views:35000000, likes:1100000, dur:'1:45:00', durSec:6300 },
-    { id:'G_LJT8lU2f4', title:'iPhone 16 - 20 Things You Didn\'t Know', channel:'MKBHD', views:10000000, likes:310000, dur:'17:22', durSec:1042 },
-    { id:'x_MEias1Qb4', title:'The Mind-Bending Physics of Time', channel:'PBS Space Time', views:5000000, likes:155000, dur:'24:30', durSec:1470 },
-    { id:'IIiMsVpnKpo', title:'AI Will Change Education Forever', channel:'TED', views:7500000, likes:230000, dur:'14:55', durSec:895 },
-    { id:'bKgf5PaBzyg', title:'We Built The Worlds Fastest Computer', channel:'SmarterEveryDay', views:9500000, likes:290000, dur:'21:08', durSec:1268 },
-    { id:'FpCrY7x5nEE', title:'CRISPR: The Future of Genetic Engineering', channel:'Kurzgesagt', views:16000000, likes:480000, dur:'8:10', durSec:490 },
-  ],
-  // Entertainment (24)
-  '24': [
-    { id:'VgqUyFCgBIU', title:'Avengers: Secret Wars - Official First Look', channel:'Marvel Entertainment', views:50000000, likes:1800000, dur:'2:15', durSec:135 },
-    { id:'8YjFbMbqXjg', title:'The Boys Season 4 - Recap Before You Watch', channel:'Prime Video', views:15000000, likes:490000, dur:'18:30', durSec:1110 },
-    { id:'tg5RFeSfBM4', title:'Breaking Bad - Every Foreshadowing Explained', channel:'IGN', views:12000000, likes:380000, dur:'22:15', durSec:1335 },
-    { id:'FxKtZmQgxrI', title:'Severance Season 2 - Full Breakdown', channel:'Apple TV+', views:9000000, likes:270000, dur:'16:44', durSec:1004 },
-    { id:'jKCRfPyD8lY', title:'Oppenheimer - Oscar Night Behind The Scenes', channel:'Universal Pictures', views:18000000, likes:560000, dur:'8:22', durSec:502 },
-    { id:'Z1TUUEY-V2M', title:'Jimmy Fallon Best Moments 2024', channel:'The Tonight Show', views:7000000, likes:210000, dur:'14:05', durSec:845 },
-    { id:'b4zZ-a6YDIU', title:'The Last of Us Season 2 - Everything We Know', channel:'HBO', views:22000000, likes:680000, dur:'12:38', durSec:758 },
-    { id:'YMRCVfZDRBM', title:'Saturday Night Live Best Sketches 2024', channel:'Saturday Night Live', views:11000000, likes:340000, dur:'19:55', durSec:1195 },
-    { id:'LlpbgpMI8lA', title:'Beetlejuice Beetlejuice - Official Review', channel:'Rotten Tomatoes', views:8000000, likes:245000, dur:'7:45', durSec:465 },
-    { id:'r4dPBkLxzPY', title:'Deadpool and Wolverine - Easter Eggs Guide', channel:'Screen Junkies', views:14000000, likes:430000, dur:'20:14', durSec:1214 },
-    { id:'QJO3ROT-A4E', title:'Stranger Things S5 - First Trailer Breakdown', channel:'Netflix', views:30000000, likes:920000, dur:'3:15', durSec:195 },
-    { id:'r-LelHXGIxQ', title:'Game of Thrones All Seasons Ranked', channel:'WatchMojo', views:6500000, likes:195000, dur:'15:40', durSec:940 },
-    { id:'JiT0Hm8ONOI', title:'Wicked - Official Trailer #2', channel:'Universal Pictures', views:25000000, likes:780000, dur:'2:34', durSec:154 },
-    { id:'9L9SMuVsxis', title:'Conan O\'Brien - Best Late Night Moments', channel:'Team Coco', views:5500000, likes:165000, dur:'18:20', durSec:1100 },
-    { id:'xm3YgoEiEDc', title:'The Bear Season 3 - Review & Analysis', channel:'New Rockstars', views:7000000, likes:210000, dur:'21:42', durSec:1302 },
-    { id:'sSB3GzFEh9w', title:'Agatha All Along - Full Series Breakdown', channel:'Marvel Entertainment', views:16000000, likes:490000, dur:'11:30', durSec:690 },
-    { id:'bTQSzYKPt_s', title:'John Wick 5 - What We Know', channel:'FilmSpot Trailer', views:9000000, likes:275000, dur:'8:45', durSec:525 },
-    { id:'eM9fKxMHuAM', title:'Best Comedy Movies of 2024 - Ranked', channel:'Chris Stuckmann', views:4000000, likes:120000, dur:'17:05', durSec:1025 },
-    { id:'0hR6MwNRSdw', title:'Joker Folie a Deux - Honest Review', channel:'Jeremy Jahns', views:11000000, likes:340000, dur:'9:22', durSec:562 },
-    { id:'OJBa0PqRqCk', title:'Emilia Perez - Oscar Winner Analysis', channel:'Every Frame a Painting', views:6000000, likes:180000, dur:'14:15', durSec:855 },
-  ],
-  // News & Politics (25)
-  '25': [
-    { id:'XRZPkCKiGr4', title:'2024 US Election Night Coverage Highlights', channel:'CNN', views:40000000, likes:580000, dur:'12:30', durSec:750 },
-    { id:'bMKkOFGKwbA', title:'Middle East Crisis Explained in 10 Minutes', channel:'Vox', views:18000000, likes:420000, dur:'10:22', durSec:622 },
-    { id:'pMiVZmQ-3G4', title:'Why Are Gas Prices So High? Explained', channel:'CNBC', views:11000000, likes:260000, dur:'8:45', durSec:525 },
-    { id:'U6xJs46LCHA', title:'Ukraine War 2024 - Full Year in Review', channel:'DW News', views:22000000, likes:390000, dur:'18:15', durSec:1095 },
-    { id:'JDpxfFJgJSk', title:'The Real Story Behind Gaza - Ground Report', channel:'Al Jazeera English', views:35000000, likes:650000, dur:'22:40', durSec:1360 },
-    { id:'w7exOcmTXpU', title:'How AI Is Changing Democracy', channel:'The Guardian', views:8000000, likes:190000, dur:'14:50', durSec:890 },
-    { id:'8ZkgkI2OtNQ', title:'Trump vs Harris - Full Presidential Debate', channel:'ABC News', views:60000000, likes:900000, dur:'1:35:22', durSec:5722 },
-    { id:'2AXugFCYv8Y', title:'Climate Change: What Happened in 2024', channel:'PBS NewsHour', views:7000000, likes:165000, dur:'16:30', durSec:990 },
-    { id:'pQaIFSI_N-g', title:'The World Economy in 2024 - Full Report', channel:'Bloomberg', views:9000000, likes:210000, dur:'20:15', durSec:1215 },
-    { id:'WBt2ICUIUVQ', title:'Inside China\'s AI Race Against America', channel:'Wired', views:13000000, likes:300000, dur:'15:44', durSec:944 },
-    { id:'2FDp3bXPRbk', title:'North Korea\'s Secret Weapons Revealed', channel:'Vice News', views:16000000, likes:370000, dur:'18:22', durSec:1102 },
-    { id:'iNWGD5G2oHI', title:'Record Heatwaves - Scientists Respond', channel:'BBC News', views:10000000, likes:235000, dur:'12:08', durSec:728 },
-    { id:'QJO3ROT-A4E', title:'India Election 2024 - What It Means', channel:'The Economist', views:12000000, likes:280000, dur:'14:55', durSec:895 },
-    { id:'Hf1T5Pj-vos', title:'Haiti Crisis Explained', channel:'Vice News', views:8500000, likes:200000, dur:'11:20', durSec:680 },
-    { id:'y9K4-ztYUzU', title:'Global Immigration Crisis - Full Report', channel:'DW Documentary', views:14000000, likes:325000, dur:'24:30', durSec:1470 },
-    { id:'nXHhm5kkIEg', title:'OpenAI vs Elon Musk - Full Story', channel:'Tech Insider', views:11000000, likes:255000, dur:'13:40', durSec:820 },
-    { id:'zvdKeGNrFfc', title:'Dollar Collapse Warning - Expert Panel', channel:'Bloomberg', views:7500000, likes:175000, dur:'19:15', durSec:1155 },
-    { id:'PIqknFJMnl4', title:'EU vs Big Tech - Billion Dollar Fines', channel:'Reuters', views:6000000, likes:140000, dur:'10:30', durSec:630 },
-    { id:'7A5-P7A7xoE', title:'Taiwan Strait Tensions Explained', channel:'Foreign Policy', views:9500000, likes:220000, dur:'16:44', durSec:1004 },
-    { id:'DFgRfONOJ2I', title:'COP29 Climate Summit - Key Takeaways', channel:'Associated Press', views:5000000, likes:115000, dur:'11:50', durSec:710 },
-  ],
-  // Education (27)
-  '27': [
-    { id:'aircAruvnKk', title:'But what is a Neural Network?', channel:'3Blue1Brown', views:17000000, likes:500000, dur:'19:13', durSec:1153 },
-    { id:'r-LelHXGIxQ', title:'How to Learn Anything Faster', channel:'Thomas Frank', views:9000000, likes:270000, dur:'12:30', durSec:750 },
-    { id:'iKqBmkYGFIQ', title:'The Complete Python Course For Beginners', channel:'Traversy Media', views:14000000, likes:420000, dur:'1:08:22', durSec:4102 },
-    { id:'ysEN5RaKOlA', title:'How To Study Effectively - The Science', channel:'Mike and Matty', views:7500000, likes:225000, dur:'15:44', durSec:944 },
-    { id:'GNcFjFmqEc8', title:'History of the Entire World I Guess', channel:'bill wurtz', views:28000000, likes:850000, dur:'19:27', durSec:1167 },
-    { id:'Xjd6bPWnWFs', title:'Reading a Book Every Day for 1 Year', channel:'Better Ideas', views:5000000, likes:150000, dur:'10:22', durSec:622 },
-    { id:'8CGZnGNRNik', title:'How To Remember Everything You Learn', channel:'Thomas Frank', views:11000000, likes:330000, dur:'11:45', durSec:705 },
-    { id:'J---aiyznGQ', title:'Feynman Technique - Learn Anything in 4 Steps', channel:'Freedom in Thought', views:4500000, likes:135000, dur:'7:12', durSec:432 },
-    { id:'2oiglHoHpIU', title:'Harvard\'s FREE Online Courses 2024', channel:'Nas Daily', views:8000000, likes:240000, dur:'9:55', durSec:595 },
-    { id:'NhGFzFj8YxQ', title:'The Map of Mathematics', channel:'Domain of Science', views:15000000, likes:450000, dur:'11:06', durSec:666 },
-    { id:'D_Vg4uyYwEk', title:'How To Think Like Sherlock Holmes', channel:'After Skool', views:6000000, likes:180000, dur:'13:44', durSec:824 },
-    { id:'mj1O0p2tkAo', title:'Why Most Diets Fail - The Science', channel:'Kurzgesagt', views:12000000, likes:360000, dur:'9:22', durSec:562 },
-    { id:'J25RKCikFQ4', title:'Ancient Rome - Full Civilization History', channel:'Overly Sarcastic Productions', views:7000000, likes:210000, dur:'38:14', durSec:2294 },
-    { id:'XLzA1UbW0ao', title:'The Complete Guide to Habit Formation', channel:'Andrew Huberman', views:10000000, likes:300000, dur:'52:30', durSec:3150 },
-    { id:'OFEvNhYJEBE', title:'Why You Should Learn Japanese', channel:'Abroad in Japan', views:5500000, likes:165000, dur:'14:05', durSec:845 },
-    { id:'TZIQMPHy0Ws', title:'Best Free Resources to Learn to Code 2024', channel:'Fireship', views:8500000, likes:255000, dur:'7:44', durSec:464 },
-    { id:'uoFvUDCf0Nk', title:'How Einstein Thought - A Masterclass', channel:'Pursuit of Wonder', views:6000000, likes:180000, dur:'21:15', durSec:1275 },
-    { id:'V2ygHi7LXPM', title:'The Art of Saying No - Psychology', channel:'Better Ideas', views:4000000, likes:120000, dur:'11:30', durSec:690 },
-    { id:'p3q5zWCw8J4', title:'Calculus - The Most Useful Math', channel:'3Blue1Brown', views:9000000, likes:270000, dur:'23:40', durSec:1420 },
-    { id:'T98EPEiK6hM', title:'Philosophy of Time Explained Simply', channel:'PBS Idea Channel', views:5000000, likes:150000, dur:'16:22', durSec:982 },
-  ],
-  // People & Blogs (22)
-  '22': [
-    { id:'Gn7CGMoiCDY', title:'I Quit My $500k Job to Travel the World', channel:'Yes Theory', views:15000000, likes:450000, dur:'18:30', durSec:1110 },
-    { id:'LH1rewc9WEY', title:'Living Alone in Japan for 30 Days', channel:'Abroad in Japan', views:12000000, likes:360000, dur:'22:15', durSec:1335 },
-    { id:'N8kXuLUCJ4E', title:'How I Made My First Million at 25', channel:'Graham Stephan', views:9000000, likes:270000, dur:'16:44', durSec:1004 },
-    { id:'Ew3OhpAvQAk', title:'My Honest Opinion After 1 Year on YouTube', channel:'Matt D\'Avella', views:7000000, likes:210000, dur:'14:05', durSec:845 },
-    { id:'TQSvVBRsF6Q', title:'Surviving 24 Hours in the Sahara Desert', channel:'Yes Theory', views:20000000, likes:600000, dur:'19:22', durSec:1162 },
-    { id:'Lf1opiaTvQE', title:'Day in My Life as a Software Engineer', channel:'Mayuko', views:6000000, likes:180000, dur:'12:30', durSec:750 },
-    { id:'uVvGQye7xpA', title:'I Tried Every Productivity Method for 30 Days', channel:'Better Ideas', views:8000000, likes:240000, dur:'15:14', durSec:914 },
-    { id:'vQEfUkvVwYQ', title:'What $1 Gets You Around the World', channel:'Kara and Nate', views:11000000, likes:330000, dur:'17:44', durSec:1064 },
-    { id:'JTxsNm9IdYU', title:'My Morning Routine as a Full-Time Creator', channel:'Emma Chamberlain', views:14000000, likes:420000, dur:'13:55', durSec:835 },
-    { id:'s0mhFXvQ2dI', title:'Why I Left Silicon Valley', channel:'Fireship', views:5000000, likes:150000, dur:'9:30', durSec:570 },
-    { id:'B7m8mUZiMBg', title:'Living in a $500/Month Apartment in Tokyo', channel:'Paolo fromTOKYO', views:10000000, likes:300000, dur:'20:15', durSec:1215 },
-    { id:'U6xJs46LCHA', title:'Testing Every "Life Hack" for a Week', channel:'Ryan Trahan', views:13000000, likes:390000, dur:'16:30', durSec:990 },
-    { id:'VQWOygWS6P4', title:'24 Hours Living Like a Billionaire', channel:'MrBeast', views:80000000, likes:2400000, dur:'21:44', durSec:1304 },
-    { id:'t-WGpUxjGrM', title:'Honest Job Review: Working at Google', channel:'Mayuko', views:4500000, likes:135000, dur:'11:20', durSec:680 },
-    { id:'zKggPzHf6wQ', title:'I Moved to a Foreign Country Knowing No One', channel:'Yes Theory', views:9500000, likes:285000, dur:'18:55', durSec:1135 },
-    { id:'N9MsBXlcAi0', title:'Why I Wake Up at 4am Every Day', channel:'Robin Sharma', views:7500000, likes:225000, dur:'14:44', durSec:884 },
-    { id:'TkwXa7Cvat8', title:'What Quitting Social Media Taught Me', channel:'Matt D\'Avella', views:6000000, likes:180000, dur:'12:08', durSec:728 },
-    { id:'7VF5K-j8czw', title:'My $0 to $10,000 Journey - Full Story', channel:'Ali Abdaal', views:8000000, likes:240000, dur:'23:30', durSec:1410 },
-    { id:'WcAMUCTtMr4', title:'Trying to Survive on $1 a Day', channel:'Ryan Trahan', views:25000000, likes:750000, dur:'15:22', durSec:922 },
-    { id:'KbYSOSEMDZ0', title:'My Honest Creator Burnout Story', channel:'Peter McKinnon', views:5500000, likes:165000, dur:'16:44', durSec:1004 },
-  ],
-  // Comedy (23)
-  '23': [
-    { id:'fBd7cHIFx50', title:'Dude Perfect - Stereotypes: School Edition', channel:'Dude Perfect', views:85000000, likes:2500000, dur:'8:44', durSec:524 },
-    { id:'_xrOoS_DLnQ', title:'SNL Cold Open - 2024 Election Special', channel:'Saturday Night Live', views:30000000, likes:900000, dur:'9:15', durSec:555 },
-    { id:'AB3-M3tHj20', title:'Try Not To Laugh Challenge #120', channel:'Smosh', views:18000000, likes:540000, dur:'15:22', durSec:922 },
-    { id:'SuCKJ7bBbkU', title:'Flight of the Conchords - Funniest Moments', channel:'Flight of the Conchords', views:8000000, likes:240000, dur:'11:30', durSec:690 },
-    { id:'vlQCMFSIBEM', title:'John Mulaney - Best Stand-Up Bits', channel:'Netflix Is A Joke', views:14000000, likes:420000, dur:'12:44', durSec:764 },
-    { id:'bmpFZFab9p8', title:'The Greatest Prank of All Time - MrBeast', channel:'MrBeast', views:100000000, likes:3000000, dur:'13:55', durSec:835 },
-    { id:'EoY5fB9pMXU', title:'Rowan Atkinson - Mr Bean Compilation', channel:'Mr Bean Official', views:60000000, likes:1800000, dur:'32:15', durSec:1935 },
-    { id:'9hiZEFdCFMQ', title:'Dave Chappelle - Netflix Special Highlights', channel:'Netflix Is A Joke', views:12000000, likes:360000, dur:'8:22', durSec:502 },
-    { id:'Zi_XLOBDo_Y', title:'Autocomplete Interview - Jimmy Fallon', channel:'The Tonight Show', views:7000000, likes:210000, dur:'6:44', durSec:404 },
-    { id:'9xfS9cPMIRE', title:'Conan Without Borders Japan - Best Moments', channel:'Team Coco', views:5500000, likes:165000, dur:'14:05', durSec:845 },
-    { id:'4fndeDfaWCg', title:'Borat Subsequent Moviefilm - Funniest Scenes', channel:'Amazon Prime Video', views:9000000, likes:270000, dur:'10:30', durSec:630 },
-    { id:'OJBa0PqRqCk', title:'Hasan Minhaj - Best Patriot Act Segments', channel:'Netflix Is A Joke', views:11000000, likes:330000, dur:'18:44', durSec:1124 },
-    { id:'2JbT_2wA40M', title:'Friends - Top 50 Funniest Moments', channel:'Comedy Bites', views:22000000, likes:660000, dur:'24:15', durSec:1455 },
-    { id:'nrGejxGWFho', title:'Impractical Jokers - Most Embarrassing Punishments', channel:'truTV', views:16000000, likes:480000, dur:'21:30', durSec:1290 },
-    { id:'M5QGkBovStw', title:'Key and Peele Best Skits Ever', channel:'Comedy Central', views:20000000, likes:600000, dur:'18:55', durSec:1135 },
-    { id:'HFfCfIVMD3w', title:'Lilly Singh - Best Talk Show Moments', channel:'Lilly Singh', views:5000000, likes:150000, dur:'12:22', durSec:742 },
-    { id:'6JnGBs88sL4', title:'Ali Wong - Baby Cobra Best Bits', channel:'Netflix Is A Joke', views:8500000, likes:255000, dur:'9:44', durSec:584 },
-    { id:'W6DmHGYy_xk', title:'Epic Rap Battles of History - Best of 2024', channel:'ERB', views:13000000, likes:390000, dur:'14:30', durSec:870 },
-    { id:'HkWoSXBk7C4', title:'Vine Compilation - The Legends Live On', channel:'Vines', views:25000000, likes:750000, dur:'20:15', durSec:1215 },
-    { id:'tbSmirjbEZE', title:'Seinfeld - Top 10 Episodes Ranked', channel:'Netflix', views:7000000, likes:210000, dur:'16:44', durSec:1004 },
-  ],
-  // Film & Animation (1)
-  '1': [
-    { id:'VgqUyFCgBIU', title:'Avengers Secret Wars - Official Trailer', channel:'Marvel Entertainment', views:50000000, likes:1800000, dur:'2:15', durSec:135 },
-    { id:'JiT0Hm8ONOI', title:'Wicked - Official Trailer', channel:'Universal Pictures', views:25000000, likes:780000, dur:'2:34', durSec:154 },
-    { id:'TlPCd2MkwOQ', title:'Inside Out 2 - Final Trailer', channel:'Pixar', views:30000000, likes:950000, dur:'2:22', durSec:142 },
-    { id:'eOrNdBpGMv8', title:'Moana 2 - Official Teaser Trailer', channel:'Walt Disney Animation', views:35000000, likes:1100000, dur:'1:51', durSec:111 },
-    { id:'h0x8SjMcLFQ', title:'Deadpool and Wolverine - Official Trailer', channel:'Marvel Entertainment', views:65000000, likes:2200000, dur:'2:44', durSec:164 },
-    { id:'9RpvOHbKt0o', title:'Alien Romulus - Official Trailer', channel:'20th Century Studios', views:20000000, likes:630000, dur:'2:30', durSec:150 },
-    { id:'KkLsN1bqhpQ', title:'How Pixar Makes Their Movies - Full Documentary', channel:'Corridor Crew', views:8000000, likes:240000, dur:'28:44', durSec:1724 },
-    { id:'GGbpPB1HVIY', title:'The Wild Robot - Official Trailer', channel:'DreamWorks Animation', views:18000000, likes:560000, dur:'2:15', durSec:135 },
-    { id:'tg5RFeSfBM4', title:'Breaking Bad vs Better Call Saul - Ultimate Comparison', channel:'IGN', views:12000000, likes:380000, dur:'22:15', durSec:1335 },
-    { id:'pVzOp_XJ0As', title:'Short Film: Lost Connection', channel:'Film Riot', views:3000000, likes:90000, dur:'7:44', durSec:464 },
-    { id:'jR3AMdNTIRI', title:'Ghibli - Why Every Film Is a Masterpiece', channel:'Like Stories of Old', views:5500000, likes:165000, dur:'18:30', durSec:1110 },
-    { id:'ByXuk9QqQkk', title:'Dune Part 2 - Full Review and Analysis', channel:'CinemaTherapy', views:7000000, likes:210000, dur:'21:15', durSec:1275 },
-    { id:'0KFEzqrSqN4', title:'Every Disney Villain - Ranked', channel:'WatchMojo', views:9000000, likes:270000, dur:'16:44', durSec:1004 },
-    { id:'XcHO4vFoJUk', title:'Anora - Oscar Best Picture Breakdown', channel:'A24', views:6000000, likes:180000, dur:'12:30', durSec:750 },
-    { id:'1eaFyNGXRys', title:'Making of Arcane Season 2 - Behind The Scenes', channel:'Riot Games', views:10000000, likes:300000, dur:'24:05', durSec:1445 },
-    { id:'7UHbRCZxP5k', title:'Spirited Away - Scene-By-Scene Analysis', channel:'NerdWriter1', views:4500000, likes:135000, dur:'19:22', durSec:1162 },
-    { id:'VktNXcxoFTo', title:'The Batman 2 - Official Announcement', channel:'Warner Bros', views:28000000, likes:880000, dur:'1:45', durSec:105 },
-    { id:'5_xI7YDBT8I', title:'Furiosa - Mad Max Prequel Review', channel:'Chris Stuckmann', views:5000000, likes:150000, dur:'15:30', durSec:930 },
-    { id:'v5gmx-Or7pQ', title:'All 2024 Oscar Winners Reaction', channel:'Academy Awards', views:11000000, likes:330000, dur:'18:44', durSec:1124 },
-    { id:'yFZ87KiOsJg', title:'Top 10 Animated Films of 2024', channel:'Screen Rant', views:7500000, likes:225000, dur:'14:05', durSec:845 },
-  ],
-  // Autos (2)
-  '2': [
-    { id:'6Hq4BFC_lO0', title:'Tesla Cybertruck - 1 Year Ownership Review', channel:'MKBHD', views:18000000, likes:540000, dur:'22:15', durSec:1335 },
-    { id:'LIU-8NU7XEY', title:'New Ferrari SF90 - Full Test Drive', channel:'Top Gear', views:12000000, likes:360000, dur:'16:44', durSec:1004 },
-    { id:'TsS-BOlMC_I', title:'Formula 1 2024 - All 24 Races Highlights', channel:'Formula 1', views:30000000, likes:900000, dur:'1:24:30', durSec:5070 },
-    { id:'DFgRfONOJ2I', title:'Lamborghini Urus vs Porsche Cayenne - Which Wins?', channel:'Car Throttle', views:8000000, likes:240000, dur:'14:30', durSec:870 },
-    { id:'eM9fKxMHuAM', title:'I Bought a Cheap Porsche - Here\'s What Happened', channel:'Doug DeMuro', views:9000000, likes:270000, dur:'25:14', durSec:1514 },
-    { id:'cdiD-9ezbeo', title:'BMW M5 G90 vs AMG E63 S - Ultimate Test', channel:'AutoTopNL', views:7000000, likes:210000, dur:'18:22', durSec:1102 },
-    { id:'Xc4xYacTu-E', title:'The Best Budget Sports Car of 2024', channel:'Throttle House', views:10000000, likes:300000, dur:'20:15', durSec:1215 },
-    { id:'ZSt9tm3RoUU', title:'Electric vs Hydrogen - Which Will Win?', channel:'Real Engineering', views:6500000, likes:195000, dur:'19:44', durSec:1184 },
-    { id:'WXuK6gekU1Y', title:'Nurburgring Record Lap - GoPro OnBoard', channel:'Misha Charoudin', views:5000000, likes:150000, dur:'6:52', durSec:412 },
-    { id:'r2eZ7lhqzNE', title:'Restoring a $500 Abandoned Muscle Car', channel:'Scott\'s Garage', views:11000000, likes:330000, dur:'32:44', durSec:1964 },
-    { id:'GkZ5OqNmfMk', title:'Rivian R2 - Everything You Need to Know', channel:'CNET', views:7500000, likes:225000, dur:'15:30', durSec:930 },
-    { id:'j2KANeSlROM', title:'Koenigsegg Jesko - 300mph Supercar Explained', channel:'Shmee150', views:9000000, likes:270000, dur:'12:44', durSec:764 },
-    { id:'OzT8P0lkakM', title:'JDM Cars That Changed History', channel:'Regular Car Reviews', views:5500000, likes:165000, dur:'22:30', durSec:1350 },
-    { id:'hc0ZDaAZQT0', title:'Jay Lenos Garage - Million Dollar Collection', channel:'Jay Lenos Garage', views:14000000, likes:420000, dur:'28:15', durSec:1695 },
-    { id:'8hly31xKli0', title:'The True Cost of Car Ownership 2024', channel:'Donut Media', views:8000000, likes:240000, dur:'17:22', durSec:1042 },
-    { id:'NbuUW9i-mHs', title:'VW Golf R vs Honda Civic Type R - Track Battle', channel:'Carwow', views:12000000, likes:360000, dur:'14:05', durSec:845 },
-    { id:'x_MEias1Qb4', title:'Hyundai Ioniq 6 - 6 Month Review', channel:'Fully Charged', views:4500000, likes:135000, dur:'16:30', durSec:990 },
-    { id:'LqbZpur38nw', title:'I Drove Every Supercar in One Day', channel:'Supercar Blondie', views:16000000, likes:480000, dur:'19:55', durSec:1195 },
-    { id:'nFTQ7kHQWtc', title:'Best Off-Road Trucks of 2024 - Ranked', channel:'MotorTrend', views:6000000, likes:180000, dur:'20:44', durSec:1244 },
-    { id:'8_GKrMOP0IQ', title:'Bugatti Tourbillon - $4M Hypercar Review', channel:'Mr JWW', views:10000000, likes:300000, dur:'15:22', durSec:922 },
-  ],
-  // Pets & Animals (15)
-  '15': [
-    { id:'Ygo_LCQKP8s', title:'Funny Cats Compilation 2024 - Try Not to Laugh', channel:'Funny Pet Media', views:25000000, likes:750000, dur:'15:22', durSec:922 },
-    { id:'kl9LJBVwaMM', title:'The Dodo - Dog Rescued After 2 Years on the Street', channel:'The Dodo', views:18000000, likes:540000, dur:'6:44', durSec:404 },
-    { id:'GBivK9G2w58', title:'Gorilla Sees Frog for First Time - Incredible Reaction', channel:'BBC Earth', views:30000000, likes:900000, dur:'3:15', durSec:195 },
-    { id:'HuFR6rPFMaU', title:'Golden Retriever Raises 9 Kittens', channel:'The Dodo', views:14000000, likes:420000, dur:'5:30', durSec:330 },
-    { id:'9bZkp7q19f0', title:'World\'s Rarest Animals - Full Documentary', channel:'National Geographic', views:8000000, likes:240000, dur:'44:30', durSec:2670 },
-    { id:'EoY5fB9pMXU', title:'Honey Badger Doesn\'t Care - Best Moments', channel:'National Geographic Wild', views:20000000, likes:600000, dur:'11:22', durSec:682 },
-    { id:'4NRXx6poa_A', title:'Dog Training Transformation in 30 Days', channel:'Zak George', views:9000000, likes:270000, dur:'18:44', durSec:1124 },
-    { id:'VQWOygWS6P4', title:'Cheetah Cub and Dog Become Best Friends', channel:'Cincinnati Zoo', views:12000000, likes:360000, dur:'4:15', durSec:255 },
-    { id:'TkwXa7Cvat8', title:'Ocean Wonders - Top 10 Strangest Sea Creatures', channel:'BBC Earth', views:16000000, likes:480000, dur:'22:30', durSec:1350 },
-    { id:'zKggPzHf6wQ', title:'Rescue Puppy\'s First Year - Emotional Story', channel:'The Dodo', views:7500000, likes:225000, dur:'9:44', durSec:584 },
-    { id:'WcAMUCTtMr4', title:'Snake vs Mongoose - Epic Battle', channel:'Nat Geo Wild', views:22000000, likes:660000, dur:'5:22', durSec:322 },
-    { id:'uVvGQye7xpA', title:'Cat Doesn\'t Realize He Is Huge - Compilation', channel:'ViralHog', views:11000000, likes:330000, dur:'8:30', durSec:510 },
-    { id:'s0mhFXvQ2dI', title:'Baby Elephant Learning to Walk is Adorable', channel:'Sheldrick Wildlife Trust', views:6000000, likes:180000, dur:'4:55', durSec:295 },
-    { id:'vQEfUkvVwYQ', title:'Most Beautiful Parrots in the World', channel:'Animal World', views:5000000, likes:150000, dur:'12:15', durSec:735 },
-    { id:'B7m8mUZiMBg', title:'Dog Reunited with Owner After 3 Years', channel:'The Dodo', views:19000000, likes:570000, dur:'5:44', durSec:344 },
-    { id:'7A5-P7A7xoE', title:'Blue Planet 2 - Deepest Ocean Discoveries', channel:'BBC Earth', views:14000000, likes:420000, dur:'48:30', durSec:2910 },
-    { id:'N9MsBXlcAi0', title:'Wildlife Photography - Behind The Shots', channel:'NatGeo', views:4500000, likes:135000, dur:'16:22', durSec:982 },
-    { id:'KbYSOSEMDZ0', title:'Lions vs Hyenas - Who Really Wins?', channel:'Nat Geo Wild', views:10000000, likes:300000, dur:'14:05', durSec:845 },
-    { id:'7VF5K-j8czw', title:'Otter Uses Phone Better Than My Dad', channel:'ViralHog', views:8000000, likes:240000, dur:'1:44', durSec:104 },
-    { id:'t-WGpUxjGrM', title:'World\'s Largest Dog Breeds Compared', channel:'Animal Facts', views:7000000, likes:210000, dur:'11:30', durSec:690 },
-  ],
-  // Travel & Events (19)
-  '19': [
-    { id:'LH1rewc9WEY', title:'Solo Travel Japan 2024 - Full Vlog', channel:'Abroad in Japan', views:12000000, likes:360000, dur:'22:15', durSec:1335 },
-    { id:'U6xJs46LCHA', title:'The Most Beautiful Places on Earth 2024', channel:'Bald and Bankrupt', views:8000000, likes:240000, dur:'18:44', durSec:1124 },
-    { id:'Gn7CGMoiCDY', title:'Backpacking Southeast Asia on $30/Day', channel:'Kara and Nate', views:10000000, likes:300000, dur:'20:30', durSec:1230 },
-    { id:'TQSvVBRsF6Q', title:'Living in Morocco for a Month - Honest Review', channel:'Lost LeBlancs', views:7500000, likes:225000, dur:'17:22', durSec:1042 },
-    { id:'Lf1opiaTvQE', title:'Dubai Hidden Gems Nobody Talks About', channel:'Nuseir Yassin', views:14000000, likes:420000, dur:'12:44', durSec:764 },
-    { id:'vQEfUkvVwYQ', title:'Visiting Every Country - Year 4 Update', channel:'Drew Binsky', views:6000000, likes:180000, dur:'15:30', durSec:930 },
-    { id:'JTxsNm9IdYU', title:'Paris Olympics 2024 - Best Moments Compilation', channel:'Olympics', views:25000000, likes:750000, dur:'14:05', durSec:845 },
-    { id:'s0mhFXvQ2dI', title:'Best Street Food Cities in Asia', channel:'Mark Wiens', views:9000000, likes:270000, dur:'19:55', durSec:1195 },
-    { id:'N8kXuLUCJ4E', title:'Iceland in Winter - Breathtaking Landscapes', channel:'CGGeography', views:5000000, likes:150000, dur:'24:30', durSec:1470 },
-    { id:'B7m8mUZiMBg', title:'Why Thailand Is The Best Country for Digital Nomads', channel:'Wanderers & Warriors', views:8000000, likes:240000, dur:'16:44', durSec:1004 },
-    { id:'Ew3OhpAvQAk', title:'The Grand Canyon in 4K - Drone Footage', channel:'Drone Traveller', views:11000000, likes:330000, dur:'8:22', durSec:502 },
-    { id:'iZwTKrTkVs8', title:'Antarctica Expedition - What Nobody Tells You', channel:'Yes Theory', views:18000000, likes:540000, dur:'21:15', durSec:1275 },
-    { id:'uVvGQye7xpA', title:'Budget Europe Trip Under $1000', channel:'Gabriel Traveler', views:7000000, likes:210000, dur:'18:30', durSec:1110 },
-    { id:'zKggPzHf6wQ', title:'Vietnam Travel Guide 2024 - Full Breakdown', channel:'Lost LeBlancs', views:6500000, likes:195000, dur:'22:44', durSec:1364 },
-    { id:'WcAMUCTtMr4', title:'First Time in India - Honest Reactions', channel:'Indigo Traveller', views:10000000, likes:300000, dur:'17:05', durSec:1025 },
-    { id:'7VF5K-j8czw', title:'Santorini Greece - Full Travel Guide', channel:'Kara and Nate', views:5500000, likes:165000, dur:'14:22', durSec:862 },
-    { id:'KbYSOSEMDZ0', title:'Japan Cherry Blossom Season 4K', channel:'Drone Shots', views:9000000, likes:270000, dur:'6:15', durSec:375 },
-    { id:'t-WGpUxjGrM', title:'Road Trip Across America - 50 States', channel:'Damon and Jo', views:12000000, likes:360000, dur:'28:44', durSec:1724 },
-    { id:'N9MsBXlcAi0', title:'Living on $5 a Day in Mexico City', channel:'Peter Santenello', views:8500000, likes:255000, dur:'19:30', durSec:1170 },
-    { id:'7A5-P7A7xoE', title:'Top 20 Hidden Gems in Europe 2024', channel:'Indigo Traveller', views:6000000, likes:180000, dur:'23:15', durSec:1395 },
-  ],
-  // Howto & Style (26)
-  '26': [
-    { id:'ysEN5RaKOlA', title:'How to Cook the Perfect Steak - Gordon Ramsay', channel:'Gordon Ramsay', views:35000000, likes:1050000, dur:'9:44', durSec:584 },
-    { id:'r-LelHXGIxQ', title:'10 Outfits From ONE Piece - Wardrobe Hack', channel:'Mina Le', views:8000000, likes:240000, dur:'14:30', durSec:870 },
-    { id:'xvFZjo5PgG0', title:'I Followed Gordon Ramsay Recipes for a Week', channel:'Joshua Weissman', views:15000000, likes:450000, dur:'18:44', durSec:1124 },
-    { id:'FkklG9_UMqg', title:'Complete Hair Care Routine - Step by Step', channel:'Brad Mondo', views:10000000, likes:300000, dur:'16:22', durSec:982 },
-    { id:'CiOZcEJAOFo', title:'How to Meal Prep for the Whole Week', channel:'Tabitha Brown', views:12000000, likes:360000, dur:'20:15', durSec:1215 },
-    { id:'m9FIU8MbdnE', title:'Room Makeover Under $100 - Full Guide', channel:'Mr Kate', views:7000000, likes:210000, dur:'22:30', durSec:1350 },
-    { id:'2SqeHjIHbZo', title:'Get Ready with Me - Everyday Makeup', channel:'NikkieTutorials', views:9500000, likes:285000, dur:'15:44', durSec:944 },
-    { id:'kAV5bj3Di9E', title:'DIY Home Renovation - Bathroom Transformation', channel:'Home RenoVision', views:6000000, likes:180000, dur:'28:44', durSec:1724 },
-    { id:'uUCUkBFBF_s', title:'How to Make Sourdough Bread - Beginner Guide', channel:'Ethan Chlebowski', views:8000000, likes:240000, dur:'24:05', durSec:1445 },
-    { id:'1ZEG1xMeJ1Q', title:'Minimalist Wardrobe - Everything I Wear', channel:'Matt D\'Avella', views:7500000, likes:225000, dur:'13:22', durSec:802 },
-    { id:'3csuNr7TFrA', title:'Ultimate Skincare Routine 2024', channel:'Hyram', views:11000000, likes:330000, dur:'17:05', durSec:1025 },
-    { id:'8jPQjjsBbIc', title:'How I Built My Dream Office for $500', channel:'Ali Abdaal', views:9000000, likes:270000, dur:'19:44', durSec:1184 },
-    { id:'YHkh9N_MFLI', title:'5 Photography Tips That Changed Everything', channel:'Peter McKinnon', views:14000000, likes:420000, dur:'12:30', durSec:750 },
-    { id:'Ix62HH3xSZM', title:'No-Knead Bread in 5 Minutes - Viral Recipe', channel:'Tasty', views:20000000, likes:600000, dur:'5:44', durSec:344 },
-    { id:'wXiRl84XPpM', title:'How to Style Vintage Clothing 2024', channel:'Bestdressed', views:5500000, likes:165000, dur:'16:44', durSec:1004 },
-    { id:'nU-IaM0WQMU', title:'Full House Declutter - Marie Kondo Method', channel:'Clean My Space', views:6500000, likes:195000, dur:'21:15', durSec:1275 },
-    { id:'lVkn4GoZjhA', title:'Budget Meal Prep - Eat Healthy for $25/Week', channel:'Ethan Chlebowski', views:10000000, likes:300000, dur:'18:22', durSec:1102 },
-    { id:'pZyRMXBFAb0', title:'How to Start a YouTube Channel in 2024', channel:'Cathrin Manning', views:7000000, likes:210000, dur:'22:44', durSec:1364 },
-    { id:'VUvTTbw7UEk', title:'Hair Color Transformation - Before and After', channel:'Brad Mondo', views:8500000, likes:255000, dur:'14:05', durSec:845 },
-    { id:'dJv2EZY5Bkk', title:'Japanese Cooking Masterclass - Full Course', channel:'Joshua Weissman', views:13000000, likes:390000, dur:'32:15', durSec:1935 },
-  ],
-};
-
-function generateDemoVideos(count, catId = '', catName = 'All') {
-  const key   = String(catId);
-  const vids  = REAL_VIDEOS[key] || REAL_VIDEOS[''];
-  const slice = vids.slice(0, Math.min(count, vids.length));
-  return slice.map((v, i) => ({
-    id:          v.id,
-    title:       v.title,
-    channel:     v.channel,
-    thumbnail:   `https://img.youtube.com/vi/${v.id}/hqdefault.jpg`,
-    views:       v.views,
-    likes:       v.likes,
-    comments:    Math.floor(v.views * 0.003),
-    duration:    v.dur,
-    durationSec: v.durSec,
-    categoryId:  key || '0',
-    publishedAt: new Date(Date.now() - Math.random() * 30 * 86400000).toISOString(),
-    url:         `https://www.youtube.com/watch?v=${v.id}`,
-    rank:        i + 1,
-  }));
-}
-
-// ═══════════════════════════════════════════════
 // VIEWS
 // ═══════════════════════════════════════════════
 function switchView(view) {
@@ -1338,8 +991,11 @@ function filterCategory(catId) {
 
 function onRegionChange() {
   STATE.region = document.getElementById('regionSelect').value;
-  // Region change needs fresh data — consume a call
-  loadTrending(true);
+  // Clear cached data — user must manually refresh for the new region
+  STATE.categoryCache = {};
+  STATE.videos = [];
+  document.getElementById('trendingCount').textContent = '0';
+  renderView();
 }
 function onCategoryChange() {
   // Dropdown category change — just re-filter from cache, no API call
@@ -1358,15 +1014,43 @@ function renderView() {
 
 // ─── TRENDING VIEW ───
 function renderTrending() {
-  const catId = String(STATE.category);
+  const catId    = String(STATE.category);
   const regionObj = REGIONS.find(r => r.code === STATE.region);
-  const content = document.getElementById('mainContent');
+  const content  = document.getElementById('mainContent');
+  const hasData  = Object.keys(STATE.categoryCache).length > 0;
+
+  // No data yet — show empty/prompt state
+  if (!hasData) {
+    const hasKeys = STATE.apiKeys.length > 0;
+    const calls   = getTodayCalls();
+    const atLimit = calls >= USER_DAILY_LIMIT;
+
+    content.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:500px;gap:18px;text-align:center;padding:40px 20px;">
+        <div style="font-size:64px;line-height:1;">📺</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--text);">NO DATA LOADED YET</div>
+        <div style="font-size:14px;color:var(--muted);max-width:400px;line-height:1.7;">
+          ${atLimit
+            ? `You have used all <strong style="color:var(--text);">${USER_DAILY_LIMIT}</strong> refreshes for today. Data resets at midnight.`
+            : hasKeys
+              ? `Hit <strong style="color:var(--red);">↺ Refresh</strong> in the top bar to pull live trending videos from YouTube for <strong style="color:var(--text);">${regionObj?.flag || ''} ${regionObj?.name || STATE.region}</strong>.`
+              : `No API key is configured yet. An admin needs to add a <strong style="color:var(--text);">YouTube Data API v3</strong> key in the Admin Panel before data can be fetched.`
+          }
+        </div>
+        ${!atLimit && hasKeys ? `
+          <button onclick="loadTrending()" style="padding:12px 32px;background:var(--red);border:none;color:white;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:.5px;transition:background .2s;" onmouseover="this.style.background='#cc0000'" onmouseout="this.style.background='var(--red)'">
+            ↺ Load Trending Now
+          </button>
+        ` : ''}
+        <div style="font-size:11px;color:#333;font-family:'Space Mono',monospace;">${calls}/${USER_DAILY_LIMIT} refreshes used today</div>
+      </div>
+    `;
+    return;
+  }
 
   if (catId === '' || catId === 'undefined') {
-    // "All Categories" — show top 20 per category in sections
     renderAllCategoriesSections(content, regionObj);
   } else {
-    // Specific category — show top 20 of that category
     renderSingleCategory(content, catId, regionObj);
   }
 }
@@ -1519,7 +1203,7 @@ function renderVideoCards(videos) {
     return `
     <div class="video-card" onclick="openVideoModal(${JSON.stringify(v).replace(/"/g,'&quot;')})">
       <div class="video-thumb-wrap">
-        <img class="video-thumb" src="${v.thumbnail}" alt="${escHtml(v.title)}" loading="lazy" onerror="this.src='https://picsum.photos/seed/${v.id}/480/270'">
+        <img class="video-thumb" src="${v.thumbnail}" alt="${escHtml(v.title)}" loading="lazy" onerror="this.style.background='#1a1a1a';this.style.display='none';this.parentElement.style.background='#1a1a1a'">
         <div class="video-rank ${v.rank <= 3 ? 'top3' : ''}">#${v.rank}</div>
         <div class="video-duration" style="background:rgba(0,0,0,.9);color:${durColor};font-weight:700;">${v.duration}</div>
         <div class="play-overlay">
@@ -1548,9 +1232,23 @@ function renderVideoCards(videos) {
   `}).join('');
 }
 
+function renderEmptyDataState(icon, title, msg) {
+  return `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;gap:16px;text-align:center;padding:40px 20px;">
+      <div style="font-size:52px;">${icon}</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--muted);">${title} — NO DATA</div>
+      <div style="font-size:13px;color:#444;max-width:360px;line-height:1.7;">${msg}</div>
+    </div>
+  `;
+}
+
 // ─── CHARTS VIEW ───
 function renderCharts() {
   const content = document.getElementById('mainContent');
+  if (!STATE.videos.length) {
+    content.innerHTML = renderEmptyDataState('📊', 'TREND CHARTS', 'Load trending data first by clicking ↺ Refresh.');
+    return;
+  }
   content.innerHTML = `
     <div class="grid-two">
       <div class="panel">
@@ -1600,24 +1298,34 @@ function initTrendChart() {
   if (STATE.chartInstance) STATE.chartInstance.destroy();
 
   const days = parseInt(document.getElementById('chartTimeRange')?.value || 30);
-  const labels = [];
-  const data = [];
-  const now = new Date();
+  const now  = new Date();
 
+  // Build buckets from real video publishedAt dates + view counts
+  const buckets = {};
   for (let i = days - 1; i >= 0; i--) {
     const d = new Date(now - i * 86400000);
-    labels.push(days <= 7 ? d.toLocaleDateString('en',{weekday:'short'}) :
-                days <= 30 ? d.toLocaleDateString('en',{month:'short',day:'numeric'}) :
-                d.toLocaleDateString('en',{month:'short',day:'numeric'}));
-    data.push(Math.floor(Math.random() * 80000000 + 20000000));
+    buckets[d.toDateString()] = 0;
   }
+  STATE.videos.forEach(v => {
+    if (!v.publishedAt) return;
+    const key = new Date(v.publishedAt).toDateString();
+    if (key in buckets) buckets[key] += v.views;
+  });
+
+  const labels = Object.keys(buckets).map(k => {
+    const d = new Date(k);
+    return days <= 7
+      ? d.toLocaleDateString('en', { weekday: 'short' })
+      : d.toLocaleDateString('en', { month: 'short', day: 'numeric' });
+  });
+  const data = Object.values(buckets);
 
   STATE.chartInstance = new Chart(ctx, {
     type: 'line',
     data: {
       labels,
       datasets: [{
-        label: 'Total Trending Views',
+        label: 'Views (by publish date)',
         data,
         borderColor: '#FF1F1F',
         backgroundColor: 'rgba(255,31,31,0.08)',
@@ -1715,6 +1423,10 @@ function renderCatBreakdown() {
 // ─── CHANNELS VIEW ───
 function renderChannels() {
   const content = document.getElementById('mainContent');
+  if (!STATE.videos.length) {
+    content.innerHTML = renderEmptyDataState('📺', 'TOP CHANNELS', 'Load trending data first by clicking ↺ Refresh.');
+    return;
+  }
 
   const channelMap = {};
   STATE.videos.forEach(v => {
@@ -1815,7 +1527,7 @@ function openVideoModal(video) {
 
   content.innerHTML = `
     <div style="margin-bottom:16px;">
-      <img src="${video.thumbnail}" style="width:100%;border-radius:8px;aspect-ratio:16/9;object-fit:cover;background:var(--border);" onerror="this.src='https://picsum.photos/seed/${video.id}/480/270'">
+      <img src="${video.thumbnail}" style="width:100%;border-radius:8px;aspect-ratio:16/9;object-fit:cover;background:var(--border);" onerror="this.style.background='#1a1a1a'">
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
       <span style="background:var(--red);color:white;font-size:10px;font-family:'Space Mono',monospace;padding:3px 10px;border-radius:4px;">#${video.rank} TRENDING</span>
