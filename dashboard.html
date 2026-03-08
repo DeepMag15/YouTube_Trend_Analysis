@@ -724,9 +724,16 @@ function updateCallsBadge(calls) {
 
 
 function checkApiKeys() {
-  // Keys loaded silently — never shown to users
-  STATE.apiKeys = JSON.parse(localStorage.getItem('tp_api_keys') || '[]')
-                  .filter(k => k && k.trim());
+  const raw = JSON.parse(localStorage.getItem('tp_api_keys') || '[]');
+  // Only accept keys that look like real YouTube Data API keys
+  STATE.apiKeys = raw.filter(k =>
+    k && typeof k === 'string' &&
+    k.startsWith('AIza') &&
+    k.length >= 30 &&
+    !k.includes('here') &&
+    !k.includes('key-')
+  );
+  console.log('[TP] Valid API keys found:', STATE.apiKeys.length);
 }
 
 function populateSelects() {
@@ -745,59 +752,77 @@ function populateSelects() {
 // ═══════════════════════════════════════════════
 // API KEY ROTATION
 // ═══════════════════════════════════════════════
-function getCurrentApiKey() {
-  const keys = STATE.apiKeys;
-  if (!keys || keys.length === 0) return null;
-  return keys[STATE.currentKeyIndex % keys.length];
-}
-
 async function fetchWithKeyRotation(url) {
   const keys = STATE.apiKeys;
   if (!keys || keys.length === 0) throw new Error('Service unavailable');
 
-  let lastError = '';
+  let lastErr = 'Unknown';
+
   for (let attempt = 0; attempt < keys.length; attempt++) {
     const keyIndex = (STATE.currentKeyIndex + attempt) % keys.length;
-    const key = keys[keyIndex];
-    const fullUrl = url + '&key=' + encodeURIComponent(key);
+    const key      = keys[keyIndex];
+
+    // Build full URL — key goes last, raw (no encode needed for AIza... keys)
+    const fullUrl = url + '&key=' + key;
 
     let resp, data;
     try {
-      resp = await fetch(fullUrl);
-      data = await resp.json();
-    } catch (networkErr) {
-      lastError = 'Network error';
+      resp = await fetch(fullUrl, { method: 'GET' });
+    } catch (netErr) {
+      // CORS / network failure
+      console.error('[TP] Network error on attempt', attempt, netErr.message);
+      lastErr = 'Network error: ' + netErr.message;
       continue;
     }
 
-    if (!data) { lastError = 'Empty response'; continue; }
+    try {
+      data = await resp.json();
+    } catch (parseErr) {
+      console.error('[TP] JSON parse error', resp.status, parseErr.message);
+      lastErr = 'Bad response';
+      continue;
+    }
+
+    // Log the raw response for debugging
+    if (data.error) {
+      console.warn('[TP] API error', data.error.code, data.error.status, data.error.message);
+    } else {
+      console.log('[TP] Success — items:', data.items?.length, 'url:', fullUrl.substring(0, 100));
+    }
 
     if (data.error) {
       const code   = data.error.code;
-      const status = data.error.status || '';
-      const msg    = data.error.message || '';
-      // Quota / forbidden — silently rotate to next key
-      if (code === 403 || code === 429 || status === 'RESOURCE_EXHAUSTED' || msg.includes('quota')) {
+      const status = (data.error.status  || '').toUpperCase();
+      const msg    = (data.error.message || '').toLowerCase();
+
+      // Quota / rate-limit / forbidden → rotate key silently
+      if (code === 403 || code === 429 ||
+          status === 'RESOURCE_EXHAUSTED' || status === 'FORBIDDEN' ||
+          msg.includes('quota') || msg.includes('forbidden') || msg.includes('rate limit')) {
         STATE.currentKeyIndex = (keyIndex + 1) % keys.length;
-        lastError = 'quota';
+        lastErr = 'quota';
         continue;
       }
-      // Invalid key
-      if (code === 400 && msg.toLowerCase().includes('api key')) {
-        lastError = 'Invalid API key';
+
+      // Bad key / bad request → skip this key and try next
+      if (code === 400 || code === 401) {
+        console.warn('[TP] Bad key or request, skipping key', keyIndex);
+        lastErr = msg || `HTTP ${code}`;
         continue;
       }
-      // Any other API error — throw it up
-      throw new Error(msg || `API error ${code}`);
+
+      // Anything else (404, 5xx, etc.) — log and skip
+      lastErr = msg || `HTTP ${code}`;
+      console.warn('[TP] Skipping due to error:', lastErr);
+      continue;
     }
 
-    // Success
+    // ✅ Successful response
     STATE.currentKeyIndex = keyIndex;
     return data;
   }
 
-  if (lastError === 'quota') throw new Error('QUOTA_EXHAUSTED');
-  throw new Error(lastError || 'All keys failed');
+  throw new Error(lastErr === 'quota' ? 'QUOTA_EXHAUSTED' : lastErr);
 }
 
 // ═══════════════════════════════════════════════
