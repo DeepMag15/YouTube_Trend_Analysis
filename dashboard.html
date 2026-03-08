@@ -429,7 +429,7 @@
     <button class="refresh-btn" id="refreshBtn" onclick="loadTrending(true)">
       <span id="refreshIcon">↺</span> Refresh
     </button>
-    <div id="callsBadge" style="font-size:11px;font-family:'Space Mono',monospace;padding:6px 12px;border-radius:6px;border:1px solid rgba(0,212,106,.2);background:rgba(0,212,106,.1);color:#00C853;white-space:nowrap;">3 refreshes left</div>
+    <div id="callsBadge" style="font-size:11px;font-family:'Space Mono',monospace;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--muted);white-space:nowrap;">Tap refresh to load</div>
   </div>
 
   <!-- CONTENT -->
@@ -449,15 +449,15 @@
 <!-- TOAST CONTAINER -->
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- RATE LIMIT WARNING BANNER (replaces modal) -->
-<div id="limitBanner" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9998;width:90%;max-width:520px;">
-  <div style="background:#1A1A1A;border:1px solid rgba(255,31,31,.4);border-radius:14px;padding:20px 24px;box-shadow:0 16px 48px rgba(0,0,0,.6);display:flex;align-items:flex-start;gap:16px;">
-    <div style="font-size:32px;flex-shrink:0;margin-top:2px;">⏳</div>
+<!-- DAILY LIMIT BANNER -->
+<div id="limitBanner" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9998;width:90%;max-width:480px;">
+  <div style="background:#1A1A1A;border:1px solid rgba(255,215,0,.2);border-radius:14px;padding:20px 24px;box-shadow:0 16px 48px rgba(0,0,0,.6);display:flex;align-items:flex-start;gap:16px;">
+    <div style="font-size:28px;flex-shrink:0;margin-top:2px;">✅</div>
     <div style="flex:1;min-width:0;">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;margin-bottom:4px;color:#F0F0F0;">Daily Refresh Limit Reached</div>
-      <div style="font-size:13px;color:#777;line-height:1.6;margin-bottom:10px;">You've used all <strong style="color:#F0F0F0;">3 free refreshes</strong> for today. You can still browse, filter categories, and watch videos — just no new data until midnight.</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;margin-bottom:4px;color:#F0F0F0;">You're all caught up!</div>
+      <div style="font-size:13px;color:#777;line-height:1.6;margin-bottom:10px;">Fresh trending data will be available soon. You can still browse, filter categories, and watch everything loaded so far.</div>
       <div style="display:flex;align-items:center;gap:10px;">
-        <div style="font-size:11px;color:#555;font-family:'Space Mono',monospace;">RESETS IN</div>
+        <div style="font-size:11px;color:#555;font-family:'Space Mono',monospace;">REFRESHES IN</div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:#FFD700;" id="countdownTimer">--:--:--</div>
       </div>
     </div>
@@ -666,8 +666,8 @@ function disableRefreshButton() {
   btn.style.opacity = '0.4';
   btn.style.cursor  = 'not-allowed';
   btn.style.pointerEvents = 'none';
-  btn.title = 'Daily refresh limit reached — resets at midnight';
-  btn.innerHTML = '🚫 Limit Reached';
+  btn.title = 'Come back tomorrow for fresh trending data';
+  btn.innerHTML = '<span id="refreshIcon">↺</span> Refresh';
 }
 
 function showLimitBanner() {
@@ -701,19 +701,24 @@ function startCountdown() {
 }
 
 function updateCallsBadge(calls) {
-  const remaining = Math.max(0, USER_DAILY_LIMIT - calls);
+  // Deliberately hide exact counts from users — just show a subtle indicator
   const badge = document.getElementById('callsBadge');
   if (!badge) return;
-  if (remaining === 0) {
-    badge.textContent = '🚫 Limit reached — resets at midnight';
-    badge.style.background   = 'rgba(255,31,31,.12)';
-    badge.style.color        = '#FF6B6B';
-    badge.style.borderColor  = 'rgba(255,31,31,.3)';
+  if (calls >= USER_DAILY_LIMIT) {
+    badge.textContent = '✓ Up to date';
+    badge.style.background  = 'rgba(0,212,106,.08)';
+    badge.style.color       = '#00C853';
+    badge.style.borderColor = 'rgba(0,212,106,.15)';
+  } else if (calls > 0) {
+    badge.textContent = '✓ Data loaded';
+    badge.style.background  = 'rgba(0,212,106,.08)';
+    badge.style.color       = '#00C853';
+    badge.style.borderColor = 'rgba(0,212,106,.15)';
   } else {
-    badge.textContent = `${remaining} refresh${remaining !== 1 ? 'es' : ''} left`;
-    badge.style.background  = remaining === 1 ? 'rgba(249,115,22,.15)' : 'rgba(0,212,106,.1)';
-    badge.style.color       = remaining === 1 ? '#F97316' : '#00C853';
-    badge.style.borderColor = remaining === 1 ? 'rgba(249,115,22,.3)' : 'rgba(0,212,106,.2)';
+    badge.textContent = 'Tap refresh to load';
+    badge.style.background  = 'rgba(255,255,255,.04)';
+    badge.style.color       = 'var(--muted)';
+    badge.style.borderColor = 'var(--border)';
   }
 }
 
@@ -748,32 +753,51 @@ function getCurrentApiKey() {
 
 async function fetchWithKeyRotation(url) {
   const keys = STATE.apiKeys;
-  if (!keys || keys.length === 0) return null;
+  if (!keys || keys.length === 0) throw new Error('Service unavailable');
 
+  let lastError = '';
   for (let attempt = 0; attempt < keys.length; attempt++) {
     const keyIndex = (STATE.currentKeyIndex + attempt) % keys.length;
     const key = keys[keyIndex];
-    const fullUrl = url + (url.includes('?') ? '&' : '?') + 'key=' + key;
+    const fullUrl = url + '&key=' + encodeURIComponent(key);
 
+    let resp, data;
     try {
-      const resp = await fetch(fullUrl);
-      const data = await resp.json();
-
-      if (data.error) {
-        if (data.error.code === 403 || data.error.status === 'RESOURCE_EXHAUSTED') {
-          showToast(`Key ${keyIndex + 1} quota exceeded. Switching to backup...`, 'info');
-          STATE.currentKeyIndex = (keyIndex + 1) % keys.length;
-          continue;
-        }
-        throw new Error(data.error.message);
-      }
-      STATE.currentKeyIndex = keyIndex;
-      return data;
-    } catch(e) {
-      if (attempt === keys.length - 1) throw e;
+      resp = await fetch(fullUrl);
+      data = await resp.json();
+    } catch (networkErr) {
+      lastError = 'Network error';
+      continue;
     }
+
+    if (!data) { lastError = 'Empty response'; continue; }
+
+    if (data.error) {
+      const code   = data.error.code;
+      const status = data.error.status || '';
+      const msg    = data.error.message || '';
+      // Quota / forbidden — silently rotate to next key
+      if (code === 403 || code === 429 || status === 'RESOURCE_EXHAUSTED' || msg.includes('quota')) {
+        STATE.currentKeyIndex = (keyIndex + 1) % keys.length;
+        lastError = 'quota';
+        continue;
+      }
+      // Invalid key
+      if (code === 400 && msg.toLowerCase().includes('api key')) {
+        lastError = 'Invalid API key';
+        continue;
+      }
+      // Any other API error — throw it up
+      throw new Error(msg || `API error ${code}`);
+    }
+
+    // Success
+    STATE.currentKeyIndex = keyIndex;
+    return data;
   }
-  throw new Error('All API keys exhausted');
+
+  if (lastError === 'quota') throw new Error('QUOTA_EXHAUSTED');
+  throw new Error(lastError || 'All keys failed');
 }
 
 // ═══════════════════════════════════════════════
@@ -800,16 +824,14 @@ const FETCH_CATS = [
 async function loadTrending() {
   if (STATE.loading) return;
 
-  // Refresh API keys in case admin just added them
+  // Re-read keys (admin may have added them since page load)
   checkApiKeys();
 
-  // Must have at least one API key
   if (!STATE.apiKeys.length) {
-    showToast('No API key configured. Ask admin to add a YouTube Data API key.', 'error');
+    showToast('Service not configured yet. Please try again later.', 'error');
     return;
   }
 
-  // Rate limit — one Refresh = one call (covers all 15 categories)
   if (!checkRateLimit(true)) return;
 
   STATE.loading = true;
@@ -820,8 +842,9 @@ async function loadTrending() {
     document.getElementById('refreshIcon').textContent = '⟳';
   }
 
-  // Show a loading skeleton while fetching
   showFetchingState();
+
+  let fetchedAny = false;
 
   try {
     incrementCall();
@@ -829,35 +852,45 @@ async function loadTrending() {
 
     STATE.categoryCache = {};
 
-    // Fetch all 15 categories. Each call costs 1 quota unit (videos.list with chart=mostPopular).
-    // We fire them with a tiny stagger so we don't hammer the same key simultaneously.
     for (const cat of FETCH_CATS) {
       try {
-        // Build URL: snippet for title/channel/thumbnail/publishedAt,
-        //            statistics for views/likes/comments,
-        //            contentDetails for duration
-        let url = `https://www.googleapis.com/youtube/v3/videos`
-          + `?part=snippet,statistics,contentDetails`
-          + `&chart=mostPopular`
-          + `&regionCode=${encodeURIComponent(STATE.region)}`
-          + `&maxResults=${TOP_PER_CATEGORY}`
-          + `&hl=en`;
-        if (cat.id) url += `&videoCategoryId=${encodeURIComponent(cat.id)}`;
+        // YouTube Data API v3 — videos.list
+        // part=snippet       → title, channelTitle, thumbnails, publishedAt, categoryId
+        // part=statistics    → viewCount, likeCount, commentCount
+        // part=contentDetails → duration (ISO 8601)
+        // chart=mostPopular  → trending chart
+        // All params joined with & — key appended by fetchWithKeyRotation
+        const params = new URLSearchParams({
+          part:        'snippet,statistics,contentDetails',
+          chart:       'mostPopular',
+          regionCode:  STATE.region,
+          maxResults:  String(TOP_PER_CATEGORY),
+          hl:          'en',
+        });
+        if (cat.id) params.set('videoCategoryId', cat.id);
 
+        const url  = `https://www.googleapis.com/youtube/v3/videos?${params.toString()}`;
         const data = await fetchWithKeyRotation(url);
-        if (data && data.items) {
+
+        if (data && Array.isArray(data.items) && data.items.length > 0) {
           STATE.categoryCache[cat.id] = data.items.map((item, i) => mapVideo(item, i));
+          fetchedAny = true;
         } else {
           STATE.categoryCache[cat.id] = [];
         }
       } catch (catErr) {
-        // One category failed — keep others, log silently
+        // QUOTA_EXHAUSTED on a single category = all keys dead, no point continuing
+        if (catErr.message === 'QUOTA_EXHAUSTED') {
+          STATE.categoryCache[cat.id] = [];
+          // Try to continue with remaining categories using next key cycle
+          continue;
+        }
         STATE.categoryCache[cat.id] = [];
-        console.warn(`Category ${cat.id} failed:`, catErr.message);
+        console.warn(`[TrendPulse] Category "${cat.name}" failed:`, catErr.message);
       }
     }
 
-    // Build flat deduplicated video list for charts/channels views
+    // Flat deduplicated list for charts / channels
     const seen = new Set();
     STATE.videos = [];
     for (const vids of Object.values(STATE.categoryCache)) {
@@ -866,16 +899,23 @@ async function loadTrending() {
       }
     }
 
-    const totalLoaded = STATE.categoryCache['']?.length || 0;
-    document.getElementById('trendingCount').textContent = totalLoaded;
+    document.getElementById('trendingCount').textContent =
+      STATE.categoryCache['']?.length || STATE.videos.length || 0;
 
-    const regionObj = REGIONS.find(r => r.code === STATE.region);
-    showToast(`✓ Loaded trending for ${regionObj?.flag || ''} ${regionObj?.name || STATE.region}`, 'success');
+    if (fetchedAny) {
+      const regionObj = REGIONS.find(r => r.code === STATE.region);
+      showToast(`✓ Trending loaded for ${regionObj?.flag || ''} ${regionObj?.name || STATE.region}`, 'success');
+    } else {
+      showToast('Could not load videos right now. Please try again later.', 'error');
+    }
+
     renderView();
 
   } catch (err) {
-    showToast('Failed to load: ' + (err.message || 'Unknown error'), 'error');
-    renderView(); // render empty state
+    // Never surface technical details to users
+    showToast('Could not load videos right now. Please try again later.', 'error');
+    console.error('[TrendPulse] loadTrending error:', err);
+    renderView();
   } finally {
     STATE.loading = false;
     if (btn) {
@@ -883,7 +923,7 @@ async function loadTrending() {
       btn.classList.remove('loading');
       document.getElementById('refreshIcon').textContent = '↺';
     }
-    checkRateLimit(false); // re-check limit to disable button if now at 3
+    checkRateLimit(false);
   }
 }
 
@@ -1014,35 +1054,32 @@ function renderView() {
 
 // ─── TRENDING VIEW ───
 function renderTrending() {
-  const catId    = String(STATE.category);
+  const catId     = String(STATE.category);
   const regionObj = REGIONS.find(r => r.code === STATE.region);
-  const content  = document.getElementById('mainContent');
-  const hasData  = Object.keys(STATE.categoryCache).length > 0;
+  const content   = document.getElementById('mainContent');
+  const hasData   = Object.keys(STATE.categoryCache).length > 0;
 
-  // No data yet — show empty/prompt state
   if (!hasData) {
-    const hasKeys = STATE.apiKeys.length > 0;
     const calls   = getTodayCalls();
     const atLimit = calls >= USER_DAILY_LIMIT;
 
     content.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:500px;gap:18px;text-align:center;padding:40px 20px;">
         <div style="font-size:64px;line-height:1;">📺</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--text);">NO DATA LOADED YET</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--text);">
+          ${atLimit ? 'COME BACK TOMORROW' : 'READY TO LOAD'}
+        </div>
         <div style="font-size:14px;color:var(--muted);max-width:400px;line-height:1.7;">
           ${atLimit
-            ? `You have used all <strong style="color:var(--text);">${USER_DAILY_LIMIT}</strong> refreshes for today. Data resets at midnight.`
-            : hasKeys
-              ? `Hit <strong style="color:var(--red);">↺ Refresh</strong> in the top bar to pull live trending videos from YouTube for <strong style="color:var(--text);">${regionObj?.flag || ''} ${regionObj?.name || STATE.region}</strong>.`
-              : `No API key is configured yet. An admin needs to add a <strong style="color:var(--text);">YouTube Data API v3</strong> key in the Admin Panel before data can be fetched.`
+            ? `You have seen all the trending data available for today. Fresh results will be ready at midnight.`
+            : `Hit <strong style="color:var(--red);">↺ Refresh</strong> to load the latest trending videos on YouTube for <strong style="color:var(--text);">${regionObj?.flag || ''} ${regionObj?.name || STATE.region}</strong>.`
           }
         </div>
-        ${!atLimit && hasKeys ? `
+        ${!atLimit ? `
           <button onclick="loadTrending()" style="padding:12px 32px;background:var(--red);border:none;color:white;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:.5px;transition:background .2s;" onmouseover="this.style.background='#cc0000'" onmouseout="this.style.background='var(--red)'">
             ↺ Load Trending Now
           </button>
         ` : ''}
-        <div style="font-size:11px;color:#333;font-family:'Space Mono',monospace;">${calls}/${USER_DAILY_LIMIT} refreshes used today</div>
       </div>
     `;
     return;
