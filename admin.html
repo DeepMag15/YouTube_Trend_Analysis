@@ -867,20 +867,20 @@ function initQuotaChart() {
 // API KEYS VIEW
 // ═══════════════════════════════════════════════
 function renderApiKeys() {
-  const totalUsed = STATE.apiKeys.reduce((s,k)=>s+k.used,0);
+  const totalUsed  = STATE.apiKeys.reduce((s,k)=>s+k.used,0);
   const totalQuota = STATE.apiKeys.reduce((s,k)=>s+k.quota,0);
-  const activeKey = STATE.apiKeys.find(k=>k.status==='active');
+  const activeKey  = STATE.apiKeys.find(k=>k.status==='active' && isRealKey(k.value));
 
   document.getElementById('content').innerHTML = `
     <div class="stats-row" style="grid-template-columns:repeat(4,1fr);">
       <div class="stat-card">
         <div class="stat-icon-wrap" style="background:rgba(255,31,31,.1);">🔑</div>
-        <div class="stat-num">${STATE.apiKeys.length}</div>
-        <div class="stat-lbl">TOTAL KEYS</div>
+        <div class="stat-num">${STATE.apiKeys.filter(k=>isRealKey(k.value)).length}</div>
+        <div class="stat-lbl">VALID KEYS</div>
       </div>
       <div class="stat-card">
         <div class="stat-icon-wrap" style="background:rgba(0,212,106,.08);">✅</div>
-        <div class="stat-num">${STATE.apiKeys.filter(k=>k.status==='active').length}</div>
+        <div class="stat-num">${STATE.apiKeys.filter(k=>k.status==='active'&&isRealKey(k.value)).length}</div>
         <div class="stat-lbl">ACTIVE KEYS</div>
       </div>
       <div class="stat-card">
@@ -895,6 +895,38 @@ function renderApiKeys() {
       </div>
     </div>
 
+    <!-- ── LIVE DIAGNOSTICS ── -->
+    <div class="panel grid-full" style="margin-bottom:18px;border-color:rgba(59,130,246,.3);">
+      <div class="ph" style="border-color:rgba(59,130,246,.2);">
+        <div class="pt" style="color:#3B82F6;">🔬 LIVE KEY DIAGNOSTICS</div>
+        <span style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;">Tests your key against YouTube API from this browser</span>
+      </div>
+      <div class="pb">
+        <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:16px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:240px;">
+            <label style="font-size:10px;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;">Test an API Key</label>
+            <input id="diagKeyInput" type="text" placeholder="Paste your AIza... key here"
+              style="width:100%;box-sizing:border-box;background:var(--dark);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-family:'Space Mono',monospace;font-size:12px;outline:none;">
+          </div>
+          <button onclick="runDiagnostics()" style="padding:10px 22px;background:#3B82F6;border:none;color:white;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif;flex-shrink:0;">
+            ▶ Run Test
+          </button>
+        </div>
+        <div id="diagResult" style="display:none;"></div>
+
+        <div style="margin-top:14px;padding:14px;background:var(--dark);border-radius:8px;border:1px solid var(--border);">
+          <div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:10px;letter-spacing:.5px;">CHECKLIST — IF FETCH IS FAILING ON VERCEL</div>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;color:#888;line-height:1.6;">
+            <div>1️⃣ <strong style="color:var(--text);">YouTube Data API v3 enabled?</strong> — Go to <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" style="color:#3B82F6;">Google Cloud Console → APIs → YouTube Data API v3</a> → click Enable</div>
+            <div>2️⃣ <strong style="color:var(--text);">Key has no HTTP referrer restriction?</strong> — In Cloud Console → Credentials → click your key → under "Application restrictions" select <strong style="color:var(--text);">None</strong> (or add your Vercel URL: <code style="background:#1a1a1a;padding:1px 6px;border-radius:4px;color:#FFD700;">${location.origin}/*</code>)</div>
+            <div>3️⃣ <strong style="color:var(--text);">API restriction set to YouTube Data API v3?</strong> — Under "API restrictions" select "Restrict key" → pick <strong style="color:var(--text);">YouTube Data API v3</strong></div>
+            <div>4️⃣ <strong style="color:var(--text);">Quota not exhausted?</strong> — Free tier is 10,000 units/day. Check in <a href="https://console.cloud.google.com/apis/api/youtube.googleapis.com/quotas" target="_blank" style="color:#3B82F6;">Cloud Console → Quotas</a></div>
+            <div>5️⃣ <strong style="color:var(--text);">Key saved correctly here?</strong> — Click "▶ Run Test" above to verify this key works from your browser right now</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="panel grid-full" style="margin-bottom:18px;">
       <div class="ph">
         <div class="pt">⚙️ ROTATION STATUS</div>
@@ -903,18 +935,21 @@ function renderApiKeys() {
       <div class="pb">
         <div style="display:flex;align-items:center;gap:0;position:relative;">
           ${STATE.apiKeys.sort((a,b)=>a.priority-b.priority).map((k,i) => {
-            const pct=(k.used/k.quota)*100;
-            const status = k.status==='disabled'?'🚫': pct>=100?'❌': pct>=80?'⚠️':'✅';
-            const isActive = k===activeKey;
+            const real = isRealKey(k.value);
+            const pct  = real ? (k.used/k.quota)*100 : 0;
+            const status = !real ? '⬜' : k.status==='disabled'?'🚫': pct>=100?'❌': pct>=80?'⚠️':'✅';
+            const isAct  = k===activeKey;
             return `
-              <div style="flex:1;padding:14px 16px;background:${isActive?'rgba(0,212,106,.06)':'var(--card2)'};border:1px solid ${isActive?'var(--green)':'var(--border)'};border-radius:8px;${i<STATE.apiKeys.length-1?'margin-right:2px;':''}position:relative;">
-                ${isActive?'<div style="position:absolute;top:-1px;right:-1px;background:var(--green);color:var(--black);font-size:9px;font-family:\'Space Mono\',monospace;font-weight:700;padding:3px 8px;border-radius:0 8px 0 8px;letter-spacing:1px;">ACTIVE</div>':''}
+              <div style="flex:1;padding:14px 16px;background:${isAct?'rgba(0,212,106,.06)':'var(--card2)'};border:1px solid ${isAct?'var(--green)':'var(--border)'};border-radius:8px;${i<STATE.apiKeys.length-1?'margin-right:2px;':''}position:relative;">
+                ${isAct?'<div style="position:absolute;top:-1px;right:-1px;background:var(--green);color:var(--black);font-size:9px;font-family:\'Space Mono\',monospace;font-weight:700;padding:3px 8px;border-radius:0 8px 0 8px;letter-spacing:1px;">ACTIVE</div>':''}
                 <div style="font-size:10px;color:var(--muted);font-family:\'Space Mono\',monospace;margin-bottom:4px;">PRIORITY ${k.priority}</div>
                 <div style="font-size:13px;font-weight:600;margin-bottom:8px;">${status} ${k.name}</div>
+                ${real ? `
                 <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:5px;">
-                  <div style="height:100%;width:${Math.min(pct,100)}%;background:${pct>=100?'var(--red)':pct>=80?'var(--orange)':'var(--green)'};border-radius:2px;transition:width .8s;"></div>
+                  <div style="height:100%;width:${Math.min(pct,100)}%;background:${pct>=100?'var(--red)':pct>=80?'var(--orange)':'var(--green)'};border-radius:2px;"></div>
                 </div>
-                <div style="font-size:10px;color:var(--muted);">${fmtNum(k.used)} / ${fmtNum(k.quota)} units (${pct.toFixed(0)}%)</div>
+                <div style="font-size:10px;color:var(--muted);">${fmtNum(k.used)} / ${fmtNum(k.quota)} units</div>
+                ` : `<div style="font-size:10px;color:#444;">No key set</div>`}
               </div>
               ${i<STATE.apiKeys.length-1?'<div style="display:flex;align-items:center;padding:0 4px;color:var(--muted);font-size:18px;">→</div>':''}
             `;
@@ -932,6 +967,10 @@ function renderApiKeys() {
       <div class="pb"><div class="chart-container"><canvas id="hourlyChart"></canvas></div></div>
     </div>
   `;
+
+  // Pre-fill the test input with first real key
+  const firstReal = STATE.apiKeys.find(k => isRealKey(k.value));
+  if (firstReal) document.getElementById('diagKeyInput').value = firstReal.value;
 
   renderKeyCards();
   setTimeout(initHourlyChart, 50);
@@ -1023,6 +1062,99 @@ function renderKeyCards() {
       </div>
     `;
   }).join('');
+}
+
+async function runDiagnostics() {
+  const key = document.getElementById('diagKeyInput')?.value?.trim();
+  const box = document.getElementById('diagResult');
+  if (!box) return;
+
+  if (!key || !key.startsWith('AIza') || key.length < 30) {
+    box.style.display = 'block';
+    box.innerHTML = diagCard('error', '❌ Invalid Key Format', 'Key must start with "AIza" and be ~39 characters. Check you copied it fully from Google Cloud Console.');
+    return;
+  }
+
+  box.style.display = 'block';
+  box.innerHTML = diagCard('info', '⏳ Testing...', 'Making a live request to YouTube Data API v3 from this browser...');
+
+  try {
+    const url  = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&chart=mostPopular&regionCode=US&maxResults=3&hl=en&key=${key}`;
+    const resp = await fetch(url, { method: 'GET' });
+    const data = await resp.json();
+
+    if (data.error) {
+      const code   = data.error.code;
+      const status = data.error.status || '';
+      const msg    = data.error.message || '';
+
+      if (code === 403 && msg.toLowerCase().includes('referrer')) {
+        box.innerHTML = diagCard('error', '❌ HTTP Referrer Blocked (403)',
+          `Your key has an HTTP referrer restriction that blocks <strong>${location.origin}</strong>.<br><br>
+          <strong>Fix:</strong> Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:#3B82F6;">Cloud Console → Credentials</a> → click your key → under "Application restrictions" either:<br>
+          • Set to <strong>None</strong>, OR<br>
+          • Add <code style="background:#1a1a1a;padding:2px 6px;border-radius:4px;">${location.origin}/*</code> to the allowed referrers`);
+
+      } else if (code === 403 && (msg.toLowerCase().includes('disabled') || msg.toLowerCase().includes('not been used'))) {
+        box.innerHTML = diagCard('error', '❌ YouTube Data API v3 Not Enabled (403)',
+          `The YouTube Data API v3 is not enabled in your Google Cloud project.<br><br>
+          <strong>Fix:</strong> Go to <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" style="color:#3B82F6;">Cloud Console → Library → YouTube Data API v3</a> → click <strong>Enable</strong>, then wait ~1 minute.`);
+
+      } else if (code === 403) {
+        box.innerHTML = diagCard('error', `❌ Access Forbidden (403)`,
+          `YouTube rejected the request. Most likely cause: HTTP referrer restriction or API not enabled.<br><br>
+          <strong>Error detail:</strong> <code style="background:#1a1a1a;padding:2px 6px;border-radius:4px;color:#ff6b6b;">${escHtml(msg)}</code><br><br>
+          Check that: (1) YouTube Data API v3 is enabled, (2) Key has no referrer restriction blocking <strong>${location.origin}</strong>`);
+
+      } else if (code === 400) {
+        box.innerHTML = diagCard('error', '❌ Bad API Key (400)',
+          `YouTube does not recognise this key. It may be incorrect or from a different project.<br><br>
+          <strong>Error:</strong> <code style="background:#1a1a1a;padding:2px 6px;border-radius:4px;color:#ff6b6b;">${escHtml(msg)}</code><br><br>
+          Double-check you copied the full key from <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:#3B82F6;">Cloud Console → Credentials</a>.`);
+
+      } else if (code === 429 || status === 'RESOURCE_EXHAUSTED') {
+        box.innerHTML = diagCard('warn', '⚠️ Quota Exhausted (429)',
+          `The key is valid and working, but its daily quota (10,000 units) is used up. It resets at midnight Pacific Time.<br><br>
+          <strong>Options:</strong> Wait for reset, add another key, or <a href="https://console.cloud.google.com/apis/api/youtube.googleapis.com/quotas" target="_blank" style="color:#3B82F6;">request a quota increase</a>.`);
+
+      } else {
+        box.innerHTML = diagCard('error', `❌ API Error ${code}`,
+          `<strong>Status:</strong> ${escHtml(status)}<br><strong>Message:</strong> ${escHtml(msg)}`);
+      }
+
+    } else if (data.items && data.items.length > 0) {
+      const sample = data.items[0].snippet;
+      box.innerHTML = diagCard('success', '✅ Key Working Perfectly!',
+        `Got <strong>${data.items.length} videos</strong> back from YouTube successfully.<br>
+        <strong>Sample:</strong> "${escHtml(sample.title)}" by ${escHtml(sample.channelTitle)}<br><br>
+        If data is still not loading on the dashboard, go to <strong>Admin → API Keys</strong> and make sure this key is saved and active there.`);
+
+    } else {
+      box.innerHTML = diagCard('warn', '⚠️ Key Works But No Results',
+        `The API responded without error but returned 0 videos. This can happen if the key is newly created and still propagating. Try again in 1–2 minutes.`);
+    }
+
+  } catch (err) {
+    box.innerHTML = diagCard('error', '❌ Network Error — Cannot Reach YouTube',
+      `The browser could not connect to the YouTube API at all.<br><br>
+      <strong>Error:</strong> <code style="background:#1a1a1a;padding:2px 6px;border-radius:4px;color:#ff6b6b;">${escHtml(err.message)}</code><br><br>
+      This usually means a network/firewall issue, not the key. Try on a different network or check browser DevTools (F12 → Network tab) for the exact error.`);
+  }
+}
+
+function diagCard(type, title, body) {
+  const colors = {
+    success: { bg:'rgba(0,212,106,.08)',  border:'rgba(0,212,106,.3)',  title:'#00C853' },
+    warn:    { bg:'rgba(255,215,0,.07)',   border:'rgba(255,215,0,.25)', title:'#FFD700' },
+    error:   { bg:'rgba(255,31,31,.08)',   border:'rgba(255,31,31,.3)',  title:'#FF6B6B' },
+    info:    { bg:'rgba(59,130,246,.08)',  border:'rgba(59,130,246,.3)', title:'#3B82F6' },
+  };
+  const c = colors[type] || colors.info;
+  return `
+    <div style="padding:16px 18px;background:${c.bg};border:1px solid ${c.border};border-radius:10px;margin-top:4px;">
+      <div style="font-weight:700;color:${c.title};margin-bottom:8px;font-size:14px;">${title}</div>
+      <div style="font-size:13px;color:#999;line-height:1.7;">${body}</div>
+    </div>`;
 }
 
 function initHourlyChart() {
@@ -1378,7 +1510,7 @@ function renderPrefetch() {
   const cachedRegion = cache?.region || '–';
   const catsDone = cache?.categories ? Object.keys(cache.categories).length : 0;
 
-  const activeKeys = STATE.apiKeys.filter(k => k.status !== 'disabled' && k.value && !k.value.includes('here'));
+  const activeKeys = STATE.apiKeys.filter(k => k.status !== 'disabled' && isRealKey(k.value));
   const hasRealKeys = activeKeys.length > 0;
 
   // Build region options for REGIONS list (reuse from dashboard context via hardcoded top ones)
@@ -1566,17 +1698,49 @@ function toggleCatPreview(elId) {
 
 // ─── FETCH ENGINE ───
 async function startPrefetch() {
-  const activeKeys = STATE.apiKeys.filter(k => k.status !== 'disabled' && k.value && !k.value.includes('here'));
+  const activeKeys = STATE.apiKeys.filter(k => k.status !== 'disabled' && isRealKey(k.value));
   if (!activeKeys.length) { toast('Add valid API keys first', 'e'); return; }
 
   const region  = document.getElementById('prefetchRegion').value;
   const maxVids = parseInt(document.getElementById('prefetchMax').value);
   FETCH_ABORT   = false;
 
-  // Show progress UI
+  // ── Pre-flight: test that the key and network actually work ──
+  document.getElementById('fetchStatusText').textContent = 'Testing API connection...';
   document.getElementById('fetchProgress').style.display = 'block';
   document.getElementById('fetchBtn').disabled = true;
   document.getElementById('fetchBtn').textContent = '⏳ Fetching...';
+
+  try {
+    const testUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&chart=mostPopular&regionCode=US&maxResults=1&hl=en&key=${activeKeys[0].value}`;
+    const testResp = await fetch(testUrl);
+    const testData = await testResp.json();
+    if (testData.error) {
+      const code = testData.error.code;
+      const msg  = testData.error.message || '';
+      if (code === 403 || code === 429) {
+        toast('API key quota exceeded. Add another key or wait 24h.', 'e');
+      } else if (code === 400) {
+        toast('API key rejected (400). Check the key in API Keys section.', 'e');
+      } else {
+        toast('API error: ' + msg, 'e');
+      }
+      document.getElementById('fetchBtn').disabled = false;
+      document.getElementById('fetchBtn').textContent = '🚀 Fetch All Categories';
+      document.getElementById('fetchProgress').style.display = 'none';
+      return;
+    }
+    console.log('[Admin] Pre-flight OK — API key works, items:', testData.items?.length);
+  } catch (preflightErr) {
+    toast('Cannot reach YouTube API. Check your internet connection.', 'e');
+    console.error('[Admin] Pre-flight failed:', preflightErr);
+    document.getElementById('fetchBtn').disabled = false;
+    document.getElementById('fetchBtn').textContent = '🚀 Fetch All Categories';
+    document.getElementById('fetchProgress').style.display = 'none';
+    return;
+  }
+
+  document.getElementById('fetchStatusText').textContent = 'Starting fetch...';
 
   // Init category pill grid
   const grid = document.getElementById('fetchCatGrid');
@@ -1637,7 +1801,9 @@ async function startPrefetch() {
     } catch (err) {
       result.categories[cat.id] = [];
       setPillState(pillId, 'error', cat.icon);
-      toast(`Failed: ${cat.name} — ${err.message}`, 'e');
+      console.error('[Admin Prefetch] Category failed:', cat.name, err);
+      const msg = err.message || 'Unknown error';
+      toast(`${cat.name}: ${msg}`, 'e');
     }
 
     // Small delay to avoid hammering API
@@ -1702,25 +1868,56 @@ function setPillState(id, state, icon, count) {
 }
 
 async function adminFetchWithRotation(url, keys, startIndex) {
-  for (let attempt = 0; attempt < keys.length; attempt++) {
-    const idx  = (startIndex + attempt) % keys.length;
-    const key  = keys[idx].value;
-    const full = url + (url.includes('?') ? '&' : '?') + 'key=' + key;
+  let lastErr = 'Unknown error';
 
-    const resp = await fetch(full);
-    const data = await resp.json();
+  for (let attempt = 0; attempt < keys.length; attempt++) {
+    const idx = (startIndex + attempt) % keys.length;
+    const key = keys[idx].value;
+    // key appended cleanly — URL already has ?params
+    const full = url + '&key=' + key;
+
+    let resp, data;
+    try {
+      resp = await fetch(full, { method: 'GET' });
+    } catch (netErr) {
+      lastErr = 'Network error: ' + netErr.message;
+      console.error('[Admin] Network error:', netErr);
+      continue;
+    }
+
+    try {
+      data = await resp.json();
+    } catch (parseErr) {
+      lastErr = 'Bad response (HTTP ' + resp.status + ')';
+      continue;
+    }
 
     if (data.error) {
-      if (data.error.code === 403 || data.error.status === 'RESOURCE_EXHAUSTED') {
-        toast(`Key quota exceeded, rotating...`, 'i');
+      const code   = data.error.code;
+      const status = (data.error.status  || '').toUpperCase();
+      const msg    = (data.error.message || '').toLowerCase();
+      console.warn('[Admin] API error:', code, status, msg);
+
+      // Quota / rate limit / forbidden — rotate
+      if (code === 403 || code === 429 ||
+          status === 'RESOURCE_EXHAUSTED' || status === 'FORBIDDEN' ||
+          msg.includes('quota') || msg.includes('forbidden') || msg.includes('rate')) {
+        lastErr = 'quota';
         continue;
       }
-      throw new Error(data.error.message || 'API error');
+      // Bad key / bad request — skip key
+      if (code === 400 || code === 401) {
+        lastErr = msg || `HTTP ${code}`;
+        continue;
+      }
+      throw new Error(data.error.message || `API error ${code}`);
     }
+
     data._keyIndex = idx;
     return data;
   }
-  throw new Error('All API keys exhausted');
+
+  throw new Error(lastErr === 'quota' ? 'All API keys quota exhausted' : lastErr);
 }
 
 function adminFmtDuration(iso) {
