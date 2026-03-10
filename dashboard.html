@@ -1680,22 +1680,121 @@ function renderEmptyDataState(icon, title, msg) {
   `;
 }
 
+// ═══════════════════════════════════════════════
+// FILTERED VIDEO POOL — used by Charts & Channels
+// ═══════════════════════════════════════════════
+function getFilteredVideos() {
+  // duration type: 'videos' = long only, 'shorts' = shorts only, 'all' = both
+  const durType = document.getElementById('chartDurFilter')?.value || 'videos';
+  const catId   = document.getElementById('chartCatFilter')?.value || '';
+
+  // Pick the right pool
+  let pool = [];
+  if (durType === 'videos')  pool = [...STATE.videos];
+  else if (durType === 'shorts') pool = [...STATE.shorts];
+  else pool = [...STATE.videos, ...STATE.shorts];
+
+  // Filter by category if selected
+  if (catId !== '') {
+    pool = pool.filter(v => String(v.categoryId) === String(catId));
+  }
+
+  return pool;
+}
+
+function buildChartFilterBar(activeDur = 'videos', activeCat = '') {
+  const catOptions = CATEGORIES.map(c =>
+    `<option value="${c.id}" ${String(activeCat)===String(c.id)?'selected':''}>${c.icon} ${c.name}</option>`
+  ).join('');
+
+  return `
+    <div style="display:flex;align-items:center;gap:10px;padding:14px 18px;background:var(--dark);border-bottom:1px solid var(--border);flex-wrap:wrap;">
+      <span style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:.5px;flex-shrink:0;">FILTER:</span>
+
+      <select id="chartCatFilter" onchange="onChartFilterChange()"
+        style="background:var(--card);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;">
+        ${catOptions}
+      </select>
+
+      <div style="display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;flex-shrink:0;">
+        ${[['videos','🎬 Videos'],['shorts','📱 Shorts'],['all','🔀 Both']].map(([val,label]) => `
+          <button onclick="setChartDurFilter('${val}')" id="durBtn_${val}"
+            style="padding:6px 14px;border:none;background:${activeDur===val?'var(--red)':'var(--card)'};color:${activeDur===val?'white':'var(--muted)'};font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;">
+            ${label}
+          </button>`).join('')}
+      </div>
+
+      <span id="chartPoolSize" style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;margin-left:auto;">
+        — videos in view
+      </span>
+    </div>`;
+}
+
+function setChartDurFilter(val) {
+  const btn = document.getElementById('durBtn_' + val);
+  if (!btn) return;
+  // Update button styles
+  ['videos','shorts','all'].forEach(v => {
+    const b = document.getElementById('durBtn_' + v);
+    if (!b) return;
+    b.style.background = v === val ? 'var(--red)' : 'var(--card)';
+    b.style.color       = v === val ? 'white' : 'var(--muted)';
+  });
+  // Store in a hidden input so getFilteredVideos can read it
+  let inp = document.getElementById('chartDurFilter');
+  if (!inp) {
+    inp = document.createElement('input');
+    inp.type = 'hidden';
+    inp.id   = 'chartDurFilter';
+    document.body.appendChild(inp);
+  }
+  inp.value = val;
+  onChartFilterChange();
+}
+
+function onChartFilterChange() {
+  updateChartPoolSize();
+  if (STATE.currentView === 'charts') {
+    initTrendChart();
+    initCatChart();
+    renderCatBreakdown();
+  } else if (STATE.currentView === 'channels') {
+    renderChannelContent();
+  }
+}
+
+function updateChartPoolSize() {
+  const pool = getFilteredVideos();
+  const el = document.getElementById('chartPoolSize');
+  if (el) el.textContent = `${pool.length} video${pool.length!==1?'s':''} in view`;
+}
+
 // ─── CHARTS VIEW ───
 function renderCharts() {
   const content = document.getElementById('mainContent');
-  if (!STATE.videos.length) {
+  const hasAny  = STATE.videos.length || STATE.shorts.length;
+  if (!hasAny) {
     content.innerHTML = renderEmptyDataState('📊', 'TREND CHARTS', 'Load trending data first by clicking ↺ Refresh.');
     return;
   }
+
+  const activeDur = document.getElementById('chartDurFilter')?.value || 'videos';
+  const activeCat = document.getElementById('chartCatFilter')?.value || '';
+
   content.innerHTML = `
+    <div class="panel grid-full" style="margin-bottom:20px;overflow:visible;">
+      ${buildChartFilterBar(activeDur, activeCat)}
+      <div style="padding:0;"></div>
+    </div>
     <div class="grid-two">
       <div class="panel">
         <div class="panel-header">
           <div class="panel-title">📈 TRENDING VIEWS OVER TIME</div>
-          <select class="time-select" id="chartTimeRange" onchange="updateMainChart()" style="font-size:12px;padding:5px 10px;">
+          <select id="chartTimeRange" onchange="updateMainChart()"
+            style="background:var(--card);border:1px solid var(--border);color:var(--text);padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;">
             <option value="7">Last 7 Days</option>
-            <option value="30" selected>Last 1 Month</option>
-            <option value="90">Last 3 Months</option>
+            <option value="30" selected>Last 30 Days</option>
+            <option value="90">Last 90 Days</option>
             <option value="365">Last 1 Year</option>
           </select>
         </div>
@@ -1721,9 +1820,14 @@ function renderCharts() {
       </div>
     </div>
   `;
-  if (banner) content.prepend(banner);
+
+  // Sync hidden dur filter input
+  let inp = document.getElementById('chartDurFilter');
+  if (!inp) { inp = document.createElement('input'); inp.type='hidden'; inp.id='chartDurFilter'; document.body.appendChild(inp); }
+  inp.value = activeDur;
 
   setTimeout(() => {
+    updateChartPoolSize();
     initTrendChart();
     initCatChart();
     renderCatBreakdown();
@@ -1733,18 +1837,18 @@ function renderCharts() {
 function initTrendChart() {
   const ctx = document.getElementById('trendChart')?.getContext('2d');
   if (!ctx) return;
-  if (STATE.chartInstance) STATE.chartInstance.destroy();
+  if (STATE.chartInstance) { STATE.chartInstance.destroy(); STATE.chartInstance = null; }
 
+  const pool = getFilteredVideos();
   const days = parseInt(document.getElementById('chartTimeRange')?.value || 30);
   const now  = new Date();
 
-  // Build buckets from real video publishedAt dates + view counts
   const buckets = {};
   for (let i = days - 1; i >= 0; i--) {
     const d = new Date(now - i * 86400000);
     buckets[d.toDateString()] = 0;
   }
-  STATE.videos.forEach(v => {
+  pool.forEach(v => {
     if (!v.publishedAt) return;
     const key = new Date(v.publishedAt).toDateString();
     if (key in buckets) buckets[key] += v.views;
@@ -1756,7 +1860,9 @@ function initTrendChart() {
       ? d.toLocaleDateString('en', { weekday: 'short' })
       : d.toLocaleDateString('en', { month: 'short', day: 'numeric' });
   });
-  const data = Object.values(buckets);
+
+  const durType = document.getElementById('chartDurFilter')?.value || 'videos';
+  const lineColor = durType === 'shorts' ? '#F97316' : durType === 'all' ? '#A855F7' : '#FF1F1F';
 
   STATE.chartInstance = new Chart(ctx, {
     type: 'line',
@@ -1764,15 +1870,13 @@ function initTrendChart() {
       labels,
       datasets: [{
         label: 'Views (by publish date)',
-        data,
-        borderColor: '#FF1F1F',
-        backgroundColor: 'rgba(255,31,31,0.08)',
-        borderWidth: 2,
-        fill: true,
-        tension: 0.4,
+        data: Object.values(buckets),
+        borderColor: lineColor,
+        backgroundColor: lineColor + '14',
+        borderWidth: 2, fill: true, tension: 0.4,
         pointRadius: days <= 7 ? 4 : 2,
         pointHoverRadius: 6,
-        pointBackgroundColor: '#FF1F1F',
+        pointBackgroundColor: lineColor,
       }]
     },
     options: {
@@ -1782,7 +1886,7 @@ function initTrendChart() {
         tooltip: {
           backgroundColor: '#1C1C1C', borderColor: '#252525', borderWidth: 1,
           titleColor: '#F0F0F0', bodyColor: '#777',
-          callbacks: { label: ctx => ' ' + formatNum(ctx.raw) + ' views' }
+          callbacks: { label: c => ' ' + formatNum(c.raw) + ' views' }
         }
       },
       scales: {
@@ -1798,15 +1902,17 @@ function updateMainChart() { initTrendChart(); }
 function initCatChart() {
   const ctx = document.getElementById('catChart')?.getContext('2d');
   if (!ctx) return;
-  if (STATE.catChartInstance) STATE.catChartInstance.destroy();
+  if (STATE.catChartInstance) { STATE.catChartInstance.destroy(); STATE.catChartInstance = null; }
 
+  const pool = getFilteredVideos();
   const catCounts = {};
-  STATE.videos.forEach(v => {
+  pool.forEach(v => {
     const cat = CATEGORIES.find(c => String(c.id) === String(v.categoryId))?.name || 'Other';
     catCounts[cat] = (catCounts[cat] || 0) + 1;
   });
 
   const sorted = Object.entries(catCounts).sort((a,b) => b[1]-a[1]).slice(0, 8);
+  if (!sorted.length) return;
   const colors = ['#FF1F1F','#FF6B35','#FFD700','#00C853','#2196F3','#9C27B0','#FF9800','#00BCD4'];
 
   STATE.catChartInstance = new Chart(ctx, {
@@ -1833,22 +1939,29 @@ function renderCatBreakdown() {
   const el = document.getElementById('catBreakdown');
   if (!el) return;
 
+  const pool = getFilteredVideos();
   const catData = {};
-  STATE.videos.forEach(v => {
-    const cat = CATEGORIES.find(c => String(c.id) === String(v.categoryId));
+  pool.forEach(v => {
+    const cat  = CATEGORIES.find(c => String(c.id) === String(v.categoryId));
     const name = cat?.name || 'Other';
-    if (!catData[name]) catData[name] = { views: 0, count: 0 };
+    if (!catData[name]) catData[name] = { views: 0, likes: 0, count: 0 };
     catData[name].views += v.views;
+    catData[name].likes += v.likes;
     catData[name].count++;
   });
 
-  const sorted = Object.entries(catData).sort((a,b) => b[1].views - a[1].views);
+  const sorted  = Object.entries(catData).sort((a,b) => b[1].views - a[1].views);
   const maxViews = sorted[0]?.[1].views || 1;
+
+  if (!sorted.length) {
+    el.innerHTML = `<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">No data for the selected filters.</div>`;
+    return;
+  }
 
   el.innerHTML = sorted.slice(0, 12).map(([name, d]) => `
     <div class="cat-bar-item">
       <div class="cat-bar-label">
-        <span>${name} (${d.count} videos)</span>
+        <span>${name} <span style="color:#444;font-size:10px;">(${d.count} video${d.count!==1?'s':''})</span></span>
         <span>${formatNum(d.views)}</span>
       </div>
       <div class="cat-bar-track">
@@ -1861,66 +1974,134 @@ function renderCatBreakdown() {
 // ─── CHANNELS VIEW ───
 function renderChannels() {
   const content = document.getElementById('mainContent');
-  if (!STATE.videos.length) {
+  const hasAny  = STATE.videos.length || STATE.shorts.length;
+  if (!hasAny) {
     content.innerHTML = renderEmptyDataState('📺', 'TOP CHANNELS', 'Load trending data first by clicking ↺ Refresh.');
     return;
   }
 
-  const channelMap = {};
-  STATE.videos.forEach(v => {
-    if (!channelMap[v.channel]) channelMap[v.channel] = { name: v.channel, videos: 0, views: 0 };
-    channelMap[v.channel].videos++;
-    channelMap[v.channel].views += v.views;
-  });
-  const channels = Object.values(channelMap).sort((a,b) => b.views - a.views);
+  const activeDur = document.getElementById('chartDurFilter')?.value || 'videos';
+  const activeCat = document.getElementById('chartCatFilter')?.value || '';
 
   content.innerHTML = `
+    <div class="panel grid-full" style="margin-bottom:20px;overflow:visible;">
+      ${buildChartFilterBar(activeDur, activeCat)}
+      <div style="padding:0;"></div>
+    </div>
+    <div id="channelContent"></div>
+  `;
+
+  // Sync hidden filter input
+  let inp = document.getElementById('chartDurFilter');
+  if (!inp) { inp = document.createElement('input'); inp.type='hidden'; inp.id='chartDurFilter'; document.body.appendChild(inp); }
+  inp.value = activeDur;
+
+  updateChartPoolSize();
+  renderChannelContent();
+}
+
+function renderChannelContent() {
+  const container = document.getElementById('channelContent');
+  if (!container) return;
+
+  const pool = getFilteredVideos();
+
+  if (!pool.length) {
+    container.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--muted);font-size:14px;">No channels found for the selected filters.<br><span style="font-size:12px;color:#444;">Try switching to a different duration type or category.</span></div>`;
+    return;
+  }
+
+  const channelMap = {};
+  pool.forEach(v => {
+    if (!channelMap[v.channel]) channelMap[v.channel] = { name: v.channel, videos: 0, views: 0, likes: 0, shorts: 0 };
+    channelMap[v.channel].views += v.views;
+    channelMap[v.channel].likes += v.likes;
+    if ((v.durationSec||0) <= SHORTS_MAX_SEC) channelMap[v.channel].shorts++;
+    else channelMap[v.channel].videos++;
+  });
+
+  const channels = Object.values(channelMap).sort((a,b) => b.views - a.views);
+  const total = channels.reduce((s,c) => s+c.views, 0);
+
+  container.innerHTML = `
     <div class="stats-row">
-      <div class="stat-card red"><div class="stat-icon">📺</div><div class="stat-value">${channels.length}</div><div class="stat-label">UNIQUE CHANNELS</div></div>
-      <div class="stat-card gold"><div class="stat-icon">🏆</div><div class="stat-value" style="font-size:18px">${(channels[0]?.name||'–').substring(0,12)}</div><div class="stat-label">#1 CHANNEL</div></div>
-      <div class="stat-card green"><div class="stat-icon">👁️</div><div class="stat-value">${formatNum(channels[0]?.views||0)}</div><div class="stat-label">TOP CHANNEL VIEWS</div></div>
-      <div class="stat-card blue"><div class="stat-icon">📊</div><div class="stat-value">${(STATE.videos.length/Math.max(channels.length,1)).toFixed(1)}</div><div class="stat-label">AVG VIDEOS/CHANNEL</div></div>
+      <div class="stat-card red">
+        <div class="stat-icon">📺</div>
+        <div class="stat-value">${channels.length}</div>
+        <div class="stat-label">UNIQUE CHANNELS</div>
+        <div class="stat-change">${pool.length} video${pool.length!==1?'s':''} analysed</div>
+      </div>
+      <div class="stat-card gold">
+        <div class="stat-icon">🏆</div>
+        <div class="stat-value" style="font-size:16px;letter-spacing:0;">${(channels[0]?.name||'–').substring(0,14)}</div>
+        <div class="stat-label">#1 CHANNEL</div>
+        <div class="stat-change">${formatNum(channels[0]?.views||0)} views</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-icon">👁️</div>
+        <div class="stat-value">${formatNum(total)}</div>
+        <div class="stat-label">TOTAL VIEWS</div>
+        <div class="stat-change">Across all channels</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-icon">📊</div>
+        <div class="stat-value">${(pool.length / Math.max(channels.length,1)).toFixed(1)}</div>
+        <div class="stat-label">AVG VIDEOS/CHANNEL</div>
+        <div class="stat-change">In current filter</div>
+      </div>
     </div>
     <div class="grid-two">
       <div class="panel">
         <div class="panel-header"><div class="panel-title">🏆 TOP CHANNELS BY VIEWS</div></div>
         <div class="panel-body">
-          ${channels.slice(0,15).map((ch, i) => `
+          ${channels.slice(0, 15).map((ch, i) => `
             <div class="channel-item">
-              <div class="channel-rank ${i<3?'gold':'#'+String(i+1)}">${i<3?['🥇','🥈','🥉'][i]:i+1}</div>
-              <div class="channel-icon">${ch.name[0]}</div>
+              <div class="channel-rank ${i<3?'gold':''}">${i<3?['🥇','🥈','🥉'][i]:i+1}</div>
+              <div class="channel-icon">${ch.name[0]?.toUpperCase()||'?'}</div>
               <div class="channel-info">
                 <div class="channel-name">${escHtml(ch.name)}</div>
-                <div class="channel-videos">${ch.videos} trending video${ch.videos>1?'s':''}</div>
+                <div class="channel-videos">
+                  ${ch.videos ? `${ch.videos} video${ch.videos>1?'s':''}` : ''}${ch.videos&&ch.shorts?' · ':''}${ch.shorts ? `${ch.shorts} short${ch.shorts>1?'s':''}` : ''}
+                </div>
               </div>
-              <div class="channel-views">${formatNum(ch.views)}</div>
+              <div>
+                <div class="channel-views">${formatNum(ch.views)}</div>
+                <div style="font-size:10px;color:var(--muted);text-align:right;">👍 ${formatNum(ch.likes)}</div>
+              </div>
             </div>
           `).join('')}
         </div>
       </div>
       <div class="panel">
-        <div class="panel-header"><div class="panel-title">📊 CHANNEL CHART</div></div>
+        <div class="panel-header"><div class="panel-title">📊 TOP 8 CHANNELS — VIEWS</div></div>
         <div class="panel-body">
           <div class="chart-container"><canvas id="channelChart"></canvas></div>
         </div>
       </div>
     </div>
   `;
-  if (banner) content.prepend(banner);
 
   setTimeout(() => {
     const ctx = document.getElementById('channelChart')?.getContext('2d');
     if (!ctx) return;
-    const top8 = channels.slice(0,8);
+    const top8 = channels.slice(0, 8);
+    const durType = document.getElementById('chartDurFilter')?.value || 'videos';
+    const barColor = durType === 'shorts' ? '#F97316' : durType === 'all' ? '#A855F7' : '#FF1F1F';
     new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: top8.map(c => c.name.substring(0,12)),
-        datasets: [{ label: 'Views', data: top8.map(c => c.views), backgroundColor: 'rgba(255,31,31,0.7)', borderColor: '#FF1F1F', borderWidth: 1, borderRadius: 4 }]
+        labels: top8.map(c => c.name.substring(0, 14)),
+        datasets: [{
+          label: 'Views',
+          data: top8.map(c => c.views),
+          backgroundColor: barColor + 'B3',
+          borderColor: barColor,
+          borderWidth: 1, borderRadius: 4
+        }]
       },
       options: {
         responsive: true, maintainAspectRatio: false, indexAxis: 'y',
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' '+formatNum(c.raw) } } },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' ' + formatNum(c.raw) + ' views' } } },
         scales: {
           x: { grid: { color: '#1E1E1E' }, ticks: { color: '#555', callback: v => formatNum(v) } },
           y: { grid: { color: '#1E1E1E' }, ticks: { color: '#888', font: { size: 11 } } }
