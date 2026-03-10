@@ -228,7 +228,98 @@
   .action-btn.watch { background:var(--red); border-color:var(--red); color:white; }
   .action-btn.watch:hover { background:var(--red-dark); }
 
-  /* TOP CHANNELS */
+  /* SHORTS GRID */
+  .shorts-hero {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+  }
+  .short-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform .2s, border-color .2s, box-shadow .2s;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .short-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--red);
+    box-shadow: 0 8px 32px rgba(255,0,0,.15);
+  }
+  .short-thumb-wrap {
+    position: relative;
+    aspect-ratio: 9/16;
+    overflow: hidden;
+    background: #111;
+    flex-shrink: 0;
+  }
+  .short-thumb {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .3s;
+  }
+  .short-card:hover .short-thumb { transform: scale(1.05); }
+  .short-rank {
+    position: absolute; top: 8px; left: 8px;
+    background: rgba(0,0,0,.85);
+    color: var(--muted);
+    font-size: 11px; font-weight: 700;
+    font-family: 'Space Mono', monospace;
+    padding: 3px 8px; border-radius: 20px;
+  }
+  .short-rank.top3 { background: var(--red); color: white; }
+  .short-badge {
+    position: absolute; top: 8px; right: 8px;
+    background: rgba(255,0,0,.9);
+    color: white; font-size: 10px; font-weight: 700;
+    padding: 3px 7px; border-radius: 20px;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: .5px;
+  }
+  .short-play-overlay {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity .2s;
+    background: rgba(0,0,0,.4);
+  }
+  .short-card:hover .short-play-overlay { opacity: 1; }
+  .short-play-btn {
+    width: 48px; height: 48px;
+    background: rgba(255,0,0,.9); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .short-play-btn svg { width: 18px; fill: white; margin-left: 4px; }
+  .short-info { padding: 10px 12px; flex: 1; }
+  .short-title {
+    font-size: 12px; font-weight: 600; line-height: 1.4;
+    display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .short-channel { font-size: 11px; color: var(--muted); margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .short-meta { display: flex; gap: 8px; font-size: 10px; color: var(--muted); flex-wrap: wrap; }
+  .short-actions {
+    padding: 8px 12px; border-top: 1px solid var(--border);
+    display: flex; gap: 6px;
+  }
+  .short-actions .action-btn { font-size: 11px; padding: 5px 4px; }
+
+  /* SECTION DIVIDER */
+  .section-divider {
+    display: flex; align-items: center; gap: 14px;
+    margin: 28px 0 18px;
+  }
+  .section-divider-line { flex: 1; height: 1px; background: var(--border); }
+  .section-divider-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px; letter-spacing: 2px; color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+  }
   .channel-item {
     display:flex; align-items:center; gap:14px;
     padding:12px 0; border-bottom:1px solid var(--border);
@@ -349,8 +440,12 @@
   <div class="sidebar-section">
     <div class="sidebar-section-label">Main</div>
     <button class="nav-item active" onclick="switchView('trending')">
-      <span class="icon">🔥</span> Trending Now
+      <span class="icon">🔥</span> Trending Videos
       <span class="nav-badge" id="trendingCount">–</span>
+    </button>
+    <button class="nav-item" onclick="switchView('shorts')">
+      <span class="icon">📱</span> Trending Shorts
+      <span class="nav-badge" id="shortsCount">–</span>
     </button>
     <button class="nav-item" onclick="switchView('charts')">
       <span class="icon">📊</span> Trend Charts
@@ -469,9 +564,12 @@
 // ═══════════════════════════════════════════════
 // CONSTANTS
 // ═══════════════════════════════════════════════
-const ADMIN_EMAIL      = 'deepmagar505@gmail.com';
-const USER_DAILY_LIMIT = 3;
-const TOP_PER_CATEGORY = 20;
+const ADMIN_EMAIL       = 'deepmagar505@gmail.com';
+const USER_DAILY_LIMIT  = 3;
+const TOP_PER_CATEGORY  = 20;   // fetched per category
+const TOP_VIDEOS_SHOW   = 10;   // regular videos shown in hero section
+const TOP_SHORTS_SHOW   = 10;   // shorts shown in hero section
+const SHORTS_MAX_SEC    = 60;   // YouTube Shorts = ≤ 60 seconds
 
 // ═══════════════════════════════════════════════
 // STATE
@@ -481,7 +579,8 @@ const STATE = {
   region: 'US',
   category: '',          // '' = All, number = specific category
   timeRange: 30,
-  videos: [],            // flat list of ALL fetched videos across categories
+  videos: [],            // flat list of ALL fetched regular videos (>60s)
+  shorts: [],            // flat list of ALL fetched shorts (≤60s)
   categoryCache: {},     // { catId: [top20 videos], '' : [top20 overall], ... }
   bookmarks: JSON.parse(localStorage.getItem('tp_bookmarks') || '[]'),
   apiKeys: JSON.parse(localStorage.getItem('tp_api_keys') || '[]'),
@@ -971,17 +1070,28 @@ async function loadTrending() {
       }
     }
 
-    // Flatten deduplicated list
+    // Flatten & split into regular videos and Shorts (≤60s)
     const seen = new Set();
     STATE.videos = [];
+    STATE.shorts = [];
     for (const vids of Object.values(STATE.categoryCache)) {
       for (const v of vids) {
-        if (!seen.has(v.id)) { seen.add(v.id); STATE.videos.push(v); }
+        if (!seen.has(v.id)) {
+          seen.add(v.id);
+          if ((v.durationSec || 0) <= SHORTS_MAX_SEC && v.durationSec > 0) {
+            STATE.shorts.push(v);
+          } else {
+            STATE.videos.push(v);
+          }
+        }
       }
     }
+    // Sort both by views descending, re-rank
+    STATE.videos.sort((a,b) => b.views - a.views).forEach((v,i) => v.rank = i+1);
+    STATE.shorts.sort((a,b) => b.views - a.views).forEach((v,i) => v.rank = i+1);
 
     document.getElementById('trendingCount').textContent =
-      STATE.categoryCache['']?.length || STATE.videos.length || 0;
+      STATE.videos.length + STATE.shorts.length || 0;
 
     if (fetchedAny) {
       const regionObj = REGIONS.find(r => r.code === STATE.region);
@@ -1093,7 +1203,7 @@ function switchView(view) {
   STATE.currentView = view;
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   event?.target?.closest('.nav-item')?.classList.add('active');
-  const titles = { trending:'🔥 TRENDING NOW', charts:'📊 TREND CHARTS', channels:'📺 TOP CHANNELS', bookmarks:'🔖 BOOKMARKS' };
+  const titles = { trending:'🔥 TRENDING VIDEOS', shorts:'📱 TRENDING SHORTS', charts:'📊 TREND CHARTS', channels:'📺 TOP CHANNELS', bookmarks:'🔖 BOOKMARKS' };
   document.getElementById('topbarTitle').textContent = titles[view] || '';
   renderView();
 }
@@ -1114,6 +1224,7 @@ function onRegionChange() {
   // Clear cached data — user must manually refresh for the new region
   STATE.categoryCache = {};
   STATE.videos = [];
+  STATE.shorts = [];
   document.getElementById('trendingCount').textContent = '0';
   renderView();
 }
@@ -1124,8 +1235,15 @@ function onCategoryChange() {
 }
 
 function renderView() {
+  // Update badges
+  const vc = document.getElementById('trendingCount');
+  const sc = document.getElementById('shortsCount');
+  if (vc) vc.textContent = STATE.videos.length || '–';
+  if (sc) sc.textContent = STATE.shorts.length || '–';
+
   switch(STATE.currentView) {
     case 'trending':  renderTrending();  break;
+    case 'shorts':    renderShorts();    break;
     case 'charts':    renderCharts();    break;
     case 'channels':  renderChannels();  break;
     case 'bookmarks': renderBookmarks(); break;
@@ -1191,12 +1309,12 @@ function renderAllCategoriesSections(content, regionObj) {
     { id: '26', name: 'Howto & Style',    icon: '💄' },
   ];
 
-  // Summary stats from overall
-  const overall = STATE.categoryCache[''] || STATE.videos.slice(0, 20);
-  const totalViews  = overall.reduce((s,x)=>s+x.views, 0);
-  const totalLikes  = overall.reduce((s,x)=>s+x.likes, 0);
+  const topVideos = STATE.videos.slice(0, TOP_VIDEOS_SHOW);
+  const topShorts = STATE.shorts.slice(0, TOP_SHORTS_SHOW);
+  const totalViews = topVideos.reduce((s,x)=>s+x.views, 0);
+  const totalLikes = topVideos.reduce((s,x)=>s+x.likes, 0);
   const topCh = (() => {
-    const m = {}; overall.forEach(v=>{ m[v.channel]=(m[v.channel]||0)+1; });
+    const m = {}; topVideos.forEach(v=>{ m[v.channel]=(m[v.channel]||0)+1; });
     return Object.entries(m).sort((a,b)=>b[1]-a[1])[0]?.[0] || '–';
   })();
 
@@ -1204,21 +1322,21 @@ function renderAllCategoriesSections(content, regionObj) {
     <div class="stats-row">
       <div class="stat-card red">
         <div class="stat-icon">🔥</div>
-        <div class="stat-value">${SHOW_CATS.length}</div>
-        <div class="stat-label">CATEGORIES LOADED</div>
-        <div class="stat-change">${regionObj?.flag||''} ${regionObj?.name||STATE.region}</div>
+        <div class="stat-value">${topVideos.length + topShorts.length}</div>
+        <div class="stat-label">TOTAL TRENDING</div>
+        <div class="stat-change">${topVideos.length} videos · ${topShorts.length} shorts</div>
       </div>
       <div class="stat-card gold">
         <div class="stat-icon">👁️</div>
         <div class="stat-value">${formatNum(totalViews)}</div>
-        <div class="stat-label">TOP TRENDING VIEWS</div>
-        <div class="stat-change">Overall #1–20</div>
+        <div class="stat-label">TOP VIDEO VIEWS</div>
+        <div class="stat-change">${regionObj?.flag||''} ${regionObj?.name||STATE.region}</div>
       </div>
       <div class="stat-card green">
         <div class="stat-icon">👍</div>
         <div class="stat-value">${formatNum(totalLikes)}</div>
         <div class="stat-label">TOTAL LIKES</div>
-        <div class="stat-change">Overall top 20</div>
+        <div class="stat-change">Top ${topVideos.length} videos</div>
       </div>
       <div class="stat-card blue">
         <div class="stat-icon">📺</div>
@@ -1226,6 +1344,51 @@ function renderAllCategoriesSections(content, regionObj) {
         <div class="stat-label">TOP CHANNEL</div>
         <div class="stat-change">Overall trending</div>
       </div>
+    </div>
+
+    <!-- ── TOP 10 TRENDING VIDEOS ── -->
+    <div class="section-divider">
+      <div class="section-divider-line"></div>
+      <div class="section-divider-label">🔥 TOP ${topVideos.length} TRENDING VIDEOS</div>
+      <div class="section-divider-line"></div>
+    </div>
+    <div class="panel grid-full" style="margin-bottom:24px;">
+      <div class="panel-header">
+        <div class="panel-title">🔥 TRENDING VIDEOS — TOP ${topVideos.length}</div>
+        <button onclick="switchView('trending')" style="background:none;border:1px solid var(--border);color:var(--muted);padding:5px 14px;border-radius:6px;cursor:pointer;font-size:12px;transition:all .2s;" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">See all →</button>
+      </div>
+      <div class="panel-body">
+        ${topVideos.length
+          ? `<div class="videos-grid">${renderVideoCards(topVideos)}</div>`
+          : `<div class="empty-state"><div class="icon">📭</div><h3>No regular videos found</h3><p>Try refreshing or a different region</p></div>`
+        }
+      </div>
+    </div>
+
+    <!-- ── TOP 10 TRENDING SHORTS ── -->
+    <div class="section-divider">
+      <div class="section-divider-line"></div>
+      <div class="section-divider-label">📱 TOP ${topShorts.length || 0} TRENDING SHORTS</div>
+      <div class="section-divider-line"></div>
+    </div>
+    <div class="panel grid-full" style="margin-bottom:28px;">
+      <div class="panel-header">
+        <div class="panel-title">📱 TRENDING SHORTS — TOP ${topShorts.length || 0}</div>
+        <button onclick="switchView('shorts')" style="background:none;border:1px solid var(--border);color:var(--muted);padding:5px 14px;border-radius:6px;cursor:pointer;font-size:12px;transition:all .2s;" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">See all →</button>
+      </div>
+      <div class="panel-body">
+        ${topShorts.length
+          ? `<div class="shorts-hero">${renderShortCards(topShorts)}</div>`
+          : `<div class="empty-state"><div class="icon">📱</div><h3>No Shorts found</h3><p>No videos under 60s were trending right now. Try a different region.</p></div>`
+        }
+      </div>
+    </div>
+
+    <!-- ── BY CATEGORY ── -->
+    <div class="section-divider">
+      <div class="section-divider-line"></div>
+      <div class="section-divider-label">🏷️ BY CATEGORY</div>
+      <div class="section-divider-line"></div>
     </div>
   `;
 
@@ -1309,6 +1472,126 @@ function renderSingleCategory(content, catId, regionObj) {
     </div>
   `;
 }
+
+// ─── SHORTS VIEW ───
+function renderShorts() {
+  const content   = document.getElementById('mainContent');
+  const regionObj = REGIONS.find(r => r.code === STATE.region);
+  const hasData   = Object.keys(STATE.categoryCache).length > 0;
+
+  if (!hasData) {
+    const calls   = getTodayCalls();
+    const atLimit = calls >= USER_DAILY_LIMIT;
+    content.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:500px;gap:18px;text-align:center;padding:40px 20px;">
+        <div style="font-size:64px;line-height:1;">📱</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--text);">
+          ${atLimit ? 'COME BACK TOMORROW' : 'READY TO LOAD'}
+        </div>
+        <div style="font-size:14px;color:var(--muted);max-width:400px;line-height:1.7;">
+          ${atLimit
+            ? 'Fresh Shorts data will be ready at midnight.'
+            : `Hit <strong style="color:var(--red);">↺ Refresh</strong> to load trending Shorts for <strong style="color:var(--text);">${regionObj?.flag||''} ${regionObj?.name||STATE.region}</strong>.`
+          }
+        </div>
+        ${!atLimit ? `
+          <button onclick="loadTrending()" style="padding:12px 32px;background:var(--red);border:none;color:white;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">
+            ↺ Load Trending Now
+          </button>` : ''}
+      </div>`;
+    return;
+  }
+
+  const shorts = STATE.shorts.slice(0, TOP_SHORTS_SHOW);
+  const totalViews = shorts.reduce((s,v)=>s+v.views,0);
+  const totalLikes = shorts.reduce((s,v)=>s+v.likes,0);
+  const topCh = (() => {
+    const m={}; shorts.forEach(v=>{m[v.channel]=(m[v.channel]||0)+1;});
+    return Object.entries(m).sort((a,b)=>b[1]-a[1])[0]?.[0]||'–';
+  })();
+
+  content.innerHTML = `
+    <div class="stats-row">
+      <div class="stat-card red">
+        <div class="stat-icon">📱</div>
+        <div class="stat-value">${shorts.length}</div>
+        <div class="stat-label">TRENDING SHORTS</div>
+        <div class="stat-change">${regionObj?.flag||''} ${regionObj?.name||STATE.region}</div>
+      </div>
+      <div class="stat-card gold">
+        <div class="stat-icon">👁️</div>
+        <div class="stat-value">${formatNum(totalViews)}</div>
+        <div class="stat-label">TOTAL VIEWS</div>
+        <div class="stat-change">Top ${shorts.length} shorts</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-icon">👍</div>
+        <div class="stat-value">${formatNum(totalLikes)}</div>
+        <div class="stat-label">TOTAL LIKES</div>
+        <div class="stat-change">Top ${shorts.length} shorts</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-icon">⚡</div>
+        <div class="stat-value" style="font-size:15px;letter-spacing:0">${topCh.substring(0,14)}</div>
+        <div class="stat-label">TOP CREATOR</div>
+        <div class="stat-change">Most shorts here</div>
+      </div>
+    </div>
+
+    <div class="panel grid-full">
+      <div class="panel-header">
+        <div class="panel-title">📱 TRENDING SHORTS — TOP ${shorts.length}</div>
+        <span style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;">≤ 60 seconds · sorted by views</span>
+      </div>
+      <div class="panel-body">
+        ${shorts.length
+          ? `<div class="shorts-hero">${renderShortCards(shorts)}</div>`
+          : `
+            <div class="empty-state">
+              <div class="icon">📱</div>
+              <h3>No Shorts found</h3>
+              <p>No videos under 60 seconds were in the current trending data. Try a different region.</p>
+            </div>`
+        }
+      </div>
+    </div>
+  `;
+}
+
+function renderShortCards(shorts) {
+  return shorts.map(v => {
+    const shortUrl = `https://www.youtube.com/shorts/${v.id}`;
+    return `
+    <div class="short-card" onclick="window.open('${shortUrl}','_blank')">
+      <div class="short-thumb-wrap">
+        <img class="short-thumb" src="${v.thumbnail}" alt="${escHtml(v.title)}" loading="lazy"
+          onerror="this.style.display='none';this.parentElement.style.background='#1a1a1a'">
+        <div class="short-rank ${v.rank<=3?'top3':''}">#${v.rank}</div>
+        <div class="short-badge">SHORT</div>
+        <div class="short-play-overlay">
+          <div class="short-play-btn">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="short-info">
+        <div class="short-title">${escHtml(v.title)}</div>
+        <div class="short-channel">📺 ${escHtml(v.channel)}</div>
+        <div class="short-meta">
+          <span>👁️ ${formatNum(v.views)}</span>
+          <span>👍 ${formatNum(v.likes)}</span>
+          <span>⏱️ ${v.duration}</span>
+        </div>
+      </div>
+      <div class="short-actions">
+        <button class="action-btn watch" onclick="event.stopPropagation();window.open('${shortUrl}','_blank')">▶ Watch</button>
+        <button class="action-btn" onclick="event.stopPropagation();toggleBookmark(${JSON.stringify(v).replace(/"/g,'&quot;')})">🔖</button>
+        <button class="action-btn" onclick="event.stopPropagation();shareVideo('${shortUrl}','${escHtml(v.title).replace(/'/g,"\\'")}')">↗</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 
 function renderVideoCards(videos) {
   if (!videos.length) return `<div class="empty-state"><div class="icon">📭</div><h3>No videos found</h3><p>Try a different region</p></div>`;
