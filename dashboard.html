@@ -798,9 +798,10 @@ async function fetchWithKeyRotation(url) {
       // Quota / rate-limit / forbidden → rotate key silently
       if (code === 403 || code === 429 ||
           status === 'RESOURCE_EXHAUSTED' || status === 'FORBIDDEN' ||
-          msg.includes('quota') || msg.includes('forbidden') || msg.includes('rate limit')) {
+          msg.includes('quota') || msg.includes('forbidden') || msg.includes('rate limit') ||
+          msg.includes('referer') || msg.includes('referrer') || msg.includes('ip address')) {
         STATE.currentKeyIndex = (keyIndex + 1) % keys.length;
-        lastErr = 'quota';
+        lastErr = data.error.message || 'quota'; // preserve real message
         continue;
       }
 
@@ -822,7 +823,7 @@ async function fetchWithKeyRotation(url) {
     return data;
   }
 
-  throw new Error(lastErr === 'quota' ? 'QUOTA_EXHAUSTED' : lastErr);
+  throw new Error(lastErr || 'All API keys failed');
 }
 
 // ═══════════════════════════════════════════════
@@ -849,11 +850,10 @@ const FETCH_CATS = [
 async function loadTrending() {
   if (STATE.loading) return;
 
-  // Re-read keys (admin may have added them since page load)
   checkApiKeys();
 
   if (!STATE.apiKeys.length) {
-    showToast('Service not configured yet. Please try again later.', 'error');
+    showToast('No API key configured — go to Admin Panel to add one.', 'error');
     return;
   }
 
@@ -869,7 +869,74 @@ async function loadTrending() {
 
   showFetchingState();
 
+  // ── PRE-FLIGHT: one quick test call to catch the exact error before looping 15 cats ──
+  try {
+    const testKey = STATE.apiKeys[0];
+    const testUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&chart=mostPopular&regionCode=US&maxResults=1&hl=en&key=${testKey}`;
+    const testResp = await fetch(testUrl);
+    const testData = await testResp.json();
+
+    if (testData.error) {
+      const code = testData.error.code;
+      const msg  = testData.error.message || '';
+      const status = (testData.error.status || '').toUpperCase();
+
+      let friendlyMsg = '';
+      if (code === 403 && msg.toLowerCase().includes('referer')) {
+        friendlyMsg = `Blocked: add ${location.origin} to your API key's allowed referrers in Google Cloud Console.`;
+      } else if (code === 403 && (msg.toLowerCase().includes('not been used') || msg.toLowerCase().includes('disabled') || msg.toLowerCase().includes('enable'))) {
+        friendlyMsg = 'YouTube Data API v3 is not enabled. Go to Google Cloud Console → APIs & Services → Enable YouTube Data API v3.';
+      } else if (code === 403 || status === 'FORBIDDEN') {
+        friendlyMsg = `API key forbidden (403). Check key restrictions in Google Cloud Console. Detail: ${msg}`;
+      } else if (code === 400) {
+        friendlyMsg = `Invalid API key (400). Re-check the key in Admin Panel. Detail: ${msg}`;
+      } else if (code === 429 || status === 'RESOURCE_EXHAUSTED') {
+        friendlyMsg = 'API quota exhausted for today. Resets at midnight Pacific Time.';
+      } else {
+        friendlyMsg = `YouTube API error ${code}: ${msg}`;
+      }
+
+      // Show real error, decrement call count since we didn't actually fetch
+      showToast(friendlyMsg, 'error');
+      console.error('[TrendPulse] Pre-flight failed:', code, msg);
+      STATE.loading = false;
+      if (btn) {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+        document.getElementById('refreshIcon').textContent = '↺';
+      }
+      // Restore the rate-limit call we haven't incremented yet
+      const content = document.getElementById('mainContent');
+      if (content) content.innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;gap:16px;text-align:center;padding:40px 20px;">
+          <div style="font-size:48px;">⚠️</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--red);">COULD NOT LOAD DATA</div>
+          <div style="font-size:13px;color:#888;max-width:480px;line-height:1.8;background:#1a1a1a;padding:16px 20px;border-radius:10px;border:1px solid #2a2a2a;text-align:left;">
+            <strong style="color:var(--text);">Error:</strong> ${friendlyMsg}
+          </div>
+          <button onclick="loadTrending()" style="padding:10px 28px;background:var(--red);border:none;color:white;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">
+            ↺ Try Again
+          </button>
+        </div>`;
+      checkRateLimit(false);
+      return;
+    }
+  } catch (preflightNetErr) {
+    showToast('Cannot reach YouTube API — check your internet connection.', 'error');
+    console.error('[TrendPulse] Network error:', preflightNetErr.message);
+    STATE.loading = false;
+    if (btn) {
+      btn.disabled = false;
+      btn.classList.remove('loading');
+      document.getElementById('refreshIcon').textContent = '↺';
+    }
+    checkRateLimit(false);
+    return;
+  }
+
+  // Pre-flight passed — now fetch all 15 categories
   let fetchedAny = false;
+  let firstCatError = '';
 
   try {
     incrementCall();
@@ -879,18 +946,12 @@ async function loadTrending() {
 
     for (const cat of FETCH_CATS) {
       try {
-        // YouTube Data API v3 — videos.list
-        // part=snippet       → title, channelTitle, thumbnails, publishedAt, categoryId
-        // part=statistics    → viewCount, likeCount, commentCount
-        // part=contentDetails → duration (ISO 8601)
-        // chart=mostPopular  → trending chart
-        // All params joined with & — key appended by fetchWithKeyRotation
         const params = new URLSearchParams({
-          part:        'snippet,statistics,contentDetails',
-          chart:       'mostPopular',
-          regionCode:  STATE.region,
-          maxResults:  String(TOP_PER_CATEGORY),
-          hl:          'en',
+          part:       'snippet,statistics,contentDetails',
+          chart:      'mostPopular',
+          regionCode: STATE.region,
+          maxResults: String(TOP_PER_CATEGORY),
+          hl:         'en',
         });
         if (cat.id) params.set('videoCategoryId', cat.id);
 
@@ -904,18 +965,13 @@ async function loadTrending() {
           STATE.categoryCache[cat.id] = [];
         }
       } catch (catErr) {
-        // QUOTA_EXHAUSTED on a single category = all keys dead, no point continuing
-        if (catErr.message === 'QUOTA_EXHAUSTED') {
-          STATE.categoryCache[cat.id] = [];
-          // Try to continue with remaining categories using next key cycle
-          continue;
-        }
         STATE.categoryCache[cat.id] = [];
-        console.warn(`[TrendPulse] Category "${cat.name}" failed:`, catErr.message);
+        if (!firstCatError) firstCatError = catErr.message;
+        console.warn(`[TrendPulse] "${cat.name}" failed:`, catErr.message);
       }
     }
 
-    // Flat deduplicated list for charts / channels
+    // Flatten deduplicated list
     const seen = new Set();
     STATE.videos = [];
     for (const vids of Object.values(STATE.categoryCache)) {
@@ -931,14 +987,13 @@ async function loadTrending() {
       const regionObj = REGIONS.find(r => r.code === STATE.region);
       showToast(`✓ Trending loaded for ${regionObj?.flag || ''} ${regionObj?.name || STATE.region}`, 'success');
     } else {
-      showToast('Could not load videos right now. Please try again later.', 'error');
+      showToast(firstCatError || 'Could not load videos. Please try again.', 'error');
     }
 
     renderView();
 
   } catch (err) {
-    // Never surface technical details to users
-    showToast('Could not load videos right now. Please try again later.', 'error');
+    showToast(err.message || 'Could not load videos. Please try again.', 'error');
     console.error('[TrendPulse] loadTrending error:', err);
     renderView();
   } finally {
