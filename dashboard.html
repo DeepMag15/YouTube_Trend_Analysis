@@ -936,13 +936,13 @@ const FETCH_CATS = [
   { id: '28', name: 'Science & Tech',   icon: '🔬' },
   { id: '24', name: 'Entertainment',    icon: '🎭' },
   { id: '25', name: 'News & Politics',  icon: '📰' },
-  { id: '27', name: 'Education',        icon: '📚' },
+  { id: '27', name: 'Education',        icon: '📚', searchFallback: true, searchQ: 'education learning tutorial' },
   { id: '22', name: 'People & Blogs',   icon: '👤' },
   { id: '23', name: 'Comedy',           icon: '😂' },
   { id: '1',  name: 'Film & Animation', icon: '🎬' },
   { id: '2',  name: 'Autos & Vehicles', icon: '🚗' },
   { id: '15', name: 'Pets & Animals',   icon: '🐾' },
-  { id: '19', name: 'Travel & Events',  icon: '✈️' },
+  { id: '19', name: 'Travel & Events',  icon: '✈️', searchFallback: true, searchQ: 'travel vlog events' },
   { id: '26', name: 'Howto & Style',    icon: '💄' },
 ];
 
@@ -1045,6 +1045,7 @@ async function loadTrending() {
 
     for (const cat of FETCH_CATS) {
       try {
+        // Primary: videos.list mostPopular chart
         const params = new URLSearchParams({
           part:       'snippet,statistics,contentDetails',
           chart:      'mostPopular',
@@ -1055,10 +1056,46 @@ async function loadTrending() {
         if (cat.id) params.set('videoCategoryId', cat.id);
 
         const url  = `https://www.googleapis.com/youtube/v3/videos?${params.toString()}`;
-        const data = await fetchWithKeyRotation(url);
+        let data   = await fetchWithKeyRotation(url);
+        let items  = data?.items || [];
 
-        if (data && Array.isArray(data.items) && data.items.length > 0) {
-          STATE.categoryCache[cat.id] = data.items.map((item, i) => mapVideo(item, i));
+        // Fallback: if mostPopular returns empty for this category, use search.list
+        if (items.length === 0 && cat.searchFallback) {
+          console.log(`[TrendPulse] "${cat.name}" mostPopular empty — trying search fallback`);
+          try {
+            const searchParams = new URLSearchParams({
+              part:             'snippet',
+              q:                cat.searchQ || cat.name,
+              type:             'video',
+              order:            'viewCount',
+              regionCode:       STATE.region,
+              videoCategoryId:  cat.id,
+              maxResults:       String(TOP_PER_CATEGORY),
+              hl:               'en',
+            });
+            const searchUrl  = `https://www.googleapis.com/youtube/v3/search?${searchParams.toString()}`;
+            const searchData = await fetchWithKeyRotation(searchUrl);
+            const videoIds   = (searchData?.items || []).map(i => i.id?.videoId).filter(Boolean);
+
+            if (videoIds.length > 0) {
+              // Fetch full details for these video IDs
+              const detailParams = new URLSearchParams({
+                part:       'snippet,statistics,contentDetails',
+                id:         videoIds.join(','),
+                hl:         'en',
+              });
+              const detailUrl  = `https://www.googleapis.com/youtube/v3/videos?${detailParams.toString()}`;
+              const detailData = await fetchWithKeyRotation(detailUrl);
+              items = detailData?.items || [];
+              console.log(`[TrendPulse] "${cat.name}" search fallback got ${items.length} videos`);
+            }
+          } catch (fallbackErr) {
+            console.warn(`[TrendPulse] "${cat.name}" search fallback also failed:`, fallbackErr.message);
+          }
+        }
+
+        if (items.length > 0) {
+          STATE.categoryCache[cat.id] = items.map((item, i) => mapVideo(item, i));
           fetchedAny = true;
         } else {
           STATE.categoryCache[cat.id] = [];
