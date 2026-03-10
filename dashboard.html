@@ -1392,21 +1392,31 @@ function renderAllCategoriesSections(content, regionObj) {
     </div>
   `;
 
-  for (const cat of SHOW_CATS) {
-    const vids = (STATE.categoryCache[cat.id] || []).slice(0, TOP_PER_CATEGORY);
-    if (!vids.length) continue;
-    const catViews = vids.reduce((s,v)=>s+v.views,0);
+  // Skip '' (Overall) since top videos/shorts are already shown above as hero panels
+  const CAT_LOOP = SHOW_CATS.filter(c => c.id !== '');
+  for (const cat of CAT_LOOP) {
+    const allCatVids = STATE.categoryCache[cat.id] || [];
+    // Only long videos in the category breakdown rows
+    const longVids   = allCatVids.filter(v => (v.durationSec||0) > SHORTS_MAX_SEC).slice(0, TOP_VIDEOS_SHOW);
+    const shortCount = allCatVids.filter(v => (v.durationSec||0) > 0 && (v.durationSec||0) <= SHORTS_MAX_SEC).length;
+    if (!longVids.length && !shortCount) continue;
+
+    longVids.forEach((v,i) => v.rank = i+1);
+    const catViews = longVids.reduce((s,v)=>s+v.views,0);
     html += `
       <div class="panel grid-full" style="margin-bottom:20px;">
         <div class="panel-header" style="cursor:pointer;" onclick="filterCategory('${cat.id}')">
-          <div class="panel-title">${cat.icon} ${cat.name.toUpperCase()} — TOP ${vids.length}</div>
+          <div class="panel-title">${cat.icon} ${cat.name.toUpperCase()} VIDEOS — TOP ${longVids.length}</div>
           <div style="display:flex;align-items:center;gap:12px;">
-            <span style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;">${formatNum(catViews)} total views</span>
+            <span style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;">${formatNum(catViews)} views${shortCount ? ` · <span style="color:#F97316;">+${shortCount} shorts</span>` : ''}</span>
             <span style="font-size:11px;color:var(--red);">See all →</span>
           </div>
         </div>
         <div class="panel-body">
-          <div class="videos-grid">${renderVideoCards(vids)}</div>
+          ${longVids.length
+            ? `<div class="videos-grid">${renderVideoCards(longVids)}</div>`
+            : `<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px;">No long videos in this category — <span style="color:#F97316;">${shortCount} short${shortCount!==1?'s':''}</span> found. <button onclick="filterCategory('${cat.id}')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:13px;text-decoration:underline;">View them →</button></div>`
+          }
         </div>
       </div>
     `;
@@ -1416,17 +1426,24 @@ function renderAllCategoriesSections(content, regionObj) {
 }
 
 function renderSingleCategory(content, catId, regionObj) {
-  const catObj = CATEGORIES.find(c => String(c.id) === catId);
-  const vids   = (STATE.categoryCache[catId] || []).slice(0, TOP_PER_CATEGORY);
+  const catObj   = CATEGORIES.find(c => String(c.id) === catId);
+  const allVids  = (STATE.categoryCache[catId] || []);
 
-  const totalViews = vids.reduce((s,x)=>s+x.views,0);
-  const totalLikes = vids.reduce((s,x)=>s+x.likes,0);
+  // Split into long videos and shorts
+  const longVids  = allVids.filter(v => (v.durationSec||0) > SHORTS_MAX_SEC).slice(0, TOP_VIDEOS_SHOW);
+  const catShorts = allVids.filter(v => (v.durationSec||0) > 0 && (v.durationSec||0) <= SHORTS_MAX_SEC).slice(0, TOP_SHORTS_SHOW);
+
+  // Re-rank each group
+  longVids.forEach((v,i)  => v.rank = i+1);
+  catShorts.forEach((v,i) => v.rank = i+1);
+
+  const totalViews = longVids.reduce((s,x)=>s+x.views,0);
+  const totalLikes = longVids.reduce((s,x)=>s+x.likes,0);
   const topCh = (() => {
-    const m = {}; vids.forEach(v=>{m[v.channel]=(m[v.channel]||0)+1;});
+    const m = {}; longVids.forEach(v=>{m[v.channel]=(m[v.channel]||0)+1;});
     return Object.entries(m).sort((a,b)=>b[1]-a[1])[0]?.[0]||'–';
   })();
-  // Duration distribution
-  const avgDurSec = vids.length ? Math.round(vids.reduce((s,v)=>s+(v.durationSec||0),0)/vids.length) : 0;
+  const avgDurSec = longVids.length ? Math.round(longVids.reduce((s,v)=>s+(v.durationSec||0),0)/longVids.length) : 0;
   const avgDurStr = avgDurSec >= 3600
     ? `${Math.floor(avgDurSec/3600)}h ${Math.floor((avgDurSec%3600)/60)}m`
     : `${Math.floor(avgDurSec/60)}m ${avgDurSec%60}s`;
@@ -1435,21 +1452,21 @@ function renderSingleCategory(content, catId, regionObj) {
     <div class="stats-row">
       <div class="stat-card red">
         <div class="stat-icon">${catObj?.icon||'🏷️'}</div>
-        <div class="stat-value">${vids.length}</div>
-        <div class="stat-label">TOP ${catObj?.name||'CATEGORY'} VIDEOS</div>
-        <div class="stat-change">${regionObj?.flag||''} ${regionObj?.name||STATE.region}</div>
+        <div class="stat-value">${longVids.length + catShorts.length}</div>
+        <div class="stat-label">${(catObj?.name||'CATEGORY').toUpperCase()} TRENDING</div>
+        <div class="stat-change">${longVids.length} videos · ${catShorts.length} shorts</div>
       </div>
       <div class="stat-card gold">
         <div class="stat-icon">👁️</div>
         <div class="stat-value">${formatNum(totalViews)}</div>
         <div class="stat-label">TOTAL VIEWS</div>
-        <div class="stat-change">Top ${vids.length} combined</div>
+        <div class="stat-change">Top ${longVids.length} videos</div>
       </div>
       <div class="stat-card green">
         <div class="stat-icon">⏱️</div>
         <div class="stat-value" style="font-size:20px;">${avgDurStr}</div>
         <div class="stat-label">AVG DURATION</div>
-        <div class="stat-change">Across top ${vids.length}</div>
+        <div class="stat-change">Long videos only</div>
       </div>
       <div class="stat-card blue">
         <div class="stat-icon">📺</div>
@@ -1458,15 +1475,36 @@ function renderSingleCategory(content, catId, regionObj) {
         <div class="stat-change">Most videos here</div>
       </div>
     </div>
-    <div class="panel grid-full">
+
+    <!-- Long videos -->
+    <div class="panel grid-full" style="margin-bottom:24px;">
       <div class="panel-header">
-        <div class="panel-title">${catObj?.icon||'🏷️'} ${(catObj?.name||'').toUpperCase()} — TOP ${vids.length}</div>
+        <div class="panel-title">${catObj?.icon||'🏷️'} ${(catObj?.name||'').toUpperCase()} VIDEOS — TOP ${longVids.length}</div>
         <button onclick="filterCategory('')" style="background:none;border:1px solid var(--border);color:var(--muted);padding:5px 14px;border-radius:6px;cursor:pointer;font-size:12px;transition:all .2s;" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">← All Categories</button>
       </div>
       <div class="panel-body">
-        ${vids.length
-          ? `<div class="videos-grid">${renderVideoCards(vids)}</div>`
-          : `<div class="empty-state"><div class="icon">📭</div><h3>No videos yet</h3><p>Click Refresh to load data for this region</p></div>`
+        ${longVids.length
+          ? `<div class="videos-grid">${renderVideoCards(longVids)}</div>`
+          : `<div class="empty-state"><div class="icon">🎬</div><h3>No long videos found</h3><p>All trending ${catObj?.name||''} content may be Shorts right now</p></div>`
+        }
+      </div>
+    </div>
+
+    <!-- Shorts for this category -->
+    <div class="section-divider">
+      <div class="section-divider-line"></div>
+      <div class="section-divider-label">📱 ${(catObj?.name||'').toUpperCase()} SHORTS — TOP ${catShorts.length}</div>
+      <div class="section-divider-line"></div>
+    </div>
+    <div class="panel grid-full">
+      <div class="panel-header">
+        <div class="panel-title">📱 ${(catObj?.name||'').toUpperCase()} SHORTS — TOP ${catShorts.length}</div>
+        <span style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;">≤ 60 seconds</span>
+      </div>
+      <div class="panel-body">
+        ${catShorts.length
+          ? `<div class="shorts-hero">${renderShortCards(catShorts)}</div>`
+          : `<div class="empty-state"><div class="icon">📱</div><h3>No Shorts found</h3><p>No videos under 60s were trending in ${catObj?.name||'this category'}</p></div>`
         }
       </div>
     </div>
