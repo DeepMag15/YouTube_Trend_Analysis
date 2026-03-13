@@ -95,7 +95,7 @@
   /* HERO */
   .hero {
     min-height:100vh; padding-top:98px;
-    display:grid; grid-template-columns:1fr 1fr;
+    display:grid; grid-template-columns:1.1fr .9fr;
     align-items:center; gap:0; position:relative; overflow:hidden;
   }
   /* Background texture */
@@ -114,7 +114,7 @@
     mask-image:radial-gradient(ellipse 80% 100% at 50% 50%, black 20%, transparent 100%);
   }
   .hero-left { padding:60px 52px 60px; position:relative; z-index:2; }
-  .hero-right { padding:60px 52px 60px 0; position:relative; z-index:2; display:flex; flex-direction:column; gap:14px; }
+  .hero-right { padding:20px 24px 20px 0; position:relative; z-index:2; display:flex; align-items:center; justify-content:center; overflow:visible; }
 
   .eyebrow {
     display:inline-flex; align-items:center; gap:8px;
@@ -202,62 +202,133 @@
     font-size:9px; font-family:'Space Mono',monospace; color:var(--muted);
     padding:2px 6px; border-radius:4px; flex-shrink:0;
   }
-  /* ORBIT */
+  /* ── ORBIT ── */
   .orbit-scene {
-    width:400px; height:400px; position:relative; margin:0 auto; flex-shrink:0;
+    width:520px; height:520px;
+    position:relative; margin:0 auto; flex-shrink:0;
+    overflow:visible;
   }
+  /* Red pulse glow at center */
+  @keyframes centerPulse {
+    0%,100% { opacity:.5; transform:translate(-50%,-50%) scale(1); }
+    50%      { opacity:1;  transform:translate(-50%,-50%) scale(1.8); }
+  }
+  .orbit-scene::before {
+    content:''; position:absolute; top:50%; left:50%;
+    width:160px; height:160px; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,31,31,.28) 0%, transparent 65%);
+    animation:centerPulse 3s ease-in-out infinite;
+    pointer-events:none; z-index:1;
+  }
+  /* Center hub */
   .orbit-center {
     position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-    width:86px; height:86px; border-radius:50%;
-    background:var(--card); border:2px solid rgba(255,31,31,.45);
+    width:100px; height:100px; border-radius:50%;
+    background:linear-gradient(145deg,#222,#111);
+    border:2px solid rgba(255,31,31,.6);
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    z-index:10; box-shadow:0 0 40px rgba(255,31,31,.12), 0 0 0 8px rgba(255,31,31,.04);
+    z-index:12;
+    box-shadow:
+      0 0 0 8px  rgba(255,31,31,.05),
+      0 0 0 16px rgba(255,31,31,.025),
+      0 0 50px   rgba(255,31,31,.25);
   }
-  .orbit-center-icon { font-size:26px; line-height:1; }
-  .orbit-center-label { font-family:'Space Mono',monospace; font-size:7.5px; letter-spacing:1.5px; color:var(--red); margin-top:4px; }
+  .orbit-center-icon  { font-size:34px; line-height:1; }
+  .orbit-center-label {
+    font-family:'Space Mono',monospace; font-size:8px; letter-spacing:2.5px;
+    color:#FF1F1F; margin-top:5px; font-weight:700;
+  }
+  /* Orbital rings */
   .orbit-ring {
     position:absolute; border-radius:50%; pointer-events:none;
-    border:1px solid rgba(255,255,255,.055);
     top:50%; left:50%; transform:translate(-50%,-50%);
   }
-  .orbit-ring-1 { width:190px; height:190px; }
-  .orbit-ring-2 { width:300px; height:300px; border-style:dashed; border-color:rgba(255,255,255,.04); }
-  .orbit-ring-3 { width:400px; height:400px; }
-  /* Arm wrappers that rotate; child nodes counter-rotate to stay upright */
-  .orbit-arm { position:absolute; width:100%; height:100%; top:0; left:0; }
-  .orbit-arm-1 { animation:arm1 13s linear infinite; }
-  .orbit-arm-2 { animation:arm2 21s linear infinite; }
-  .orbit-arm-3 { animation:arm3 31s linear infinite; }
+  .orbit-ring-1 { width:230px; height:230px; border:1px solid rgba(255,31,31,.14); }
+  .orbit-ring-2 { width:360px; height:360px; border:1px dashed rgba(255,255,255,.055); }
+  .orbit-ring-3 { width:500px; height:500px; border:1px solid rgba(255,255,255,.04); }
+  /* Rotating arm wrappers — children counter-rotate to stay upright */
+  .orbit-arm {
+    position:absolute; width:100%; height:100%; top:0; left:0;
+    transform-origin:50% 50%;
+  }
+  .orbit-arm-1 { animation:arm1 18s linear infinite; }
+  .orbit-arm-2 { animation:arm2 28s linear infinite; }
+  .orbit-arm-3 { animation:arm3 42s linear infinite; }
   @keyframes arm1 { to { transform:rotate(360deg); } }
   @keyframes arm2 { to { transform:rotate(-360deg); } }
   @keyframes arm3 { to { transform:rotate(360deg); } }
-  .orbit-node {
-    position:absolute; width:54px; height:54px;
-    border-radius:50%; background:var(--card); border:1px solid var(--border2);
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    font-size:19px; cursor:default; z-index:5;
-    box-shadow:0 4px 20px rgba(0,0,0,.4);
-    transition:border-color .25s, box-shadow .25s;
-  }
-  .orbit-node:hover { border-color:rgba(255,31,31,.6); box-shadow:0 0 20px rgba(255,31,31,.18); }
-  .orbit-node:hover .orbit-tip { opacity:1; transform:translateX(-50%) translateY(-6px); }
-  .orbit-node-lbl { font-size:7px; font-family:'Space Mono',monospace; color:var(--dim); margin-top:2px; text-align:center; max-width:50px; line-height:1.2; }
-  .orbit-tip {
-    position:absolute; bottom:calc(100% + 7px); left:50%;
-    transform:translateX(-50%) translateY(4px);
-    background:var(--card2); border:1px solid var(--border2);
-    border-radius:6px; padding:4px 10px;
-    font-size:10px; color:var(--text); white-space:nowrap;
-    opacity:0; transition:all .2s; pointer-events:none; z-index:30;
-    box-shadow:0 8px 24px rgba(0,0,0,.5);
-  }
-  /* Counter-rotation classes */
-  .nr1 { animation:nr1 13s linear infinite; }
-  .nr2 { animation:nr2 21s linear infinite; }
-  .nr3 { animation:nr3 31s linear infinite; }
+  /* Counter-rotation so icons stay upright */
+  .nr1 { animation:nr1 18s linear infinite; }
+  .nr2 { animation:nr2 28s linear infinite; }
+  .nr3 { animation:nr3 42s linear infinite; }
   @keyframes nr1 { to { transform:rotate(-360deg); } }
   @keyframes nr2 { to { transform:rotate(360deg); } }
   @keyframes nr3 { to { transform:rotate(-360deg); } }
+  /* Node circles */
+  .orbit-node {
+    position:absolute; width:68px; height:68px; border-radius:50%;
+    background:linear-gradient(150deg,#202020,#131313);
+    border:1.5px solid rgba(255,255,255,.1);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-size:24px; cursor:pointer; z-index:8;
+    box-shadow:0 8px 32px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.07);
+    transition:border-color .28s, box-shadow .28s;
+  }
+  .orbit-node:hover {
+    border-color:rgba(255,31,31,.75);
+    box-shadow:0 0 0 5px rgba(255,31,31,.07),0 0 30px rgba(255,31,31,.3),0 8px 32px rgba(0,0,0,.65);
+    z-index:60;
+  }
+  .orbit-node-lbl {
+    font-size:7px; font-family:'Space Mono',monospace; color:#555;
+    margin-top:3px; text-align:center; line-height:1.2; letter-spacing:.6px;
+  }
+  /* Rich hover popup card */
+  .orbit-card {
+    position:absolute; bottom:calc(100% + 12px); left:50%;
+    transform:translateX(-50%) translateY(6px) scale(.94);
+    width:210px; background:#181818;
+    border:1px solid rgba(255,31,31,.3); border-radius:14px;
+    opacity:0; transition:all .28s cubic-bezier(.16,1,.3,1);
+    pointer-events:none; z-index:200;
+    box-shadow:0 24px 70px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.04);
+    overflow:hidden;
+  }
+  .orbit-node:hover .orbit-card {
+    opacity:1; pointer-events:all;
+    transform:translateX(-50%) translateY(-2px) scale(1);
+  }
+  .orbit-card-head {
+    padding:13px 14px 11px;
+    background:linear-gradient(135deg,rgba(255,31,31,.08),rgba(255,31,31,.02));
+    border-bottom:1px solid rgba(255,255,255,.055);
+    display:flex; align-items:center; gap:9px;
+  }
+  .orbit-card-icon { font-size:22px; flex-shrink:0; }
+  .orbit-card-cat {
+    font-family:'Bebas Neue',sans-serif; font-size:16px;
+    letter-spacing:1.5px; color:#F0F0F0; line-height:1;
+  }
+  .orbit-card-sub {
+    font-size:8.5px; color:#555; font-family:'Space Mono',monospace;
+    margin-top:2px; letter-spacing:.5px;
+  }
+  .orbit-card-creators { padding:11px 14px 13px; display:flex; flex-direction:column; gap:8px; }
+  .orbit-creator { display:flex; align-items:center; gap:9px; }
+  .orbit-creator-rank {
+    font-family:'Space Mono',monospace; font-size:9px;
+    font-weight:700; color:#333; width:14px; text-align:center; flex-shrink:0;
+  }
+  .orbit-creator-avatar {
+    width:28px; height:28px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700; font-family:'Space Mono',monospace;
+  }
+  .orbit-creator-name {
+    font-size:11.5px; font-weight:600; color:#E8E8E8;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .orbit-creator-subs { font-size:9px; color:#555; font-family:'Space Mono',monospace; margin-top:1px; }
 
   /* PROOF BAR */
   .proof {
@@ -890,55 +961,149 @@ msgs.forEach((m,i) => {
 });
 
 // ── ORBIT ────────────────────────────────────────
-// Creators/categories displayed on 3 concentric orbiting rings
 const ORBIT_NODES = [
-  // ring 1 (inner, r=95) — 2 nodes
-  { icon:'🎵', label:'Music', tip:'Music Creators', ring:1 },
-  { icon:'🎮', label:'Gaming', tip:'Gaming Channels', ring:1 },
-  // ring 2 (mid, r=150) — 4 nodes
-  { icon:'⚽', label:'Sports', tip:'Sports Highlights', ring:2 },
-  { icon:'📚', label:'Edu', tip:'Education Creators', ring:2 },
-  { icon:'😂', label:'Comedy', tip:'Comedy Channels', ring:2 },
-  { icon:'✈️', label:'Travel', tip:'Travel Vloggers', ring:2 },
-  // ring 3 (outer, r=200) — 6 nodes
-  { icon:'🔬', label:'Science', tip:'Science & Tech', ring:3 },
-  { icon:'📰', label:'News', tip:'News & Politics', ring:3 },
-  { icon:'🎭', label:'Entertain', tip:'Entertainment', ring:3 },
-  { icon:'💄', label:'Style', tip:'Howto & Style', ring:3 },
-  { icon:'🐾', label:'Pets', tip:'Pets & Animals', ring:3 },
-  { icon:'🎬', label:'Film', tip:'Film & Animation', ring:3 },
+  // Ring 1 — inner (r=115) · 2 nodes
+  { icon:'🎵', label:'MUSIC',  cat:'Music',  ring:1, color:'#E91E63',
+    creators:[
+      { name:'T-Series',     subs:'276M subs', c:'#E91E63' },
+      { name:'Eminem',       subs:'58M subs',  c:'#9C27B0' },
+      { name:'Taylor Swift', subs:'56M subs',  c:'#FF6B35' },
+    ]},
+  { icon:'🎮', label:'GAMING', cat:'Gaming', ring:1, color:'#00C853',
+    creators:[
+      { name:'PewDiePie',    subs:'111M subs', c:'#00C853' },
+      { name:'Markiplier',   subs:'35M subs',  c:'#2196F3' },
+      { name:'Ninja',        subs:'19M subs',  c:'#00BCD4' },
+    ]},
+  // Ring 2 — mid (r=180) · 4 nodes
+  { icon:'⚽', label:'SPORTS', cat:'Sports', ring:2, color:'#FF1F1F',
+    creators:[
+      { name:'ESPN',         subs:'10M subs',  c:'#FF1F1F' },
+      { name:'NBA',          subs:'20M subs',  c:'#FF6B35' },
+      { name:'UEFA CL',      subs:'12M subs',  c:'#3F51B5' },
+    ]},
+  { icon:'📚', label:'EDU',    cat:'Education', ring:2, color:'#2196F3',
+    creators:[
+      { name:'Kurzgesagt',   subs:'23M subs',  c:'#FF6B35' },
+      { name:'Veritasium',   subs:'16M subs',  c:'#2196F3' },
+      { name:'Khan Academy', subs:'8M subs',   c:'#00C853' },
+    ]},
+  { icon:'😂', label:'COMEDY', cat:'Comedy', ring:2, color:'#FFD700',
+    creators:[
+      { name:'MrBeast',      subs:'339M subs', c:'#FF1F1F' },
+      { name:'David Dobrik', subs:'18M subs',  c:'#9C27B0' },
+      { name:'Smosh',        subs:'26M subs',  c:'#FF6B35' },
+    ]},
+  { icon:'✈️', label:'TRAVEL', cat:'Travel & Events', ring:2, color:'#00BCD4',
+    creators:[
+      { name:'Mark Wiens',   subs:'10M subs',  c:'#FF6B35' },
+      { name:'Kara & Nate',  subs:'3M subs',   c:'#00C853' },
+      { name:'Yes Theory',   subs:'8M subs',   c:'#2196F3' },
+    ]},
+  // Ring 3 — outer (r=248) · 6 nodes
+  { icon:'🔬', label:'SCIENCE', cat:'Science & Tech', ring:3, color:'#2196F3',
+    creators:[
+      { name:'MKBHD',         subs:'18M subs', c:'#FF1F1F' },
+      { name:'Linus Tech',    subs:'15M subs', c:'#FF6B35' },
+      { name:'SmarterEvery',  subs:'11M subs', c:'#00C853' },
+    ]},
+  { icon:'📰', label:'NEWS',    cat:'News & Politics', ring:3, color:'#FF6B35',
+    creators:[
+      { name:'CNN',           subs:'16M subs', c:'#FF1F1F' },
+      { name:'BBC News',      subs:'16M subs', c:'#E53935' },
+      { name:'VICE News',     subs:'5M subs',  c:'#FF6B35' },
+    ]},
+  { icon:'🎭', label:'ENTERTAIN', cat:'Entertainment', ring:3, color:'#9C27B0',
+    creators:[
+      { name:'Jimmy Fallon',  subs:'29M subs', c:'#9C27B0' },
+      { name:'Seth Meyers',   subs:'10M subs', c:'#2196F3' },
+      { name:'Colbert',       subs:'11M subs', c:'#FF6B35' },
+    ]},
+  { icon:'💄', label:'STYLE',   cat:'Howto & Style', ring:3, color:'#E91E63',
+    creators:[
+      { name:'NikkieTutorials',subs:'14M subs',c:'#E91E63' },
+      { name:'James Charles',  subs:'24M subs',c:'#9C27B0' },
+      { name:'Michelle Phan',  subs:'9M subs', c:'#FF6B35' },
+    ]},
+  { icon:'🐾', label:'PETS',    cat:'Pets & Animals', ring:3, color:'#4CAF50',
+    creators:[
+      { name:'The Dodo',      subs:'11M subs', c:'#4CAF50' },
+      { name:'AnimalPlanet',  subs:'4M subs',  c:'#00C853' },
+      { name:'Paul Cuffaro',  subs:'3M subs',  c:'#FF6B35' },
+    ]},
+  { icon:'🎬', label:'FILM',    cat:'Film & Animation', ring:3, color:'#FF6B35',
+    creators:[
+      { name:'Corridor Crew', subs:'7M subs',  c:'#FF1F1F' },
+      { name:'CinemaSins',    subs:'9M subs',  c:'#FF6B35' },
+      { name:'Screen Junkies',subs:'7M subs',  c:'#9C27B0' },
+    ]},
 ];
-const RING_R = { 1:95, 2:150, 3:200 };
-const RING_NR_CLASS = { 1:'nr1', 2:'nr2', 3:'nr3' };
+
+// Ring radii (distance from center 260,260 of the 520px scene)
+const RING_R  = { 1:115, 2:180, 3:248 };
+const RING_NR = { 1:'nr1', 2:'nr2', 3:'nr3' };
+const CX = 260; // half of 520
 
 function buildOrbit() {
-  const arms = { 1: document.getElementById('arm1'), 2: document.getElementById('arm2'), 3: document.getElementById('arm3') };
-  const countByRing = { 1:0, 2:0, 3:0 };
-  const totalByRing = ORBIT_NODES.reduce((acc,n) => { acc[n.ring]=(acc[n.ring]||0)+1; return acc; }, {});
+  const arms = {
+    1: document.getElementById('arm1'),
+    2: document.getElementById('arm2'),
+    3: document.getElementById('arm3')
+  };
+  const count = { 1:0, 2:0, 3:0 };
+  const total = ORBIT_NODES.reduce((a,n)=>{ a[n.ring]=(a[n.ring]||0)+1; return a; }, {});
+  const SIZE  = 68;
 
   ORBIT_NODES.forEach(n => {
-    const arm = arms[n.ring];
-    if (!arm) return;
-    const idx = countByRing[n.ring]++;
-    const total = totalByRing[n.ring];
-    const angleDeg = (360 / total) * idx;
-    const angleRad = (angleDeg * Math.PI) / 180;
-    const r = RING_R[n.ring];
-    const cx = 200, cy = 200, nodeSize = 54;
+    const arm = arms[n.ring]; if (!arm) return;
+    const idx = count[n.ring]++;
+    const deg = (360 / total[n.ring]) * idx - 90; // start top
+    const rad = deg * Math.PI / 180;
+    const r   = RING_R[n.ring];
+    const x   = CX + r * Math.cos(rad) - SIZE / 2;
+    const y   = CX + r * Math.sin(rad) - SIZE / 2;
 
-    // Position: center of scene is (200,200). Node center placed on circle.
-    const x = cx + r * Math.cos(angleRad) - nodeSize/2;
-    const y = cy + r * Math.sin(angleRad) - nodeSize/2;
+    const creatorsHtml = n.creators.map((c, i) => `
+      <div class="orbit-creator">
+        <div class="orbit-creator-rank">#${i+1}</div>
+        <div class="orbit-creator-avatar" style="background:${c.c}18;border:1.5px solid ${c.c}44;color:${c.c};">
+          ${c.name[0]}
+        </div>
+        <div>
+          <div class="orbit-creator-name">${c.name}</div>
+          <div class="orbit-creator-subs">${c.subs}</div>
+        </div>
+      </div>`).join('');
 
     const node = document.createElement('div');
-    node.className = `orbit-node ${RING_NR_CLASS[n.ring]}`;
-    node.style.left = x + 'px';
-    node.style.top  = y + 'px';
+    node.className = `orbit-node ${RING_NR[n.ring]}`;
+    node.style.cssText = `left:${x}px;top:${y}px;`;
+    // Tint border color per category
+    node.style.setProperty('--nc', n.color);
     node.innerHTML = `
-      <span>${n.icon}</span>
+      <span style="line-height:1;">${n.icon}</span>
       <span class="orbit-node-lbl">${n.label}</span>
-      <div class="orbit-tip">${n.tip}</div>
+      <div class="orbit-card">
+        <div class="orbit-card-head" style="background:linear-gradient(135deg,${n.color}14,${n.color}04);">
+          <div class="orbit-card-icon">${n.icon}</div>
+          <div>
+            <div class="orbit-card-cat">${n.cat}</div>
+            <div class="orbit-card-sub">TOP CREATORS</div>
+          </div>
+        </div>
+        <div class="orbit-card-creators">${creatorsHtml}</div>
+      </div>
     `;
+    // On hover highlight border with category color
+    node.addEventListener('mouseenter', () => {
+      node.style.borderColor = n.color + 'bb';
+      node.style.boxShadow = `0 0 0 5px ${n.color}10,0 0 30px ${n.color}30,0 8px 32px rgba(0,0,0,.65)`;
+    });
+    node.addEventListener('mouseleave', () => {
+      node.style.borderColor = '';
+      node.style.boxShadow = '';
+    });
+
     arm.appendChild(node);
   });
 }
