@@ -203,16 +203,14 @@
     padding:2px 6px; border-radius:4px; flex-shrink:0;
   }
  /* ── ORBIT ── */
-
 .orbit-scene{
-  width:520px;
-  height:520px;
+  width:600px;
+  height:600px;
   position:relative;
-  margin:0 auto;
+  margin:-40px auto 0 auto;   /* moves orbit upward */
   flex-shrink:0;
   overflow:visible;
 }
-
 
 /* Center glow */
 
@@ -287,22 +285,21 @@
   left:50%;
   transform:translate(-50%,-50%);
 }
-
 .orbit-ring-1{
-  width:230px;
-  height:230px;
+  width:280px;
+  height:280px;
   border:1px solid rgba(255,31,31,.14);
 }
 
 .orbit-ring-2{
-  width:360px;
-  height:360px;
+  width:430px;
+  height:430px;
   border:1px dashed rgba(255,255,255,.055);
 }
 
 .orbit-ring-3{
-  width:500px;
-  height:500px;
+  width:600px;
+  height:600px;
   border:1px solid rgba(255,255,255,.04);
 }
 
@@ -1320,10 +1317,10 @@ const ORBIT_NODES = [
 
 // ── CONSTANTS ────────────────────────────────────
 
-const RING_R  = { 1:115, 2:180, 3:248 };
+const RING_R  = { 1:140, 2:215, 3:295 };
 const RING_NR = { 1:'nr1', 2:'nr2', 3:'nr3' };
 
-const CX = 260;        // center of 520px scene
+const CX = 300;        // center of 520px scene
 const SIZE = 68;
 
 
