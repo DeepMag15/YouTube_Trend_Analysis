@@ -960,153 +960,292 @@ msgs.forEach((m,i) => {
   tt.innerHTML += `<span class="tick-item">${m}<span class="tick-sep">◆</span></span>`;
 });
 
-// ── ORBIT ────────────────────────────────────────
+  // ── ORBIT ────────────────────────────────────────
 const ORBIT_NODES = [
+
   // Ring 1 — inner (r=115) · 2 nodes
-  { icon:'🎵', label:'MUSIC',  cat:'Music',  ring:1, color:'#E91E63',
+  {
+    icon:'🎵',
+    label:'MUSIC',
+    cat:'Music',
+    ring:1,
+    color:'#E91E63',
     creators:[
-      { name:'T-Series',     subs:'276M subs', c:'#E91E63' },
-      { name:'Eminem',       subs:'58M subs',  c:'#9C27B0' },
-      { name:'Taylor Swift', subs:'56M subs',  c:'#FF6B35' },
-    ]},
-  { icon:'🎮', label:'GAMING', cat:'Gaming', ring:1, color:'#00C853',
+      { name:'T-Series', subs:'276M subs', c:'#E91E63' },
+      { name:'Eminem', subs:'58M subs', c:'#9C27B0' },
+      { name:'Taylor Swift', subs:'56M subs', c:'#FF6B35' }
+    ]
+  },
+
+  {
+    icon:'🎮',
+    label:'GAMING',
+    cat:'Gaming',
+    ring:1,
+    color:'#00C853',
     creators:[
-      { name:'PewDiePie',    subs:'111M subs', c:'#00C853' },
-      { name:'Markiplier',   subs:'35M subs',  c:'#2196F3' },
-      { name:'Ninja',        subs:'19M subs',  c:'#00BCD4' },
-    ]},
+      { name:'PewDiePie', subs:'111M subs', c:'#00C853' },
+      { name:'Markiplier', subs:'35M subs', c:'#2196F3' },
+      { name:'Ninja', subs:'19M subs', c:'#00BCD4' }
+    ]
+  },
+
+
   // Ring 2 — mid (r=180) · 4 nodes
-  { icon:'⚽', label:'SPORTS', cat:'Sports', ring:2, color:'#FF1F1F',
+  {
+    icon:'⚽',
+    label:'SPORTS',
+    cat:'Sports',
+    ring:2,
+    color:'#FF1F1F',
     creators:[
-      { name:'ESPN',         subs:'10M subs',  c:'#FF1F1F' },
-      { name:'NBA',          subs:'20M subs',  c:'#FF6B35' },
-      { name:'UEFA CL',      subs:'12M subs',  c:'#3F51B5' },
-    ]},
-  { icon:'📚', label:'EDU',    cat:'Education', ring:2, color:'#2196F3',
+      { name:'ESPN', subs:'10M subs', c:'#FF1F1F' },
+      { name:'NBA', subs:'20M subs', c:'#FF6B35' },
+      { name:'UEFA CL', subs:'12M subs', c:'#3F51B5' }
+    ]
+  },
+
+  {
+    icon:'📚',
+    label:'EDU',
+    cat:'Education',
+    ring:2,
+    color:'#2196F3',
     creators:[
-      { name:'Kurzgesagt',   subs:'23M subs',  c:'#FF6B35' },
-      { name:'Veritasium',   subs:'16M subs',  c:'#2196F3' },
-      { name:'Khan Academy', subs:'8M subs',   c:'#00C853' },
-    ]},
-  { icon:'😂', label:'COMEDY', cat:'Comedy', ring:2, color:'#FFD700',
+      { name:'Kurzgesagt', subs:'23M subs', c:'#FF6B35' },
+      { name:'Veritasium', subs:'16M subs', c:'#2196F3' },
+      { name:'Khan Academy', subs:'8M subs', c:'#00C853' }
+    ]
+  },
+
+  {
+    icon:'😂',
+    label:'COMEDY',
+    cat:'Comedy',
+    ring:2,
+    color:'#FFD700',
     creators:[
-      { name:'MrBeast',      subs:'339M subs', c:'#FF1F1F' },
-      { name:'David Dobrik', subs:'18M subs',  c:'#9C27B0' },
-      { name:'Smosh',        subs:'26M subs',  c:'#FF6B35' },
-    ]},
-  { icon:'✈️', label:'TRAVEL', cat:'Travel & Events', ring:2, color:'#00BCD4',
+      { name:'MrBeast', subs:'339M subs', c:'#FF1F1F' },
+      { name:'David Dobrik', subs:'18M subs', c:'#9C27B0' },
+      { name:'Smosh', subs:'26M subs', c:'#FF6B35' }
+    ]
+  },
+
+  {
+    icon:'✈️',
+    label:'TRAVEL',
+    cat:'Travel & Events',
+    ring:2,
+    color:'#00BCD4',
     creators:[
-      { name:'Mark Wiens',   subs:'10M subs',  c:'#FF6B35' },
-      { name:'Kara & Nate',  subs:'3M subs',   c:'#00C853' },
-      { name:'Yes Theory',   subs:'8M subs',   c:'#2196F3' },
-    ]},
+      { name:'Mark Wiens', subs:'10M subs', c:'#FF6B35' },
+      { name:'Kara & Nate', subs:'3M subs', c:'#00C853' },
+      { name:'Yes Theory', subs:'8M subs', c:'#2196F3' }
+    ]
+  },
+
+
   // Ring 3 — outer (r=248) · 6 nodes
-  { icon:'🔬', label:'SCIENCE', cat:'Science & Tech', ring:3, color:'#2196F3',
+  {
+    icon:'🔬',
+    label:'SCIENCE',
+    cat:'Science & Tech',
+    ring:3,
+    color:'#2196F3',
     creators:[
-      { name:'MKBHD',         subs:'18M subs', c:'#FF1F1F' },
-      { name:'Linus Tech',    subs:'15M subs', c:'#FF6B35' },
-      { name:'SmarterEvery',  subs:'11M subs', c:'#00C853' },
-    ]},
-  { icon:'📰', label:'NEWS',    cat:'News & Politics', ring:3, color:'#FF6B35',
+      { name:'MKBHD', subs:'18M subs', c:'#FF1F1F' },
+      { name:'Linus Tech', subs:'15M subs', c:'#FF6B35' },
+      { name:'SmarterEvery', subs:'11M subs', c:'#00C853' }
+    ]
+  },
+
+  {
+    icon:'📰',
+    label:'NEWS',
+    cat:'News & Politics',
+    ring:3,
+    color:'#FF6B35',
     creators:[
-      { name:'CNN',           subs:'16M subs', c:'#FF1F1F' },
-      { name:'BBC News',      subs:'16M subs', c:'#E53935' },
-      { name:'VICE News',     subs:'5M subs',  c:'#FF6B35' },
-    ]},
-  { icon:'🎭', label:'ENTERTAIN', cat:'Entertainment', ring:3, color:'#9C27B0',
+      { name:'CNN', subs:'16M subs', c:'#FF1F1F' },
+      { name:'BBC News', subs:'16M subs', c:'#E53935' },
+      { name:'VICE News', subs:'5M subs', c:'#FF6B35' }
+    ]
+  },
+
+  {
+    icon:'🎭',
+    label:'ENTERTAIN',
+    cat:'Entertainment',
+    ring:3,
+    color:'#9C27B0',
     creators:[
-      { name:'Jimmy Fallon',  subs:'29M subs', c:'#9C27B0' },
-      { name:'Seth Meyers',   subs:'10M subs', c:'#2196F3' },
-      { name:'Colbert',       subs:'11M subs', c:'#FF6B35' },
-    ]},
-  { icon:'💄', label:'STYLE',   cat:'Howto & Style', ring:3, color:'#E91E63',
+      { name:'Jimmy Fallon', subs:'29M subs', c:'#9C27B0' },
+      { name:'Seth Meyers', subs:'10M subs', c:'#2196F3' },
+      { name:'Colbert', subs:'11M subs', c:'#FF6B35' }
+    ]
+  },
+
+  {
+    icon:'💄',
+    label:'STYLE',
+    cat:'Howto & Style',
+    ring:3,
+    color:'#E91E63',
     creators:[
-      { name:'NikkieTutorials',subs:'14M subs',c:'#E91E63' },
-      { name:'James Charles',  subs:'24M subs',c:'#9C27B0' },
-      { name:'Michelle Phan',  subs:'9M subs', c:'#FF6B35' },
-    ]},
-  { icon:'🐾', label:'PETS',    cat:'Pets & Animals', ring:3, color:'#4CAF50',
+      { name:'NikkieTutorials', subs:'14M subs', c:'#E91E63' },
+      { name:'James Charles', subs:'24M subs', c:'#9C27B0' },
+      { name:'Michelle Phan', subs:'9M subs', c:'#FF6B35' }
+    ]
+  },
+
+  {
+    icon:'🐾',
+    label:'PETS',
+    cat:'Pets & Animals',
+    ring:3,
+    color:'#4CAF50',
     creators:[
-      { name:'The Dodo',      subs:'11M subs', c:'#4CAF50' },
-      { name:'AnimalPlanet',  subs:'4M subs',  c:'#00C853' },
-      { name:'Paul Cuffaro',  subs:'3M subs',  c:'#FF6B35' },
-    ]},
-  { icon:'🎬', label:'FILM',    cat:'Film & Animation', ring:3, color:'#FF6B35',
+      { name:'The Dodo', subs:'11M subs', c:'#4CAF50' },
+      { name:'AnimalPlanet', subs:'4M subs', c:'#00C853' },
+      { name:'Paul Cuffaro', subs:'3M subs', c:'#FF6B35' }
+    ]
+  },
+
+  {
+    icon:'🎬',
+    label:'FILM',
+    cat:'Film & Animation',
+    ring:3,
+    color:'#FF6B35',
     creators:[
-      { name:'Corridor Crew', subs:'7M subs',  c:'#FF1F1F' },
-      { name:'CinemaSins',    subs:'9M subs',  c:'#FF6B35' },
-      { name:'Screen Junkies',subs:'7M subs',  c:'#9C27B0' },
-    ]},
+      { name:'Corridor Crew', subs:'7M subs', c:'#FF1F1F' },
+      { name:'CinemaSins', subs:'9M subs', c:'#FF6B35' },
+      { name:'Screen Junkies', subs:'7M subs', c:'#9C27B0' }
+    ]
+  }
+
 ];
 
-// Ring radii (distance from center 260,260 of the 520px scene)
+
+// ── CONSTANTS ────────────────────────────────────
+
 const RING_R  = { 1:115, 2:180, 3:248 };
 const RING_NR = { 1:'nr1', 2:'nr2', 3:'nr3' };
-const CX = 260; // half of 520
+
+const CX = 260;        // center of 520px scene
+const SIZE = 68;
+
+
+// ── BUILD ORBIT ─────────────────────────────────
 
 function buildOrbit() {
+
   const arms = {
     1: document.getElementById('arm1'),
     2: document.getElementById('arm2'),
     3: document.getElementById('arm3')
   };
-  const count = { 1:0, 2:0, 3:0 };
-  const total = ORBIT_NODES.reduce((a,n)=>{ a[n.ring]=(a[n.ring]||0)+1; return a; }, {});
-  const SIZE  = 68;
 
-  ORBIT_NODES.forEach(n => {
-    const arm = arms[n.ring]; if (!arm) return;
-    const idx = count[n.ring]++;
-    const deg = (360 / total[n.ring]) * idx - 90; // start top
+  const count = {1:0,2:0,3:0};
+
+  const total = ORBIT_NODES.reduce((acc,node)=>{
+    acc[node.ring] = (acc[node.ring] || 0) + 1;
+    return acc;
+  },{});
+
+
+  ORBIT_NODES.forEach(nodeData => {
+
+    const arm = arms[nodeData.ring];
+    if(!arm) return;
+
+    const idx = count[nodeData.ring]++;
+    const deg = (360 / total[nodeData.ring]) * idx - 90;
+
     const rad = deg * Math.PI / 180;
-    const r   = RING_R[n.ring];
-    const x   = CX + r * Math.cos(rad) - SIZE / 2;
-    const y   = CX + r * Math.sin(rad) - SIZE / 2;
+    const r   = RING_R[nodeData.ring];
 
-    const creatorsHtml = n.creators.map((c, i) => `
+    const x = CX + r * Math.cos(rad) - SIZE/2;
+    const y = CX + r * Math.sin(rad) - SIZE/2;
+
+
+    const creatorsHtml = nodeData.creators.map((creator,i)=>`
       <div class="orbit-creator">
+
         <div class="orbit-creator-rank">#${i+1}</div>
-        <div class="orbit-creator-avatar" style="background:${c.c}18;border:1.5px solid ${c.c}44;color:${c.c};">
-          ${c.name[0]}
+
+        <div class="orbit-creator-avatar"
+          style="background:${creator.c}18;border:1.5px solid ${creator.c}44;color:${creator.c};">
+
+          ${creator.name[0]}
+
         </div>
+
         <div>
-          <div class="orbit-creator-name">${c.name}</div>
-          <div class="orbit-creator-subs">${c.subs}</div>
+          <div class="orbit-creator-name">${creator.name}</div>
+          <div class="orbit-creator-subs">${creator.subs}</div>
         </div>
-      </div>`).join('');
+
+      </div>
+    `).join('');
+
 
     const node = document.createElement('div');
-    node.className = `orbit-node ${RING_NR[n.ring]}`;
-    node.style.cssText = `left:${x}px;top:${y}px;`;
-    // Tint border color per category
-    node.style.setProperty('--nc', n.color);
+
+    node.className = `orbit-node ${RING_NR[nodeData.ring]}`;
+    node.style.left = `${x}px`;
+    node.style.top  = `${y}px`;
+
+    node.style.setProperty('--nc', nodeData.color);
+
     node.innerHTML = `
-      <span style="line-height:1;">${n.icon}</span>
-      <span class="orbit-node-lbl">${n.label}</span>
+      <span>${nodeData.icon}</span>
+      <span class="orbit-node-lbl">${nodeData.label}</span>
+
       <div class="orbit-card">
-        <div class="orbit-card-head" style="background:linear-gradient(135deg,${n.color}14,${n.color}04);">
-          <div class="orbit-card-icon">${n.icon}</div>
+
+        <div class="orbit-card-head"
+        style="background:linear-gradient(135deg,${nodeData.color}14,${nodeData.color}04);">
+
+          <div class="orbit-card-icon">${nodeData.icon}</div>
+
           <div>
-            <div class="orbit-card-cat">${n.cat}</div>
+            <div class="orbit-card-cat">${nodeData.cat}</div>
             <div class="orbit-card-sub">TOP CREATORS</div>
           </div>
+
         </div>
-        <div class="orbit-card-creators">${creatorsHtml}</div>
+
+        <div class="orbit-card-creators">
+          ${creatorsHtml}
+        </div>
+
       </div>
     `;
-    // On hover highlight border with category color
-    node.addEventListener('mouseenter', () => {
-      node.style.borderColor = n.color + 'bb';
-      node.style.boxShadow = `0 0 0 5px ${n.color}10,0 0 30px ${n.color}30,0 8px 32px rgba(0,0,0,.65)`;
+
+
+    node.addEventListener('mouseenter',()=>{
+      node.style.borderColor = nodeData.color + 'bb';
+      node.style.boxShadow =
+        `0 0 0 5px ${nodeData.color}10,
+         0 0 30px ${nodeData.color}30,
+         0 8px 32px rgba(0,0,0,.65)`;
     });
-    node.addEventListener('mouseleave', () => {
+
+
+    node.addEventListener('mouseleave',()=>{
       node.style.borderColor = '';
       node.style.boxShadow = '';
     });
 
+
     arm.appendChild(node);
+
   });
+
 }
+
+
 buildOrbit();
 
 // Categories grid
