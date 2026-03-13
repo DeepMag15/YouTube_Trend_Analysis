@@ -89,6 +89,15 @@
   }
   .logout-btn:hover { color:var(--red); }
 
+  @keyframes slideInRight {
+    from { transform:translateX(100%); opacity:0; }
+    to { transform:translateX(0); opacity:1; }
+  }
+  @keyframes popIn {
+    from { transform:scale(.93); opacity:0; }
+    to { transform:scale(1); opacity:1; }
+  }
+
   /* ── MAIN CONTENT ── */
   .main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
 
@@ -500,7 +509,7 @@
       <div class="user-name" id="userName">Loading...</div>
       <div class="user-email" id="userEmail">–</div>
     </div>
-    <button class="logout-btn" onclick="logout()" title="Logout">↩</button>
+    <button class="logout-btn" onclick="openSettings()" title="Settings" style="font-size:18px;">⚙️</button>
   </div>
 </aside>
 
@@ -545,18 +554,209 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <!-- DAILY LIMIT BANNER -->
-<div id="limitBanner" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9998;width:90%;max-width:480px;">
-  <div style="background:#1A1A1A;border:1px solid rgba(255,215,0,.2);border-radius:14px;padding:20px 24px;box-shadow:0 16px 48px rgba(0,0,0,.6);display:flex;align-items:flex-start;gap:16px;">
-    <div style="font-size:28px;flex-shrink:0;margin-top:2px;">✅</div>
-    <div style="flex:1;min-width:0;">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1.5px;margin-bottom:4px;color:#F0F0F0;">You're all caught up!</div>
-      <div style="font-size:13px;color:#777;line-height:1.6;margin-bottom:10px;">Fresh trending data will be available soon. You can still browse, filter categories, and watch everything loaded so far.</div>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="font-size:11px;color:#555;font-family:'Space Mono',monospace;">REFRESHES IN</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:#FFD700;" id="countdownTimer">--:--:--</div>
+<div id="limitBanner" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9998;width:92%;max-width:520px;">
+  <div style="background:#141414;border:1px solid rgba(255,31,31,.18);border-radius:16px;padding:22px 24px;box-shadow:0 24px 64px rgba(0,0,0,.7);position:relative;">
+    <button onclick="document.getElementById('limitBanner').style.display='none'" style="position:absolute;top:14px;right:14px;background:none;border:1px solid #2A2A2A;color:#555;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;">✕</button>
+    <!-- Basic plan message -->
+    <div id="limitBannerBasic">
+      <div style="display:flex;align-items:flex-start;gap:16px;">
+        <div style="font-size:32px;flex-shrink:0;">⏱️</div>
+        <div style="flex:1;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;margin-bottom:4px;color:#F0F0F0;">Daily Quota Reached</div>
+          <div style="font-size:13px;color:#777;line-height:1.6;margin-bottom:14px;">You've used all <strong style="color:#F0F0F0;">3 free refreshes</strong> for today. Upgrade to Pro for <strong style="color:#FFD700;">6 refreshes/day</strong> and priority access.</div>
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+            <button onclick="openUpgradeModal()" style="background:#FF1F1F;border:none;color:white;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;gap:7px;">⭐ Upgrade to Pro</button>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="font-size:11px;color:#555;font-family:'Space Mono',monospace;">RESETS IN</div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#FFD700;" id="countdownTimer">--:--:--</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    <button onclick="document.getElementById('limitBanner').style.display='none'" style="background:none;border:1px solid #2A2A2A;color:#555;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s;" onmouseover="this.style.borderColor='#555';this.style.color='#F0F0F0'" onmouseout="this.style.borderColor='#2A2A2A';this.style.color='#555'">✕</button>
+    <!-- Pro plan message -->
+    <div id="limitBannerPro" style="display:none;">
+      <div style="display:flex;align-items:flex-start;gap:16px;">
+        <div style="font-size:32px;flex-shrink:0;">⭐</div>
+        <div style="flex:1;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;margin-bottom:4px;color:#FFD700;">Pro Daily Quota Reached</div>
+          <div style="font-size:13px;color:#777;line-height:1.6;margin-bottom:12px;">You've used all <strong style="color:#FFD700;">6 Pro refreshes</strong> for today. Fresh data resets at midnight.</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="font-size:11px;color:#555;font-family:'Space Mono',monospace;">RESETS IN</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#FFD700;" id="countdownTimerPro">--:--:--</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS PANEL -->
+<div id="settingsOverlay" style="display:none;position:fixed;inset:0;z-index:9990;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);" onclick="if(event.target===this)closeSettings()">
+  <div style="position:absolute;right:0;top:0;bottom:0;width:400px;max-width:100vw;background:#141414;border-left:1px solid #242424;display:flex;flex-direction:column;overflow:hidden;animation:slideInRight .3s ease;">
+    <div style="padding:20px 24px;border-bottom:1px solid #242424;display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;">⚙️ SETTINGS</div>
+      <button onclick="closeSettings()" style="background:none;border:1px solid #2A2A2A;color:#888;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .2s;" onmouseover="this.style.color='#F0F0F0'" onmouseout="this.style.color='#888'">✕</button>
+    </div>
+    <!-- Tabs -->
+    <div style="display:flex;border-bottom:1px solid #242424;">
+      <button id="stab-profile" onclick="switchSettingsTab('profile')" style="flex:1;padding:12px;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;background:none;border:none;border-bottom:2px solid #FF1F1F;color:#F0F0F0;cursor:pointer;letter-spacing:.5px;">👤 PROFILE</button>
+      <button id="stab-plan" onclick="switchSettingsTab('plan')" style="flex:1;padding:12px;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;background:none;border:none;border-bottom:2px solid transparent;color:#888;cursor:pointer;letter-spacing:.5px;">⭐ PLAN</button>
+      <button id="stab-about" onclick="switchSettingsTab('about')" style="flex:1;padding:12px;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;background:none;border:none;border-bottom:2px solid transparent;color:#888;cursor:pointer;letter-spacing:.5px;">ℹ️ ABOUT</button>
+    </div>
+    <!-- Content -->
+    <div style="flex:1;overflow-y:auto;padding:24px;">
+      <!-- Profile Tab -->
+      <div id="spanel-profile">
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:28px;padding-bottom:24px;border-bottom:1px solid #1E1E1E;">
+          <div id="settingsAvatar" style="width:60px;height:60px;border-radius:50%;background:#FF1F1F;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:white;flex-shrink:0;"></div>
+          <div>
+            <div id="settingsName" style="font-size:18px;font-weight:600;margin-bottom:4px;"></div>
+            <div id="settingsEmail" style="font-size:12px;color:#888;"></div>
+            <div id="settingsPlanBadge" style="margin-top:6px;display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600;font-family:'Space Mono',monospace;"></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:28px;">
+          <div style="background:#1A1A1A;border:1px solid #242424;border-radius:10px;padding:16px;">
+            <div style="font-size:10px;color:#555;font-family:'Space Mono',monospace;letter-spacing:1px;margin-bottom:6px;">DAILY REFRESHES USED</div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div id="settingsCallsBar" style="flex:1;height:6px;background:#242424;border-radius:3px;overflow:hidden;"><div id="settingsCallsFill" style="height:100%;background:#FF1F1F;border-radius:3px;transition:width .6s;"></div></div>
+              <div id="settingsCallsText" style="font-family:'Space Mono',monospace;font-size:12px;color:#F0F0F0;"></div>
+            </div>
+          </div>
+          <div id="settingsMemberSince" style="background:#1A1A1A;border:1px solid #242424;border-radius:10px;padding:16px;">
+            <div style="font-size:10px;color:#555;font-family:'Space Mono',monospace;letter-spacing:1px;margin-bottom:4px;">MEMBER SINCE</div>
+            <div id="settingsJoinDate" style="font-size:14px;font-weight:500;"></div>
+          </div>
+        </div>
+        <button onclick="logout()" style="width:100%;padding:12px;background:rgba(255,31,31,.1);border:1px solid rgba(255,31,31,.25);color:#FF1F1F;border-radius:8px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;" onmouseover="this.style.background='rgba(255,31,31,.18)'" onmouseout="this.style.background='rgba(255,31,31,.1)'">↩ Sign Out</button>
+      </div>
+      <!-- Plan Tab -->
+      <div id="spanel-plan" style="display:none;">
+        <div id="planCurrentInfo" style="margin-bottom:20px;"></div>
+        <!-- Basic plan card -->
+        <div style="background:#1A1A1A;border:1px solid #242424;border-radius:12px;padding:20px;margin-bottom:12px;position:relative;">
+          <div id="basicPlanActive" style="display:none;position:absolute;top:12px;right:12px;background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.2);color:#00C853;padding:2px 9px;border-radius:100px;font-size:10px;font-family:'Space Mono',monospace;">CURRENT</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;margin-bottom:4px;">FREE PLAN</div>
+          <div style="font-size:24px;font-weight:700;color:#F0F0F0;margin-bottom:12px;">$0<span style="font-size:13px;color:#888;font-weight:400;">/month</span></div>
+          <div style="display:flex;flex-direction:column;gap:7px;font-size:13px;color:#888;">
+            <div>✓ 3 refreshes per day</div>
+            <div>✓ All 15 categories</div>
+            <div>✓ 30+ regions</div>
+            <div>✓ Bookmarks</div>
+          </div>
+        </div>
+        <!-- Pro plan card -->
+        <div style="background:linear-gradient(135deg,rgba(255,215,0,.06),rgba(255,31,31,.06));border:1px solid rgba(255,215,0,.2);border-radius:12px;padding:20px;position:relative;">
+          <div id="proPlanActive" style="display:none;position:absolute;top:12px;right:12px;background:rgba(255,215,0,.12);border:1px solid rgba(255,215,0,.25);color:#FFD700;padding:2px 9px;border-radius:100px;font-size:10px;font-family:'Space Mono',monospace;">CURRENT</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;">⭐ PRO PLAN</div>
+          </div>
+          <div style="font-size:24px;font-weight:700;color:#FFD700;margin-bottom:12px;">$4.99<span style="font-size:13px;color:#888;font-weight:400;">/month</span></div>
+          <div style="display:flex;flex-direction:column;gap:7px;font-size:13px;color:#888;margin-bottom:16px;">
+            <div style="color:#FFD700;">⭐ 6 refreshes per day</div>
+            <div>✓ Everything in Free</div>
+            <div>✓ Priority data access</div>
+            <div>✓ Pro badge</div>
+            <div id="proExpiryInfo" style="display:none;"></div>
+          </div>
+          <button id="upgradeBtn" onclick="openUpgradeModal()" style="width:100%;padding:11px;background:#FF1F1F;border:none;color:white;border-radius:8px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .2s;">⭐ Upgrade to Pro — $4.99/mo</button>
+        </div>
+      </div>
+      <!-- About Tab -->
+      <div id="spanel-about" style="display:none;">
+        <div style="text-align:center;margin-bottom:24px;">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:3px;margin-bottom:4px;">TREND<span style="color:#FF1F1F;">PULSE</span></div>
+          <div style="font-size:12px;color:#555;font-family:'Space Mono',monospace;letter-spacing:1.5px;">YOUTUBE TREND ANALYZER</div>
+        </div>
+        <div style="background:#1A1A1A;border:1px solid #242424;border-radius:10px;padding:18px;margin-bottom:14px;">
+          <div style="font-size:10px;color:#555;font-family:'Space Mono',monospace;letter-spacing:1px;margin-bottom:8px;">WHAT IS TRENDPULSE?</div>
+          <div style="font-size:13px;color:#AAA;line-height:1.7;">TrendPulse is a real-time YouTube trend analytics dashboard. It pulls live data directly from YouTube Data API v3 to show you what the world is watching — broken down by country, category, and content type (Videos vs Shorts).</div>
+        </div>
+        <div style="font-size:11px;color:#555;font-family:'Space Mono',monospace;letter-spacing:1px;margin-bottom:10px;">TOOLS & SECTIONS</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
+          <div style="background:#1A1A1A;border:1px solid #242424;border-radius:8px;padding:12px 14px;">
+            <div style="font-size:12px;font-weight:600;margin-bottom:3px;">🔥 Trending Videos</div>
+            <div style="font-size:12px;color:#666;line-height:1.5;">Top 10 long-form videos per category, ranked by views. Filter by region and category from the topbar.</div>
+          </div>
+          <div style="background:#1A1A1A;border:1px solid #242424;border-radius:8px;padding:12px 14px;">
+            <div style="font-size:12px;font-weight:600;margin-bottom:3px;">📱 Trending Shorts</div>
+            <div style="font-size:12px;color:#666;line-height:1.5;">Top 20 YouTube Shorts (≤60 seconds) shown in a native vertical portrait grid. Opens directly on youtube.com/shorts.</div>
+          </div>
+          <div style="background:#1A1A1A;border:1px solid #242424;border-radius:8px;padding:12px 14px;">
+            <div style="font-size:12px;font-weight:600;margin-bottom:3px;">📊 Trend Charts</div>
+            <div style="font-size:12px;color:#666;line-height:1.5;">Views-over-time line chart and category doughnut — filterable by category and duration type (Videos / Shorts / Both).</div>
+          </div>
+          <div style="background:#1A1A1A;border:1px solid #242424;border-radius:8px;padding:12px 14px;">
+            <div style="font-size:12px;font-weight:600;margin-bottom:3px;">📺 Top Channels</div>
+            <div style="font-size:12px;color:#666;line-height:1.5;">Which channels appear most in trending. Ranked by total views. Filter by category and content type.</div>
+          </div>
+          <div style="background:#1A1A1A;border:1px solid #242424;border-radius:8px;padding:12px 14px;">
+            <div style="font-size:12px;font-weight:600;margin-bottom:3px;">🔖 Bookmarks</div>
+            <div style="font-size:12px;color:#666;line-height:1.5;">Save any trending video or Short for later reference. Bookmarks persist across sessions.</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:#444;text-align:center;line-height:1.7;">Powered by YouTube Data API v3<br>Not affiliated with Google or YouTube<br>© 2025 TrendPulse</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- UPGRADE / PAYMENT MODAL -->
+<div id="upgradeModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);backdrop-filter:blur(14px);display:none;align-items:center;justify-content:center;">
+  <div style="background:#141414;border:1px solid rgba(255,215,0,.2);border-radius:20px;padding:40px;width:90%;max-width:460px;position:relative;animation:popIn .3s ease;">
+    <button onclick="closeUpgradeModal()" style="position:absolute;top:16px;right:16px;background:none;border:1px solid #2A2A2A;color:#555;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;">✕</button>
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="font-size:40px;margin-bottom:12px;">⭐</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:2px;color:#FFD700;margin-bottom:6px;">UPGRADE TO PRO</div>
+      <div style="font-size:14px;color:#888;">Unlock 6 refreshes/day for a full month</div>
+    </div>
+    <!-- What you get -->
+    <div style="background:#1A1A1A;border:1px solid #242424;border-radius:12px;padding:18px;margin-bottom:22px;">
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
+        <div style="display:flex;align-items:center;gap:10px;"><div style="color:#FFD700;font-size:16px;">⭐</div><div><strong>6 refreshes/day</strong> <span style="color:#888;">(vs 3 on Free)</span></div></div>
+        <div style="display:flex;align-items:center;gap:10px;"><div style="color:#00C853;font-size:16px;">✓</div><div>All 15 categories + 30+ regions</div></div>
+        <div style="display:flex;align-items:center;gap:10px;"><div style="color:#00C853;font-size:16px;">✓</div><div>Priority data access</div></div>
+        <div style="display:flex;align-items:center;gap:10px;"><div style="color:#00C853;font-size:16px;">✓</div><div>Pro badge on your account</div></div>
+        <div style="display:flex;align-items:center;gap:10px;"><div style="color:#00C853;font-size:16px;">✓</div><div>1 month subscription</div></div>
+      </div>
+    </div>
+    <!-- Price -->
+    <div style="text-align:center;margin-bottom:22px;">
+      <div style="font-size:40px;font-weight:700;color:#F0F0F0;">$4.99<span style="font-size:16px;color:#888;font-weight:400;">/month</span></div>
+      <div style="font-size:12px;color:#555;margin-top:4px;">Cancel anytime · No hidden fees</div>
+    </div>
+    <!-- Payment form (simulated) -->
+    <div id="upgradePayForm">
+      <div style="margin-bottom:14px;">
+        <div style="font-size:10px;color:#555;font-family:'Space Mono',monospace;letter-spacing:1px;margin-bottom:7px;">CARD NUMBER</div>
+        <input id="payCard" type="text" maxlength="19" placeholder="1234 5678 9012 3456"
+          oninput="this.value=this.value.replace(/[^0-9]/g,'').replace(/(.{4})/g,'$1 ').trim()"
+          style="width:100%;padding:11px 14px;background:#1A1A1A;border:1px solid #2C2C2C;border-radius:8px;color:#F0F0F0;font-size:14px;font-family:'Space Mono',monospace;outline:none;letter-spacing:2px;" onfocus="this.style.borderColor='#FF1F1F'" onblur="this.style.borderColor='#2C2C2C'">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+        <div>
+          <div style="font-size:10px;color:#555;font-family:'Space Mono',monospace;letter-spacing:1px;margin-bottom:7px;">EXPIRY</div>
+          <input id="payExpiry" type="text" maxlength="5" placeholder="MM/YY"
+            oninput="let v=this.value.replace(/[^0-9]/g,'');if(v.length>=2)v=v.slice(0,2)+'/'+v.slice(2);this.value=v;"
+            style="width:100%;padding:11px 14px;background:#1A1A1A;border:1px solid #2C2C2C;border-radius:8px;color:#F0F0F0;font-size:14px;font-family:'Space Mono',monospace;outline:none;" onfocus="this.style.borderColor='#FF1F1F'" onblur="this.style.borderColor='#2C2C2C'">
+        </div>
+        <div>
+          <div style="font-size:10px;color:#555;font-family:'Space Mono',monospace;letter-spacing:1px;margin-bottom:7px;">CVV</div>
+          <input id="payCvv" type="text" maxlength="4" placeholder="•••"
+            style="width:100%;padding:11px 14px;background:#1A1A1A;border:1px solid #2C2C2C;border-radius:8px;color:#F0F0F0;font-size:14px;font-family:'Space Mono',monospace;outline:none;" onfocus="this.style.borderColor='#FF1F1F'" onblur="this.style.borderColor='#2C2C2C'">
+        </div>
+      </div>
+      <div id="payMsg" style="margin-bottom:10px;"></div>
+      <button onclick="processPayment()" style="width:100%;padding:14px;background:#FF1F1F;border:none;color:white;border-radius:10px;font-size:15px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .2s;letter-spacing:.3px;" onmouseover="this.style.background='#CC0000'" onmouseout="this.style.background='#FF1F1F'">🔒 Pay $4.99 — Activate Pro</button>
+      <div style="text-align:center;margin-top:12px;font-size:11px;color:#444;">This is a demo payment — no real charge occurs.</div>
+    </div>
+    <div id="upgradeSuccess" style="display:none;text-align:center;padding:20px 0;">
+      <div style="font-size:52px;margin-bottom:16px;">🎉</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:#FFD700;margin-bottom:8px;">Pro Activated!</div>
+      <div style="font-size:14px;color:#888;margin-bottom:20px;">You now have 6 refreshes/day for 30 days.</div>
+      <button onclick="closeUpgradeModal();location.reload();" style="padding:11px 28px;background:#FF1F1F;border:none;color:white;border-radius:8px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;">→ Start Exploring</button>
+    </div>
   </div>
 </div>
 
@@ -565,7 +765,9 @@
 // CONSTANTS
 // ═══════════════════════════════════════════════
 const ADMIN_EMAIL       = 'deepmagar505@gmail.com';
-const USER_DAILY_LIMIT  = 3;
+const USER_DAILY_LIMIT  = 3;   // Basic plan
+const PRO_DAILY_LIMIT   = 6;   // Pro plan
+const PRO_PRICE_MONTHLY = 4.99;
 const TOP_PER_CATEGORY  = 30;   // fetched per category
 const TOP_VIDEOS_SHOW   = 10;   // regular videos shown in hero section
 const TOP_SHORTS_SHOW   = 20;   // shorts shown in hero section
@@ -717,6 +919,12 @@ function checkAuth() {
   document.getElementById('userEmail').textContent = user.email || '';
   document.getElementById('userAvatar').textContent = (user.username || 'U')[0].toUpperCase();
 
+  // Show Pro badge in sidebar if applicable
+  if (isPro()) {
+    const nameEl = document.getElementById('userName');
+    if (nameEl) nameEl.innerHTML = (user.username || 'User') + ' <span style="font-size:9px;background:rgba(255,215,0,.15);color:#FFD700;border:1px solid rgba(255,215,0,.25);padding:1px 6px;border-radius:4px;font-family:\'Space Mono\',monospace;letter-spacing:.5px;vertical-align:middle;">PRO</span>';
+  }
+
   // Admin panel link only visible to admins — hidden for all regular users
   document.getElementById('adminSidebarSection').innerHTML = '';
 
@@ -747,10 +955,23 @@ function incrementCall() {
   localStorage.setItem('tp_users_db', JSON.stringify(db));
 }
 
+function isPro() {
+  const { db, email } = getUserCallsDb();
+  if (!db[email]) return false;
+  const pro = db[email].pro;
+  if (!pro) return false;
+  // Check expiry (monthly)
+  return pro.active && new Date(pro.expiresAt) > new Date();
+}
+
+function getDailyLimit() {
+  return isPro() ? PRO_DAILY_LIMIT : USER_DAILY_LIMIT;
+}
+
 function checkRateLimit(showWarning = true) {
   const calls = getTodayCalls();
   updateCallsBadge(calls);
-  if (calls >= USER_DAILY_LIMIT) {
+  if (calls >= getDailyLimit()) {
     disableRefreshButton();
     if (showWarning) showLimitBanner();
     return false;
@@ -769,16 +990,8 @@ function disableRefreshButton() {
   btn.innerHTML = '<span id="refreshIcon">↺</span> Refresh';
 }
 
-function showLimitBanner() {
-  const banner = document.getElementById('limitBanner');
-  if (banner) {
-    banner.style.display = 'block';
-    startCountdown();
-  }
-}
-
 function startCountdownIfBlocked() {
-  if (getTodayCalls() >= USER_DAILY_LIMIT) {
+  if (getTodayCalls() >= getDailyLimit()) {
     disableRefreshButton();
     showLimitBanner();
   }
@@ -792,32 +1005,36 @@ function startCountdown() {
     const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
     const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
     const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
-    const el = document.getElementById('countdownTimer');
-    if (el) el.textContent = `${h}:${m}:${s}`;
+    const t = `${h}:${m}:${s}`;
+    const el  = document.getElementById('countdownTimer');
+    const el2 = document.getElementById('countdownTimerPro');
+    if (el)  el.textContent  = t;
+    if (el2) el2.textContent = t;
   }
   tick();
   setInterval(tick, 1000);
 }
 
 function updateCallsBadge(calls) {
-  // Deliberately hide exact counts from users — just show a subtle indicator
   const badge = document.getElementById('callsBadge');
   if (!badge) return;
-  if (calls >= USER_DAILY_LIMIT) {
-    badge.textContent = '✓ Up to date';
+  const limit = getDailyLimit();
+  const pro = isPro();
+  if (calls >= limit) {
+    badge.textContent = pro ? '✓ Pro · Up to date' : '✓ Up to date';
     badge.style.background  = 'rgba(0,212,106,.08)';
     badge.style.color       = '#00C853';
     badge.style.borderColor = 'rgba(0,212,106,.15)';
   } else if (calls > 0) {
-    badge.textContent = '✓ Data loaded';
-    badge.style.background  = 'rgba(0,212,106,.08)';
-    badge.style.color       = '#00C853';
-    badge.style.borderColor = 'rgba(0,212,106,.15)';
+    badge.textContent = pro ? `⭐ Pro · ${limit-calls} left` : `✓ Data loaded`;
+    badge.style.background  = pro ? 'rgba(255,215,0,.08)' : 'rgba(0,212,106,.08)';
+    badge.style.color       = pro ? '#FFD700' : '#00C853';
+    badge.style.borderColor = pro ? 'rgba(255,215,0,.15)' : 'rgba(0,212,106,.15)';
   } else {
-    badge.textContent = 'Tap refresh to load';
-    badge.style.background  = 'rgba(255,255,255,.04)';
-    badge.style.color       = 'var(--muted)';
-    badge.style.borderColor = 'var(--border)';
+    badge.textContent = pro ? '⭐ Pro Plan Active' : 'Tap refresh to load';
+    badge.style.background  = pro ? 'rgba(255,215,0,.06)' : 'rgba(255,255,255,.04)';
+    badge.style.color       = pro ? '#FFD700' : 'var(--muted)';
+    badge.style.borderColor = pro ? 'rgba(255,215,0,.12)' : 'var(--border)';
   }
 }
 
@@ -1296,7 +1513,7 @@ function renderTrending() {
 
   if (!hasData) {
     const calls   = getTodayCalls();
-    const atLimit = calls >= USER_DAILY_LIMIT;
+    const atLimit = calls >= getDailyLimit();
 
     content.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:500px;gap:18px;text-align:center;padding:40px 20px;">
@@ -1556,7 +1773,7 @@ function renderShorts() {
 
   if (!hasData) {
     const calls   = getTodayCalls();
-    const atLimit = calls >= USER_DAILY_LIMIT;
+    const atLimit = calls >= getDailyLimit();
     content.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:500px;gap:18px;text-align:center;padding:40px 20px;">
         <div style="font-size:64px;line-height:1;">📱</div>
@@ -2259,10 +2476,191 @@ function logout() {
   window.location.href = 'index.html';
 }
 
+// ═══════════════════════════════════════════════
+// SETTINGS PANEL
+// ═══════════════════════════════════════════════
+function openSettings() {
+  const overlay = document.getElementById('settingsOverlay');
+  if (!overlay) return;
+  overlay.style.display = 'block';
+  populateSettings();
+  switchSettingsTab('profile');
+}
+
+function closeSettings() {
+  const overlay = document.getElementById('settingsOverlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function switchSettingsTab(tab) {
+  ['profile','plan','about'].forEach(t => {
+    const panel = document.getElementById('spanel-' + t);
+    const btn   = document.getElementById('stab-' + t);
+    if (panel) panel.style.display = t === tab ? 'block' : 'none';
+    if (btn) {
+      btn.style.borderBottom = t === tab ? '2px solid #FF1F1F' : '2px solid transparent';
+      btn.style.color        = t === tab ? '#F0F0F0' : '#888';
+    }
+  });
+  if (tab === 'plan') populatePlanTab();
+}
+
+function populateSettings() {
+  const { db, email, user } = getUserCallsDb();
+  const calls  = getTodayCalls();
+  const limit  = getDailyLimit();
+  const pro    = isPro();
+
+  // Avatar & name
+  const av = document.getElementById('settingsAvatar');
+  const nm = document.getElementById('settingsName');
+  const em = document.getElementById('settingsEmail');
+  const bd = document.getElementById('settingsPlanBadge');
+  if (av) av.textContent = (user.username || 'U')[0].toUpperCase();
+  if (nm) nm.textContent = user.username || 'User';
+  if (em) em.textContent = email || '';
+  if (bd) {
+    if (pro) {
+      bd.textContent = '⭐ PRO';
+      bd.style.background = 'rgba(255,215,0,.12)';
+      bd.style.border = '1px solid rgba(255,215,0,.25)';
+      bd.style.color  = '#FFD700';
+    } else {
+      bd.textContent = 'FREE';
+      bd.style.background = 'rgba(255,255,255,.06)';
+      bd.style.border = '1px solid #2A2A2A';
+      bd.style.color  = '#888';
+    }
+  }
+
+  // Usage bar
+  const fill = document.getElementById('settingsCallsFill');
+  const text = document.getElementById('settingsCallsText');
+  if (fill) fill.style.width = Math.min(100, (calls / limit) * 100) + '%';
+  if (text) text.textContent = `${calls}/${limit}`;
+
+  // Join date
+  const jd = document.getElementById('settingsJoinDate');
+  const joinedAt = db[email]?.joinedAt;
+  if (jd) jd.textContent = joinedAt ? new Date(joinedAt).toLocaleDateString('en', { year:'numeric', month:'long', day:'numeric' }) : 'N/A';
+}
+
+function populatePlanTab() {
+  const pro = isPro();
+  const basicEl = document.getElementById('basicPlanActive');
+  const proEl   = document.getElementById('proPlanActive');
+  const upBtn   = document.getElementById('upgradeBtn');
+  const expInfo = document.getElementById('proExpiryInfo');
+
+  if (basicEl) basicEl.style.display = pro ? 'none' : 'block';
+  if (proEl)   proEl.style.display   = pro ? 'block' : 'none';
+
+  if (pro) {
+    const { db, email } = getUserCallsDb();
+    const expiresAt = db[email]?.pro?.expiresAt;
+    if (expInfo && expiresAt) {
+      expInfo.style.display = 'block';
+      expInfo.innerHTML = `<span style="color:#FFD700;">Expires: ${new Date(expiresAt).toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'})}</span>`;
+    }
+    if (upBtn) { upBtn.textContent = '↻ Renew Pro — $4.99/mo'; }
+  } else {
+    if (expInfo) expInfo.style.display = 'none';
+    if (upBtn) { upBtn.textContent = '⭐ Upgrade to Pro — $4.99/mo'; }
+  }
+}
+
+// ═══════════════════════════════════════════════
+// UPGRADE / PAYMENT MODAL
+// ═══════════════════════════════════════════════
+function openUpgradeModal() {
+  const m = document.getElementById('upgradeModal');
+  if (!m) return;
+  m.style.display = 'flex';
+  // Reset form state
+  const form    = document.getElementById('upgradePayForm');
+  const success = document.getElementById('upgradeSuccess');
+  const msg     = document.getElementById('payMsg');
+  if (form)    form.style.display = 'block';
+  if (success) success.style.display = 'none';
+  if (msg)     msg.innerHTML = '';
+  ['payCard','payExpiry','payCvv'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+}
+
+function closeUpgradeModal() {
+  const m = document.getElementById('upgradeModal');
+  if (m) m.style.display = 'none';
+}
+
+function processPayment() {
+  const card   = (document.getElementById('payCard')?.value || '').replace(/\s/g,'');
+  const expiry = document.getElementById('payExpiry')?.value || '';
+  const cvv    = document.getElementById('payCvv')?.value || '';
+  const msgEl  = document.getElementById('payMsg');
+
+  const showPayMsg = (txt, type) => {
+    if (msgEl) msgEl.innerHTML = `<div style="padding:9px 13px;border-radius:7px;font-size:12px;background:${type==='error'?'rgba(255,31,31,.08)':'rgba(0,200,83,.08)'};border:1px solid ${type==='error'?'rgba(255,31,31,.25)':'rgba(0,200,83,.25)'};color:${type==='error'?'#ff7070':'#52d68a'};">${txt}</div>`;
+  };
+
+  if (card.length < 16)  { showPayMsg('Please enter a valid 16-digit card number.', 'error'); return; }
+  if (!expiry.match(/^\d{2}\/\d{2}$/)) { showPayMsg('Please enter a valid expiry (MM/YY).', 'error'); return; }
+  if (cvv.length < 3)    { showPayMsg('Please enter a valid CVV.', 'error'); return; }
+
+  // Check expiry not in past
+  const [mm, yy] = expiry.split('/').map(Number);
+  const now = new Date();
+  if (yy + 2000 < now.getFullYear() || (yy + 2000 === now.getFullYear() && mm < now.getMonth() + 1)) {
+    showPayMsg('Card expiry date is in the past.', 'error'); return;
+  }
+
+  showPayMsg('Processing...', 'success');
+
+  // Simulate processing delay, then activate Pro
+  setTimeout(() => {
+    activatePro();
+    document.getElementById('upgradePayForm').style.display = 'none';
+    document.getElementById('upgradeSuccess').style.display = 'block';
+    // Update limit banner to show pro version
+    updateLimitBannerState();
+  }, 1400);
+}
+
+function activatePro() {
+  const { db, email } = getUserCallsDb();
+  if (!db[email]) db[email] = { calls: {} };
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 30);
+  db[email].pro = { active: true, activatedAt: new Date().toISOString(), expiresAt: expiresAt.toISOString() };
+  localStorage.setItem('tp_users_db', JSON.stringify(db));
+}
+
+function updateLimitBannerState() {
+  const basic = document.getElementById('limitBannerBasic');
+  const pro   = document.getElementById('limitBannerPro');
+  if (basic && pro) {
+    const isProUser = isPro();
+    basic.style.display = isProUser ? 'none' : 'block';
+    pro.style.display   = isProUser ? 'block' : 'none';
+  }
+}
+
+function showLimitBanner() {
+  updateLimitBannerState();
+  const banner = document.getElementById('limitBanner');
+  if (banner) {
+    banner.style.display = 'block';
+    startCountdown();
+  }
+}
+
 // Keyboard shortcuts
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     closeVideoModal();
+    closeSettings();
+    closeUpgradeModal();
   }
 });
 </script>
