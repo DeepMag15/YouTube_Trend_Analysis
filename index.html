@@ -202,14 +202,62 @@
     font-size:9px; font-family:'Space Mono',monospace; color:var(--muted);
     padding:2px 6px; border-radius:4px; flex-shrink:0;
   }
-  .region-chips { display:flex; gap:7px; flex-wrap:wrap; margin-top:4px; }
-  .rchip {
-    padding:4px 12px; background:var(--card); border:1px solid var(--border);
-    border-radius:100px; font-size:10px; color:var(--muted);
-    transition:all .2s; cursor:default;
+  /* ORBIT */
+  .orbit-scene {
+    width:400px; height:400px; position:relative; margin:0 auto; flex-shrink:0;
   }
-  .rchip.on { background:rgba(255,31,31,.1); border-color:rgba(255,31,31,.35); color:var(--red); }
-  .rchip:hover { border-color:var(--red); color:var(--text); }
+  .orbit-center {
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:86px; height:86px; border-radius:50%;
+    background:var(--card); border:2px solid rgba(255,31,31,.45);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    z-index:10; box-shadow:0 0 40px rgba(255,31,31,.12), 0 0 0 8px rgba(255,31,31,.04);
+  }
+  .orbit-center-icon { font-size:26px; line-height:1; }
+  .orbit-center-label { font-family:'Space Mono',monospace; font-size:7.5px; letter-spacing:1.5px; color:var(--red); margin-top:4px; }
+  .orbit-ring {
+    position:absolute; border-radius:50%; pointer-events:none;
+    border:1px solid rgba(255,255,255,.055);
+    top:50%; left:50%; transform:translate(-50%,-50%);
+  }
+  .orbit-ring-1 { width:190px; height:190px; }
+  .orbit-ring-2 { width:300px; height:300px; border-style:dashed; border-color:rgba(255,255,255,.04); }
+  .orbit-ring-3 { width:400px; height:400px; }
+  /* Arm wrappers that rotate; child nodes counter-rotate to stay upright */
+  .orbit-arm { position:absolute; width:100%; height:100%; top:0; left:0; }
+  .orbit-arm-1 { animation:arm1 13s linear infinite; }
+  .orbit-arm-2 { animation:arm2 21s linear infinite; }
+  .orbit-arm-3 { animation:arm3 31s linear infinite; }
+  @keyframes arm1 { to { transform:rotate(360deg); } }
+  @keyframes arm2 { to { transform:rotate(-360deg); } }
+  @keyframes arm3 { to { transform:rotate(360deg); } }
+  .orbit-node {
+    position:absolute; width:54px; height:54px;
+    border-radius:50%; background:var(--card); border:1px solid var(--border2);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-size:19px; cursor:default; z-index:5;
+    box-shadow:0 4px 20px rgba(0,0,0,.4);
+    transition:border-color .25s, box-shadow .25s;
+  }
+  .orbit-node:hover { border-color:rgba(255,31,31,.6); box-shadow:0 0 20px rgba(255,31,31,.18); }
+  .orbit-node:hover .orbit-tip { opacity:1; transform:translateX(-50%) translateY(-6px); }
+  .orbit-node-lbl { font-size:7px; font-family:'Space Mono',monospace; color:var(--dim); margin-top:2px; text-align:center; max-width:50px; line-height:1.2; }
+  .orbit-tip {
+    position:absolute; bottom:calc(100% + 7px); left:50%;
+    transform:translateX(-50%) translateY(4px);
+    background:var(--card2); border:1px solid var(--border2);
+    border-radius:6px; padding:4px 10px;
+    font-size:10px; color:var(--text); white-space:nowrap;
+    opacity:0; transition:all .2s; pointer-events:none; z-index:30;
+    box-shadow:0 8px 24px rgba(0,0,0,.5);
+  }
+  /* Counter-rotation classes */
+  .nr1 { animation:nr1 13s linear infinite; }
+  .nr2 { animation:nr2 21s linear infinite; }
+  .nr3 { animation:nr3 31s linear infinite; }
+  @keyframes nr1 { to { transform:rotate(-360deg); } }
+  @keyframes nr2 { to { transform:rotate(360deg); } }
+  @keyframes nr3 { to { transform:rotate(-360deg); } }
 
   /* PROOF BAR */
   .proof {
@@ -553,43 +601,23 @@
   </div>
 
   <div class="hero-right">
-    <div class="live-tag"><div class="green-dot"></div>LIVE TRENDING · UNITED STATES</div>
-    <div class="vcard">
-      <div class="vcard-thumb">🎵<div class="vcard-rank">#1</div></div>
-      <div class="vcard-body">
-        <div class="vcard-title">Billie Eilish – BIRDS OF A FEATHER (Official)</div>
-        <div class="vcard-meta"><span class="vcard-views">142.3M</span><span>👍 4.2M</span><span>Music</span></div>
+    <!-- ORBIT: category creators loop -->
+    <div class="orbit-scene" id="orbitScene">
+      <!-- Rings -->
+      <div class="orbit-ring orbit-ring-1"></div>
+      <div class="orbit-ring orbit-ring-2"></div>
+      <div class="orbit-ring orbit-ring-3"></div>
+      <!-- Center -->
+      <div class="orbit-center">
+        <div class="orbit-center-icon">🔥</div>
+        <div class="orbit-center-label">TRENDING</div>
       </div>
-    </div>
-    <div class="vcard">
-      <div class="vcard-thumb">⚽<div class="vcard-rank">#2</div></div>
-      <div class="vcard-body">
-        <div class="vcard-title">Champions League Final 2025 Highlights</div>
-        <div class="vcard-meta"><span class="vcard-views">98.7M</span><span>👍 2.9M</span><span>Sports</span></div>
-      </div>
-    </div>
-    <div class="vcard">
-      <div class="vcard-thumb">🎮<div class="vcard-rank">#3</div></div>
-      <div class="vcard-body">
-        <div class="vcard-title">I Spent 100 Days in Hardcore Minecraft</div>
-        <div class="vcard-meta"><span class="vcard-views">67.4M</span><span>👍 3.1M</span><span>Gaming</span></div>
-      </div>
-    </div>
-    <div class="vcard">
-      <div class="vcard-thumb">📱<div class="vcard-rank">#4</div></div>
-      <div class="vcard-body">
-        <div class="vcard-title">#trending comedy short · 47 seconds</div>
-        <div class="vcard-meta"><span class="vcard-views">31.2M</span><span>📱 SHORT</span><span>Comedy</span></div>
-      </div>
-      <div class="vcard-badge">SHORT</div>
-    </div>
-    <div class="region-chips">
-      <div class="rchip on">🇺🇸 US</div>
-      <div class="rchip">🇮🇳 India</div>
-      <div class="rchip">🇯🇵 Japan</div>
-      <div class="rchip">🇧🇷 Brazil</div>
-      <div class="rchip">🇬🇧 UK</div>
-      <div class="rchip">+25 more</div>
+      <!-- Ring 1 — inner (2 nodes, 180° apart) -->
+      <div class="orbit-arm orbit-arm-1" id="arm1"></div>
+      <!-- Ring 2 — mid (4 nodes, 90° apart) -->
+      <div class="orbit-arm orbit-arm-2" id="arm2"></div>
+      <!-- Ring 3 — outer (6 nodes, 60° apart) -->
+      <div class="orbit-arm orbit-arm-3" id="arm3"></div>
     </div>
   </div>
 </section>
@@ -860,6 +888,61 @@ const msgs = [...TICKER_MSGS,...TICKER_MSGS];
 msgs.forEach((m,i) => {
   tt.innerHTML += `<span class="tick-item">${m}<span class="tick-sep">◆</span></span>`;
 });
+
+// ── ORBIT ────────────────────────────────────────
+// Creators/categories displayed on 3 concentric orbiting rings
+const ORBIT_NODES = [
+  // ring 1 (inner, r=95) — 2 nodes
+  { icon:'🎵', label:'Music', tip:'Music Creators', ring:1 },
+  { icon:'🎮', label:'Gaming', tip:'Gaming Channels', ring:1 },
+  // ring 2 (mid, r=150) — 4 nodes
+  { icon:'⚽', label:'Sports', tip:'Sports Highlights', ring:2 },
+  { icon:'📚', label:'Edu', tip:'Education Creators', ring:2 },
+  { icon:'😂', label:'Comedy', tip:'Comedy Channels', ring:2 },
+  { icon:'✈️', label:'Travel', tip:'Travel Vloggers', ring:2 },
+  // ring 3 (outer, r=200) — 6 nodes
+  { icon:'🔬', label:'Science', tip:'Science & Tech', ring:3 },
+  { icon:'📰', label:'News', tip:'News & Politics', ring:3 },
+  { icon:'🎭', label:'Entertain', tip:'Entertainment', ring:3 },
+  { icon:'💄', label:'Style', tip:'Howto & Style', ring:3 },
+  { icon:'🐾', label:'Pets', tip:'Pets & Animals', ring:3 },
+  { icon:'🎬', label:'Film', tip:'Film & Animation', ring:3 },
+];
+const RING_R = { 1:95, 2:150, 3:200 };
+const RING_NR_CLASS = { 1:'nr1', 2:'nr2', 3:'nr3' };
+
+function buildOrbit() {
+  const arms = { 1: document.getElementById('arm1'), 2: document.getElementById('arm2'), 3: document.getElementById('arm3') };
+  const countByRing = { 1:0, 2:0, 3:0 };
+  const totalByRing = ORBIT_NODES.reduce((acc,n) => { acc[n.ring]=(acc[n.ring]||0)+1; return acc; }, {});
+
+  ORBIT_NODES.forEach(n => {
+    const arm = arms[n.ring];
+    if (!arm) return;
+    const idx = countByRing[n.ring]++;
+    const total = totalByRing[n.ring];
+    const angleDeg = (360 / total) * idx;
+    const angleRad = (angleDeg * Math.PI) / 180;
+    const r = RING_R[n.ring];
+    const cx = 200, cy = 200, nodeSize = 54;
+
+    // Position: center of scene is (200,200). Node center placed on circle.
+    const x = cx + r * Math.cos(angleRad) - nodeSize/2;
+    const y = cy + r * Math.sin(angleRad) - nodeSize/2;
+
+    const node = document.createElement('div');
+    node.className = `orbit-node ${RING_NR_CLASS[n.ring]}`;
+    node.style.left = x + 'px';
+    node.style.top  = y + 'px';
+    node.innerHTML = `
+      <span>${n.icon}</span>
+      <span class="orbit-node-lbl">${n.label}</span>
+      <div class="orbit-tip">${n.tip}</div>
+    `;
+    arm.appendChild(node);
+  });
+}
+buildOrbit();
 
 // Categories grid
 const cg = document.getElementById('categoriesGrid');
