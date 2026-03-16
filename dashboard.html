@@ -546,7 +546,7 @@
     <select class="category-select" id="categorySelect" onchange="onCategoryChange()">
       <option value="">All Categories</option>
     </select>
-    <select class="time-select" id="timeSelect" onchange="renderCharts()">
+    <select class="time-select" id="timeSelect" onchange="onTimeRangeChange()">
       <option value="7">Last 7 Days</option>
       <option value="30" selected>Last 1 Month</option>
       <option value="90">Last 3 Months</option>
@@ -584,13 +584,13 @@
       <div style="display:flex;align-items:flex-start;gap:16px;">
         <div style="font-size:32px;flex-shrink:0;">⏱️</div>
         <div style="flex:1;">
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;margin-bottom:4px;color:#F0F0F0;">Daily Quota Reached</div>
+          <div style="font-family:Bebas Neue,sans-serif;font-size:20px;letter-spacing:1.5px;margin-bottom:4px;color:#F0F0F0;">Daily Quota Reached</div>
           <div style="font-size:13px;color:#777;line-height:1.6;margin-bottom:14px;">You've used all <strong style="color:#F0F0F0;">3 free refreshes</strong> for today. Upgrade to Pro for <strong style="color:#FFD700;">6 refreshes/day</strong> and priority access.</div>
           <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
-            <button onclick="openUpgradeModal()" style="background:#FF1F1F;border:none;color:white;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;gap:7px;">⭐ Upgrade to Pro</button>
+            <button onclick="openUpgradeModal()" style="background:#FF1F1F;border:none;color:white;padding:9px 20px;border-radius:8px;font-size:13px;font-weight:600;font-family:DM Sans,sans-serif;cursor:pointer;display:flex;align-items:center;gap:7px;">⭐ Upgrade to Pro</button>
             <div style="display:flex;align-items:center;gap:8px;">
               <div style="font-size:11px;color:#555;font-family:'Space Mono',monospace;">RESETS IN</div>
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#FFD700;" id="countdownTimer">--:--:--</div>
+              <div style="font-family:Bebas Neue,sans-serif;font-size:20px;letter-spacing:2px;color:#FFD700;" id="countdownTimer">--:--:--</div>
             </div>
           </div>
         </div>
@@ -601,11 +601,11 @@
       <div style="display:flex;align-items:flex-start;gap:16px;">
         <div style="font-size:32px;flex-shrink:0;">⭐</div>
         <div style="flex:1;">
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;margin-bottom:4px;color:#FFD700;">Pro Daily Quota Reached</div>
+          <div style="font-family:Bebas Neue,sans-serif;font-size:20px;letter-spacing:1.5px;margin-bottom:4px;color:#FFD700;">Pro Daily Quota Reached</div>
           <div style="font-size:13px;color:#777;line-height:1.6;margin-bottom:12px;">You've used all <strong style="color:#FFD700;">6 Pro refreshes</strong> for today. Fresh data resets at midnight.</div>
           <div style="display:flex;align-items:center;gap:8px;">
             <div style="font-size:11px;color:#555;font-family:'Space Mono',monospace;">RESETS IN</div>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#FFD700;" id="countdownTimerPro">--:--:--</div>
+            <div style="font-family:Bebas Neue,sans-serif;font-size:20px;letter-spacing:2px;color:#FFD700;" id="countdownTimerPro">--:--:--</div>
           </div>
         </div>
       </div>
@@ -617,14 +617,14 @@
 <div id="settingsOverlay" style="display:none;position:fixed;inset:0;z-index:9990;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);" onclick="if(event.target===this)closeSettings()">
   <div style="position:absolute;right:0;top:0;bottom:0;width:400px;max-width:100vw;background:#111625;border-left:1px solid #242424;display:flex;flex-direction:column;overflow:hidden;animation:slideInRight .3s ease;">
     <div style="padding:20px 24px;border-bottom:1px solid #242424;display:flex;align-items:center;justify-content:space-between;">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;">⚙️ SETTINGS</div>
+      <div style="font-family:Bebas Neue,sans-serif;font-size:22px;letter-spacing:2px;">⚙️ SETTINGS</div>
       <button onclick="closeSettings()" style="background:none;border:1px solid #2A2A2A;color:#888;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .2s;" onmouseover="this.style.color='#F0F0F0'" onmouseout="this.style.color='#888'">✕</button>
     </div>
     <!-- Tabs -->
     <div style="display:flex;border-bottom:1px solid #242424;">
-      <button id="stab-profile" onclick="switchSettingsTab('profile')" style="flex:1;padding:12px;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;background:none;border:none;border-bottom:2px solid #FF1F1F;color:#F0F0F0;cursor:pointer;letter-spacing:.5px;">👤 PROFILE</button>
-      <button id="stab-plan" onclick="switchSettingsTab('plan')" style="flex:1;padding:12px;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;background:none;border:none;border-bottom:2px solid transparent;color:#888;cursor:pointer;letter-spacing:.5px;">⭐ PLAN</button>
-      <button id="stab-about" onclick="switchSettingsTab('about')" style="flex:1;padding:12px;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;background:none;border:none;border-bottom:2px solid transparent;color:#888;cursor:pointer;letter-spacing:.5px;">ℹ️ ABOUT</button>
+      <button id="stab-profile" onclick="switchSettingsTab('profile')" style="flex:1;padding:12px;font-size:12px;font-weight:600;font-family:DM Sans,sans-serif;background:none;border:none;border-bottom:2px solid #FF1F1F;color:#F0F0F0;cursor:pointer;letter-spacing:.5px;">👤 PROFILE</button>
+      <button id="stab-plan" onclick="switchSettingsTab('plan')" style="flex:1;padding:12px;font-size:12px;font-weight:600;font-family:DM Sans,sans-serif;background:none;border:none;border-bottom:2px solid transparent;color:#888;cursor:pointer;letter-spacing:.5px;">⭐ PLAN</button>
+      <button id="stab-about" onclick="switchSettingsTab('about')" style="flex:1;padding:12px;font-size:12px;font-weight:600;font-family:DM Sans,sans-serif;background:none;border:none;border-bottom:2px solid transparent;color:#888;cursor:pointer;letter-spacing:.5px;">ℹ️ ABOUT</button>
     </div>
     <!-- Content -->
     <div style="flex:1;overflow-y:auto;padding:24px;">
@@ -651,7 +651,7 @@
             <div id="settingsJoinDate" style="font-size:14px;font-weight:500;"></div>
           </div>
         </div>
-        <button onclick="logout()" style="width:100%;padding:12px;background:rgba(255,31,31,.1);border:1px solid rgba(255,31,31,.25);color:#FF1F1F;border-radius:8px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;" onmouseover="this.style.background='rgba(255,31,31,.18)'" onmouseout="this.style.background='rgba(255,31,31,.1)'">↩ Sign Out</button>
+        <button onclick="logout()" style="width:100%;padding:12px;background:rgba(255,31,31,.1);border:1px solid rgba(255,31,31,.25);color:#FF1F1F;border-radius:8px;font-size:14px;font-weight:600;font-family:DM Sans,sans-serif;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;" onmouseover="this.style.background='rgba(255,31,31,.18)'" onmouseout="this.style.background='rgba(255,31,31,.1)'">↩ Sign Out</button>
       </div>
       <!-- Plan Tab -->
       <div id="spanel-plan" style="display:none;">
@@ -659,7 +659,7 @@
         <!-- Basic plan card -->
         <div style="background:#161C2E;border:1px solid #242424;border-radius:12px;padding:20px;margin-bottom:12px;position:relative;">
           <div id="basicPlanActive" style="display:none;position:absolute;top:12px;right:12px;background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.2);color:#00C853;padding:2px 9px;border-radius:100px;font-size:10px;font-family:'Space Mono',monospace;">CURRENT</div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;margin-bottom:4px;">FREE PLAN</div>
+          <div style="font-family:Bebas Neue,sans-serif;font-size:20px;letter-spacing:1px;margin-bottom:4px;">FREE PLAN</div>
           <div style="font-size:24px;font-weight:700;color:#F0F0F0;margin-bottom:12px;">$0<span style="font-size:13px;color:#888;font-weight:400;">/month</span></div>
           <div style="display:flex;flex-direction:column;gap:7px;font-size:13px;color:#888;">
             <div>✓ 3 refreshes per day</div>
@@ -672,7 +672,7 @@
         <div style="background:linear-gradient(135deg,rgba(255,215,0,.06),rgba(255,31,31,.06));border:1px solid rgba(255,215,0,.2);border-radius:12px;padding:20px;position:relative;">
           <div id="proPlanActive" style="display:none;position:absolute;top:12px;right:12px;background:rgba(255,215,0,.12);border:1px solid rgba(255,215,0,.25);color:#FFD700;padding:2px 9px;border-radius:100px;font-size:10px;font-family:'Space Mono',monospace;">CURRENT</div>
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;">⭐ PRO PLAN</div>
+            <div style="font-family:Bebas Neue,sans-serif;font-size:20px;letter-spacing:1px;">⭐ PRO PLAN</div>
           </div>
           <div style="font-size:24px;font-weight:700;color:#FFD700;margin-bottom:12px;">$4.99<span style="font-size:13px;color:#888;font-weight:400;">/month</span></div>
           <div style="display:flex;flex-direction:column;gap:7px;font-size:13px;color:#888;margin-bottom:16px;">
@@ -682,13 +682,13 @@
             <div>✓ Pro badge</div>
             <div id="proExpiryInfo" style="display:none;"></div>
           </div>
-          <button id="upgradeBtn" onclick="openUpgradeModal()" style="width:100%;padding:11px;background:#FF1F1F;border:none;color:white;border-radius:8px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .2s;">⭐ Upgrade to Pro — $4.99/mo</button>
+          <button id="upgradeBtn" onclick="openUpgradeModal()" style="width:100%;padding:11px;background:#FF1F1F;border:none;color:white;border-radius:8px;font-size:14px;font-weight:600;font-family:DM Sans,sans-serif;cursor:pointer;transition:all .2s;">⭐ Upgrade to Pro — $4.99/mo</button>
         </div>
       </div>
       <!-- About Tab -->
       <div id="spanel-about" style="display:none;">
         <div style="text-align:center;margin-bottom:24px;">
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:3px;margin-bottom:4px;">TREND<span style="color:#FF1F1F;">PULSE</span></div>
+          <div style="font-family:Bebas Neue,sans-serif;font-size:32px;letter-spacing:3px;margin-bottom:4px;">TREND<span style="color:#FF1F1F;">PULSE</span></div>
           <div style="font-size:12px;color:#555;font-family:'Space Mono',monospace;letter-spacing:1.5px;">YOUTUBE TREND ANALYZER</div>
         </div>
         <div style="background:#161C2E;border:1px solid #242424;border-radius:10px;padding:18px;margin-bottom:14px;">
@@ -730,7 +730,7 @@
     <button onclick="closeUpgradeModal()" style="position:absolute;top:16px;right:16px;background:none;border:1px solid #2A2A2A;color:#555;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;">✕</button>
     <div style="text-align:center;margin-bottom:28px;">
       <div style="font-size:40px;margin-bottom:12px;">⭐</div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:2px;color:#FFD700;margin-bottom:6px;">UPGRADE TO PRO</div>
+      <div style="font-family:Bebas Neue,sans-serif;font-size:30px;letter-spacing:2px;color:#FFD700;margin-bottom:6px;">UPGRADE TO PRO</div>
       <div style="font-size:14px;color:#888;">Unlock 6 refreshes/day for a full month</div>
     </div>
     <!-- What you get -->
@@ -770,14 +770,14 @@
         </div>
       </div>
       <div id="payMsg" style="margin-bottom:10px;"></div>
-      <button onclick="processPayment()" style="width:100%;padding:14px;background:#FF1F1F;border:none;color:white;border-radius:10px;font-size:15px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .2s;letter-spacing:.3px;" onmouseover="this.style.background='#CC0000'" onmouseout="this.style.background='#FF1F1F'">🔒 Pay $4.99 — Activate Pro</button>
+      <button onclick="processPayment()" style="width:100%;padding:14px;background:#FF1F1F;border:none;color:white;border-radius:10px;font-size:15px;font-weight:700;font-family:DM Sans,sans-serif;cursor:pointer;transition:all .2s;letter-spacing:.3px;" onmouseover="this.style.background='#CC0000'" onmouseout="this.style.background='#FF1F1F'">🔒 Pay $4.99 — Activate Pro</button>
       <div style="text-align:center;margin-top:12px;font-size:11px;color:#444;">This is a demo payment — no real charge occurs.</div>
     </div>
     <div id="upgradeSuccess" style="display:none;text-align:center;padding:20px 0;">
       <div style="font-size:52px;margin-bottom:16px;">🎉</div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:#FFD700;margin-bottom:8px;">Pro Activated!</div>
+      <div style="font-family:Bebas Neue,sans-serif;font-size:26px;letter-spacing:2px;color:#FFD700;margin-bottom:8px;">Pro Activated!</div>
       <div style="font-size:14px;color:#888;margin-bottom:20px;">You now have 6 refreshes/day for 30 days.</div>
-      <button onclick="closeUpgradeModal();location.reload();" style="padding:11px 28px;background:#FF1F1F;border:none;color:white;border-radius:8px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;">→ Start Exploring</button>
+      <button onclick="closeUpgradeModal();location.reload();" style="padding:11px 28px;background:#FF1F1F;border:none;color:white;border-radius:8px;font-size:14px;font-weight:600;font-family:DM Sans,sans-serif;cursor:pointer;">→ Start Exploring</button>
     </div>
   </div>
 </div>
@@ -802,7 +802,7 @@ const STATE = {
   currentView: 'trending',
   region: 'US',
   category: '',          // '' = All, number = specific category
-  timeRange: 30,
+  timeRange: 30,      // synced from timeSelect dropdown
   videos: [],            // flat list of ALL fetched regular videos (>60s)
   shorts: [],            // flat list of ALL fetched shorts (≤60s)
   categoryCache: {},     // { catId: [top20 videos], '' : [top20 overall], ... }
@@ -1210,7 +1210,7 @@ async function loadTrending() {
   // ── PRE-FLIGHT: one quick test call to catch the exact error before looping 15 cats ──
   try {
     const testKey = STATE.apiKeys[0];
-    const testUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&chart=mostPopular&regionCode=US&maxResults=1&hl=en&key=${testKey}`;
+    const testUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&chart=mostPopular&regionCode=${STATE.region}&maxResults=1&hl=en&key=${testKey}`;
     const testResp = await fetch(testUrl);
     const testData = await testResp.json();
 
@@ -1248,11 +1248,11 @@ async function loadTrending() {
       if (content) content.innerHTML = `
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;gap:16px;text-align:center;padding:40px 20px;">
           <div style="font-size:48px;">⚠️</div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--red);">COULD NOT LOAD DATA</div>
+          <div style="font-family:Bebas Neue,sans-serif;font-size:22px;letter-spacing:2px;color:var(--red);">COULD NOT LOAD DATA</div>
           <div style="font-size:13px;color:#888;max-width:480px;line-height:1.8;background:#161C2E;padding:16px 20px;border-radius:10px;border:1px solid #2a2a2a;text-align:left;">
             <strong style="color:var(--text);">Error:</strong> ${friendlyMsg}
           </div>
-          <button onclick="loadTrending()" style="padding:10px 28px;background:var(--red);border:none;color:white;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">
+          <button onclick="loadTrending()" style="padding:10px 28px;background:var(--red);border:none;color:white;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif;">
             ↺ Try Again
           </button>
         </div>`;
@@ -1496,18 +1496,63 @@ function filterCategory(catId) {
 }
 
 function onRegionChange() {
-  STATE.region = document.getElementById('regionSelect').value;
-  // Clear cached data — user must manually refresh for the new region
+  const newRegion = document.getElementById('regionSelect').value;
+  if (newRegion === STATE.region) return;
+  STATE.region = newRegion;
+  // Clear cached data — must re-fetch for new region
   STATE.categoryCache = {};
   STATE.videos = [];
   STATE.shorts = [];
   document.getElementById('trendingCount').textContent = '0';
-  renderView();
+  if (document.getElementById('shortsCount'))
+    document.getElementById('shortsCount').textContent = '0';
+  // Show prompt to refresh
+  const content = document.getElementById('mainContent');
+  const regionObj = REGIONS.find(r => r.code === STATE.region);
+  content.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:500px;gap:18px;text-align:center;padding:40px 20px;">
+      <div style="font-size:56px;">${regionObj?.flag || '🌍'}</div>
+      <div style="font-family:Bebas Neue,sans-serif;font-size:26px;letter-spacing:3px;color:var(--text);">
+        REGION CHANGED
+      </div>
+      <div style="font-size:14px;color:var(--muted);max-width:400px;line-height:1.7;">
+        Switched to <strong style="color:var(--text);">${regionObj?.name || STATE.region}</strong>. 
+        Click Refresh to load the latest trending content for this region.
+      </div>
+      <button onclick="loadTrending()" style="padding:12px 32px;background:var(--red);border:none;color:white;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif;letter-spacing:.5px;">
+        ↺ Load ${regionObj?.name || STATE.region} Trending
+      </button>
+    </div>`;
 }
+
 function onCategoryChange() {
-  // Dropdown category change — just re-filter from cache, no API call
   STATE.category = document.getElementById('categorySelect').value;
+  // Update sidebar active state
+  document.querySelectorAll('.nav-item').forEach(el => {
+    const catMatch = el.getAttribute('onclick')?.match(/filterCategory\((.+?)\)/);
+    if (catMatch) {
+      const navCat = String(catMatch[1]).replace(/'/g,'').replace(/"/g,'');
+      el.classList.toggle('active', navCat === String(STATE.category));
+    }
+  });
   renderTrending();
+}
+
+function onTimeRangeChange() {
+  STATE.timeRange = parseInt(document.getElementById('timeSelect').value || 30);
+  // Time range only affects Charts view directly — for trending it's informational
+  if (STATE.currentView === 'charts' || STATE.currentView === 'channels') {
+    renderView();
+  }
+  // Update display label
+  updateTimeLabel();
+}
+
+function updateTimeLabel() {
+  const days = parseInt(document.getElementById('timeSelect')?.value || 30);
+  const map = {7:'7D',30:'30D',90:'90D',365:'1Y'};
+  const badge = document.getElementById('timeBadge');
+  if (badge) badge.textContent = map[days] || (days+'D');
 }
 
 function renderView() {
@@ -1536,26 +1581,18 @@ function renderTrending() {
   if (!hasData) {
     const calls   = getTodayCalls();
     const atLimit = calls >= getDailyLimit();
-
-    content.innerHTML = `
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:500px;gap:18px;text-align:center;padding:40px 20px;">
-        <div style="font-size:64px;line-height:1;">📺</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--text);">
-          ${atLimit ? 'COME BACK TOMORROW' : 'READY TO LOAD'}
-        </div>
-        <div style="font-size:14px;color:var(--muted);max-width:400px;line-height:1.7;">
-          ${atLimit
-            ? `You have seen all the trending data available for today. Fresh results will be ready at midnight.`
-            : `Hit <strong style="color:var(--red);">↺ Refresh</strong> to load the latest trending videos on YouTube for <strong style="color:var(--text);">${regionObj?.flag || ''} ${regionObj?.name || STATE.region}</strong>.`
-          }
-        </div>
-        ${!atLimit ? `
-          <button onclick="loadTrending()" style="padding:12px 32px;background:var(--red);border:none;color:white;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:.5px;transition:background .2s;" onmouseover="this.style.background='#cc0000'" onmouseout="this.style.background='var(--red)'">
-            ↺ Load Trending Now
-          </button>
-        ` : ''}
-      </div>
-    `;
+    const regionName = (regionObj?.flag||'') + ' ' + (regionObj?.name||STATE.region);
+    const emptyMsg = atLimit
+      ? 'Fresh results will be ready at midnight.'
+      : 'Hit <strong style="color:var(--red);">↺ Refresh</strong> to load the latest trending videos for <strong style="color:var(--text);">' + regionName + '</strong>.';
+    const refreshBtn = atLimit ? '' : '<button onclick="loadTrending()" style="padding:12px 32px;background:var(--red);border:none;color:white;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">↺ Load Trending Now</button>';
+    const heading = atLimit ? 'COME BACK TOMORROW' : 'READY TO LOAD';
+    content.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:500px;gap:18px;text-align:center;padding:40px 20px;">'
+      + '<div style="font-size:64px;line-height:1;">📺</div>'
+      + '<div style="font-family:Bebas Neue,sans-serif;font-size:28px;letter-spacing:3px;color:var(--text);">' + heading + '</div>'
+      + '<div style="font-size:14px;color:var(--muted);max-width:400px;line-height:1.7;">' + emptyMsg + '</div>'
+      + refreshBtn
+      + '</div>';
     return;
   }
 
@@ -1564,6 +1601,24 @@ function renderTrending() {
   } else {
     renderSingleCategory(content, catId, regionObj);
   }
+}
+
+
+// ─── Filter context bar shown at top of every trending/shorts view ───
+function buildContextBar(regionObj, catObj, totalV, totalS, extraInfo) {
+  const catLabel    = catObj && catObj.id ? (catObj.icon + ' ' + catObj.name) : '🌐 All Categories';
+  const regionLabel = (regionObj?.flag || '🌍') + ' ' + (regionObj?.name || STATE.region);
+  const extraSpan   = extraInfo ? '<span style="color:var(--border);">|</span><span>' + extraInfo + '</span>' : '';
+  return '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 16px;margin-bottom:16px;background:var(--dark);border:1px solid var(--border);border-radius:10px;font-size:10px;letter-spacing:.8px;color:var(--muted);">'
+    + '<span style="background:var(--red);color:#fff;padding:3px 10px;border-radius:5px;letter-spacing:1px;font-size:9px;">LIVE</span>'
+    + '<span>📍 ' + regionLabel + '</span>'
+    + '<span style="color:var(--border);">|</span>'
+    + '<span>' + catLabel + '</span>'
+    + '<span style="color:var(--border);">|</span>'
+    + '<span style="color:var(--text);">' + totalV + ' Videos · ' + totalS + ' Shorts</span>'
+    + extraSpan
+    + '<span style="margin-left:auto;"><button onclick="loadTrending()" style="background:none;border:1px solid var(--border);color:var(--muted);padding:3px 12px;border-radius:5px;cursor:pointer;font-size:9px;letter-spacing:.5px;" onmouseover="this.style.borderColor=\'var(--red)\';this.style.color=\'var(--red)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--muted)\'">↺ Refresh</button></span>'
+    + '</div>';
 }
 
 function renderAllCategoriesSections(content, regionObj) {
@@ -1621,6 +1676,8 @@ function renderAllCategoriesSections(content, regionObj) {
         <div class="stat-change">Overall trending</div>
       </div>
     </div>
+
+    ${buildContextBar(regionObj, null, topVideos.length, topShorts.length, 'Fetched from YouTube Data API')}
 
     <!-- ── TOP 10 TRENDING VIDEOS ── -->
     <div class="section-divider">
@@ -1725,6 +1782,7 @@ function renderSingleCategory(content, catId, regionObj) {
     : `${Math.floor(avgDurSec/60)}m ${avgDurSec%60}s`;
 
   content.innerHTML = `
+    ${buildContextBar(regionObj, catObj, longVids.length, catShorts.length, allVids.length + ' fetched from API')}
     <div class="stats-row">
       <div class="stat-card red">
         <div class="stat-icon">${catObj?.icon||'🏷️'}</div>
@@ -1799,7 +1857,7 @@ function renderShorts() {
     content.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:500px;gap:18px;text-align:center;padding:40px 20px;">
         <div style="font-size:64px;line-height:1;">📱</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:3px;color:var(--text);">
+        <div style="font-family:Bebas Neue,sans-serif;font-size:28px;letter-spacing:3px;color:var(--text);">
           ${atLimit ? 'COME BACK TOMORROW' : 'READY TO LOAD'}
         </div>
         <div style="font-size:14px;color:var(--muted);max-width:400px;line-height:1.7;">
@@ -1809,15 +1867,21 @@ function renderShorts() {
           }
         </div>
         ${!atLimit ? `
-          <button onclick="loadTrending()" style="padding:12px 32px;background:var(--red);border:none;color:white;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">
+          <button onclick="loadTrending()" style="padding:12px 32px;background:var(--red);border:none;color:white;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif;">
             ↺ Load Trending Now
           </button>` : ''}
       </div>`;
     return;
   }
 
-  const shorts = STATE.shorts.slice(0, TOP_SHORTS_SHOW);
+  // If category is selected, filter shorts by that category too
+  const catFilterId = String(STATE.category);
+  let shortsPool = catFilterId && catFilterId !== '' && catFilterId !== 'undefined'
+    ? STATE.shorts.filter(v => String(v.categoryId) === catFilterId)
+    : STATE.shorts;
+  const shorts = shortsPool.slice(0, TOP_SHORTS_SHOW);
   const totalViews = shorts.reduce((s,v)=>s+v.views,0);
+  const shortsCatObj = catFilterId && catFilterId !== '' ? CATEGORIES.find(c=>String(c.id)===catFilterId) : null;
   const totalLikes = shorts.reduce((s,v)=>s+v.likes,0);
   const topCh = (() => {
     const m={}; shorts.forEach(v=>{m[v.channel]=(m[v.channel]||0)+1;});
@@ -1825,6 +1889,7 @@ function renderShorts() {
   })();
 
   content.innerHTML = `
+    ${buildContextBar(regionObj, shortsCatObj, 0, shorts.length, shorts.length + ' shorts · ≤60s')}
     <div class="stats-row">
       <div class="stat-card red">
         <div class="stat-icon">📱</div>
@@ -1854,7 +1919,7 @@ function renderShorts() {
 
     <div class="panel grid-full">
       <div class="panel-header">
-        <div class="panel-title">📱 TRENDING SHORTS — TOP ${shorts.length}</div>
+        <div class="panel-title">📱 ${shortsCatObj ? shortsCatObj.icon+' '+shortsCatObj.name.toUpperCase()+' ' : ''}TRENDING SHORTS — TOP ${shorts.length}</div>
         <span style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;">≤ 60 seconds · sorted by views</span>
       </div>
       <div class="panel-body">
@@ -1895,6 +1960,11 @@ function renderShortCards(shorts) {
           <span>👁️ ${formatNum(v.views)}</span>
           <span>👍 ${formatNum(v.likes)}</span>
           <span>⏱️ ${v.duration}</span>
+          <span style="color:var(--green);">${v.views>0?((v.likes/v.views)*100).toFixed(1)+'%':''} eng</span>
+        </div>
+        <div style="font-size:9px;color:var(--muted);margin-top:2px;">
+          ${CATEGORIES.find(c=>String(c.id)===String(v.categoryId))?.icon||''} ${CATEGORIES.find(c=>String(c.id)===String(v.categoryId))?.name||''}
+          · ${timeSince(v.publishedAt)}
         </div>
       </div>
       <div class="short-actions">
@@ -1933,8 +2003,12 @@ function renderVideoCards(videos) {
           <span class="vm-item">👁️ ${formatNum(v.views)}</span>
           <span class="vm-item">👍 ${formatNum(v.likes)}</span>
           <span class="vm-item">💬 ${formatNum(v.comments)}</span>
+        </div>
+        <div class="video-meta" style="margin-top:3px;">
           <span class="vm-item" style="color:${durColor};">⏱️ ${durHint}</span>
           <span class="vm-item">⏰ ${timeSince(v.publishedAt)}</span>
+          <span class="vm-item" style="color:var(--green);font-size:9px;">${v.views>0?((v.likes/v.views)*100).toFixed(2)+'%':''} eng</span>
+          ${CATEGORIES.find(c=>String(c.id)===String(v.categoryId))?.icon ? `<span class="vm-item" style="font-size:9px;color:var(--muted);">${CATEGORIES.find(c=>String(c.id)===String(v.categoryId))?.icon||''} ${CATEGORIES.find(c=>String(c.id)===String(v.categoryId))?.name||''}</span>` : ''}
         </div>
       </div>
       <div class="video-actions">
@@ -1950,7 +2024,7 @@ function renderEmptyDataState(icon, title, msg) {
   return `
     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;gap:16px;text-align:center;padding:40px 20px;">
       <div style="font-size:52px;">${icon}</div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--muted);">${title} — NO DATA</div>
+      <div style="font-family:Bebas Neue,sans-serif;font-size:22px;letter-spacing:3px;color:var(--muted);">${title} — NO DATA</div>
       <div style="font-size:13px;color:#444;max-width:360px;line-height:1.7;">${msg}</div>
     </div>
   `;
@@ -1988,14 +2062,14 @@ function buildChartFilterBar(activeDur = 'videos', activeCat = '') {
       <span style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:.5px;flex-shrink:0;">FILTER:</span>
 
       <select id="chartCatFilter" onchange="onChartFilterChange()"
-        style="background:var(--card);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;">
+        style="background:var(--card);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:12px;cursor:pointer;font-family:DM Sans,sans-serif;">
         ${catOptions}
       </select>
 
       <div style="display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;flex-shrink:0;">
         ${[['videos','🎬 Videos'],['shorts','📱 Shorts'],['all','🔀 Both']].map(([val,label]) => `
           <button onclick="setChartDurFilter('${val}')" id="durBtn_${val}"
-            style="padding:6px 14px;border:none;background:${activeDur===val?'var(--red)':'var(--card)'};color:${activeDur===val?'white':'var(--muted)'};font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;">
+            style="padding:6px 14px;border:none;background:${activeDur===val?'var(--red)':'var(--card)'};color:${activeDur===val?'white':'var(--muted)'};font-size:12px;cursor:pointer;font-family:DM Sans,sans-serif;transition:all .15s;">
             ${label}
           </button>`).join('')}
       </div>
@@ -2074,22 +2148,22 @@ function showDurationModal(callback) {
       @keyframes fadeInModal{from{opacity:0;transform:scale(.96);}to{opacity:1;transform:scale(1);}}
       .dur-modal{background:var(--card);border:1px solid var(--border);border-radius:16px;
         padding:32px;width:90%;max-width:520px;position:relative;}
-      .dur-modal h2{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;margin-bottom:6px;color:var(--text);}
+      .dur-modal h2{font-family:Bebas Neue,sans-serif;font-size:26px;letter-spacing:2px;margin-bottom:6px;color:var(--text);}
       .dur-modal p{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6;}
       .dur-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px;}
       .dur-opt{padding:14px;border:2px solid var(--border);border-radius:10px;
         cursor:pointer;transition:all .2s;text-align:center;background:var(--dark);}
       .dur-opt:hover{border-color:var(--red);background:rgba(229,19,31,.06);}
       .dur-opt.selected{border-color:var(--red);background:rgba(229,19,31,.1);}
-      .dur-opt-days{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:var(--red);}
+      .dur-opt-days{font-family:Bebas Neue,sans-serif;font-size:28px;letter-spacing:1px;color:var(--red);}
       .dur-opt-label{font-size:11px;color:var(--muted);margin-top:2px;font-family:'Space Mono',monospace;letter-spacing:.5px;}
       .dur-type-row{display:flex;gap:8px;margin-bottom:20px;}
       .dur-type-btn{flex:1;padding:9px;border:1px solid var(--border);border-radius:8px;
         background:var(--dark);color:var(--muted);font-size:12px;cursor:pointer;
-        font-family:'DM Sans',sans-serif;transition:all .2s;text-align:center;}
+        font-family:DM Sans,sans-serif;transition:all .2s;text-align:center;}
       .dur-type-btn.active{border-color:var(--red);background:rgba(229,19,31,.1);color:var(--text);}
       .dur-apply{width:100%;padding:13px;background:var(--red);border:none;color:#fff;
-        border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;
+        border-radius:8px;font-family:Bebas Neue,sans-serif;font-size:15px;letter-spacing:2px;
         cursor:pointer;transition:background .2s;}
       .dur-apply:hover{background:#C41019;}
       .dur-close{position:absolute;top:14px;right:16px;background:none;border:none;
@@ -2132,18 +2206,18 @@ function showDurationModalCb(cb) {
     <style>
       @keyframes fdIM{from{opacity:0;transform:scale(.96);}to{opacity:1;transform:scale(1);}}
       #durModal .dm{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px;width:90%;max-width:500px;position:relative;}
-      #durModal h2{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;margin-bottom:6px;color:var(--text);}
+      #durModal h2{font-family:Bebas Neue,sans-serif;font-size:26px;letter-spacing:2px;margin-bottom:6px;color:var(--text);}
       #durModal p{font-size:13px;color:var(--muted);margin-bottom:22px;line-height:1.6;}
       .dg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px;}
       .do{padding:14px 8px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:all .18s;text-align:center;background:var(--dark);}
       .do:hover{border-color:var(--red);}
       .do.sel{border-color:var(--red);background:rgba(229,19,31,.09);}
-      .do-n{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--red);}
+      .do-n{font-family:Bebas Neue,sans-serif;font-size:26px;color:var(--red);}
       .do-l{font-size:9px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:.5px;margin-top:2px;}
       .dtr{display:flex;gap:8px;margin-bottom:20px;}
-      .dtb{flex:1;padding:9px 6px;border:1px solid var(--border);border-radius:8px;background:var(--dark);color:var(--muted);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .18s;text-align:center;}
+      .dtb{flex:1;padding:9px 6px;border:1px solid var(--border);border-radius:8px;background:var(--dark);color:var(--muted);font-size:12px;cursor:pointer;font-family:DM Sans,sans-serif;transition:all .18s;text-align:center;}
       .dtb.sel{border-color:var(--red);background:rgba(229,19,31,.09);color:var(--text);}
-      .da{width:100%;padding:13px;background:var(--red);border:none;color:#fff;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;cursor:pointer;}
+      .da{width:100%;padding:13px;background:var(--red);border:none;color:#fff;border-radius:8px;font-family:Bebas Neue,sans-serif;font-size:15px;letter-spacing:2px;cursor:pointer;}
       .da:hover{background:#C41019;}
       .dcl{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:4px;}
       .dcl:hover{color:var(--text);}
@@ -2267,12 +2341,12 @@ function buildChartsView(days, type) {
     <!-- Header -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
       <div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--text);">📊 TREND ANALYSIS</div>
+        <div style="font-family:Bebas Neue,sans-serif;font-size:22px;letter-spacing:2px;color:var(--text);">📊 TREND ANALYSIS</div>
         <div style="font-size:12px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:1px;margin-top:3px;">
           ${typeLabel} · Last ${days} days · ${pool.length} videos · ${STATE.region}
         </div>
       </div>
-      <button onclick="renderCharts()" style="padding:8px 18px;border:1px solid var(--border);background:var(--card);color:var(--muted);border-radius:8px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;"
+      <button onclick="renderCharts()" style="padding:8px 18px;border:1px solid var(--border);background:var(--card);color:var(--muted);border-radius:8px;font-size:12px;cursor:pointer;font-family:DM Sans,sans-serif;transition:all .2s;"
         onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
         ⚙ Change Period
       </button>
@@ -2288,7 +2362,7 @@ function buildChartsView(days, type) {
       ].map(([ic,val,lbl,col])=>`
         <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;border-top:3px solid ${col};">
           <div style="font-size:20px;margin-bottom:8px;">${ic}</div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:${col};line-height:1;">${val}</div>
+          <div style="font-family:Bebas Neue,sans-serif;font-size:26px;color:${col};line-height:1;">${val}</div>
           <div style="font-size:9px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:1px;margin-top:4px;">${lbl}</div>
         </div>
       `).join('')}
@@ -2300,9 +2374,9 @@ function buildChartsView(days, type) {
         <div class="panel-header">
           <div class="panel-title">📈 VIEWS BY PUBLISH DATE</div>
           <div style="display:flex;gap:6px;">
-            <button id="mChart_views" onclick="switchMainMetric('views')"  style="padding:5px 12px;border:1px solid var(--red);background:var(--red);color:#fff;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;">Views</button>
-            <button id="mChart_likes" onclick="switchMainMetric('likes')"  style="padding:5px 12px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;">Likes</button>
-            <button id="mChart_count" onclick="switchMainMetric('count')"  style="padding:5px 12px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;">Count</button>
+            <button id="mChart_views" onclick="switchMainMetric('views')"  style="padding:5px 12px;border:1px solid var(--red);background:var(--red);color:#fff;border-radius:5px;font-size:11px;cursor:pointer;font-family:DM Sans,sans-serif;">Views</button>
+            <button id="mChart_likes" onclick="switchMainMetric('likes')"  style="padding:5px 12px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:5px;font-size:11px;cursor:pointer;font-family:DM Sans,sans-serif;">Likes</button>
+            <button id="mChart_count" onclick="switchMainMetric('count')"  style="padding:5px 12px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:5px;font-size:11px;cursor:pointer;font-family:DM Sans,sans-serif;">Count</button>
           </div>
         </div>
         <div class="panel-body"><div class="chart-container"><canvas id="mainTimeline"></canvas></div></div>
@@ -2358,7 +2432,7 @@ function buildChartsView(days, type) {
               const medal = i<3?['🥇','🥈','🥉'][i]:'';
               return `<tr style="border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s;" 
                 onmouseover="this.style.background='rgba(229,19,31,.04)'" onmouseout="this.style.background='transparent'">
-                <td style="padding:10px 16px;font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--muted);">${medal||i+1}</td>
+                <td style="padding:10px 16px;font-family:Bebas Neue,sans-serif;font-size:18px;color:var(--muted);">${medal||i+1}</td>
                 <td style="padding:10px 16px;max-width:320px;">
                   <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(v.title)}</div>
                   <div style="font-size:11px;color:var(--muted);margin-top:2px;">${escHtml(v.channel)} · ${v.duration}</div>
@@ -2367,7 +2441,7 @@ function buildChartsView(days, type) {
                 <td style="padding:10px 16px;text-align:right;font-family:'Space Mono',monospace;font-size:12px;color:#FF9800;">${formatNum(v.likes)}</td>
                 <td style="padding:10px 16px;text-align:right;font-family:'Space Mono',monospace;font-size:12px;color:var(--green);">${eng}</td>
                 <td style="padding:10px 16px;text-align:center;">
-                  <a href="${v.url}" target="_blank" style="padding:4px 10px;background:var(--red);color:#fff;border-radius:5px;font-size:11px;text-decoration:none;font-family:'DM Sans',sans-serif;">▶</a>
+                  <a href="${v.url}" target="_blank" style="padding:4px 10px;background:var(--red);color:#fff;border-radius:5px;font-size:11px;text-decoration:none;font-family:DM Sans,sans-serif;">▶</a>
                 </td>
               </tr>`;
             }).join('')}
@@ -2647,9 +2721,9 @@ function buildChannelsView(days, type) {
               <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.04);
                 transition:background .15s;" onmouseover="this.style.background='rgba(229,19,31,.04)'" onmouseout="this.style.background='transparent'"
                 onclick="showChannelVideos('${escHtml(ch.name).replace(/'/g,"\\'")}',${JSON.stringify(ch.videos).replace(/</g,'\\u003c')})">
-                <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;width:28px;text-align:center;color:${i<3?'#FFD700':'var(--dim)'};">${medal||i+1}</div>
+                <div style="font-family:Bebas Neue,sans-serif;font-size:20px;width:28px;text-align:center;color:${i<3?'#FFD700':'var(--dim)'};">${medal||i+1}</div>
                 <div style="width:36px;height:36px;border-radius:50%;background:${avatarBg};display:flex;align-items:center;justify-content:center;
-                  font-family:'Bebas Neue',sans-serif;font-size:14px;color:#fff;flex-shrink:0;">${initials}</div>
+                  font-family:Bebas Neue,sans-serif;font-size:14px;color:#fff;flex-shrink:0;">${initials}</div>
                 <div style="flex:1;min-width:0;">
                   <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(ch.name)}</div>
                   <div style="display:flex;gap:8px;margin-top:3px;align-items:center;">
@@ -2724,12 +2798,12 @@ function buildChannelsView(days, type) {
                 transition:background .15s;" onmouseover="this.style.background='rgba(229,19,31,.03)'" onmouseout="this.style.background='transparent'">
                 <div style="padding:12px 16px;border-right:1px solid rgba(255,255,255,.04);">
                   <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-                    <div style="width:30px;height:30px;border-radius:50%;background:${avatarBg};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:12px;color:#fff;flex-shrink:0;">${initials}</div>
+                    <div style="width:30px;height:30px;border-radius:50%;background:${avatarBg};display:flex;align-items:center;justify-content:center;font-family:Bebas Neue,sans-serif;font-size:12px;color:#fff;flex-shrink:0;">${initials}</div>
                     <div>
                       <div style="font-size:13px;font-weight:600;color:var(--text);">${escHtml(ch.name)}</div>
                       <div style="height:2px;width:${barW}%;background:${avatarBg};border-radius:1px;margin-top:4px;"></div>
                     </div>
-                    <span style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--dim);margin-left:auto;">${i<3?['🥇','🥈','🥉'][i]:i+1}</span>
+                    <span style="font-family:Bebas Neue,sans-serif;font-size:16px;color:var(--dim);margin-left:auto;">${i<3?['🥇','🥈','🥉'][i]:i+1}</span>
                   </div>
                   ${topV ? `<div style="margin-left:40px;">
                     <a href="${topV.url}" target="_blank" style="font-size:11px;color:rgba(255,255,255,.55);text-decoration:none;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px;" 
@@ -2753,17 +2827,17 @@ function buildChannelsView(days, type) {
     <!-- Header -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
       <div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;">📺 TOP CHANNELS</div>
+        <div style="font-family:Bebas Neue,sans-serif;font-size:22px;letter-spacing:2px;">📺 TOP CHANNELS</div>
         <div style="font-size:12px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:1px;margin-top:3px;">${typeLabel} · ${STATE.region} · ${pool.length} videos</div>
       </div>
-      <button onclick="renderChannels()" style="padding:8px 18px;border:1px solid var(--border);background:var(--card);color:var(--muted);border-radius:8px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;"
+      <button onclick="renderChannels()" style="padding:8px 18px;border:1px solid var(--border);background:var(--card);color:var(--muted);border-radius:8px;font-size:12px;cursor:pointer;font-family:DM Sans,sans-serif;transition:all .2s;"
         onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
         ⚙ Change Period
       </button>
     </div>
     ${statsHtml}
     ${globalTop10Html}
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--muted);margin-bottom:14px;">BY CATEGORY</div>
+    <div style="font-family:Bebas Neue,sans-serif;font-size:16px;letter-spacing:2px;color:var(--muted);margin-bottom:14px;">BY CATEGORY</div>
     ${catSectionsHtml || '<div style="text-align:center;padding:40px;color:var(--muted);font-size:13px;">No category data available.</div>'}
   `;
 
@@ -2800,7 +2874,7 @@ function showChannelVideos(name, videos) {
     <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;width:90%;max-width:660px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;">
       <div style="padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
         <div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;">📺 ${escHtml(name)}</div>
+          <div style="font-family:Bebas Neue,sans-serif;font-size:20px;letter-spacing:1px;">📺 ${escHtml(name)}</div>
           <div style="font-size:11px;color:var(--muted);margin-top:2px;">${sorted.length} trending videos</div>
         </div>
         <button onclick="this.closest('[style]').remove()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 8px;">✕</button>
@@ -2809,7 +2883,7 @@ function showChannelVideos(name, videos) {
         ${sorted.map((v,i)=>`
           <div style="display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s;"
             onmouseover="this.style.background='rgba(229,19,31,.04)'" onmouseout="this.style.background='transparent'">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--dim);width:24px;">${i+1}</div>
+            <div style="font-family:Bebas Neue,sans-serif;font-size:18px;color:var(--dim);width:24px;">${i+1}</div>
             <img src="${v.thumbnail}" alt="" style="width:80px;height:45px;object-fit:cover;border-radius:6px;flex-shrink:0;background:var(--dark);" onerror="this.style.display='none'">
             <div style="flex:1;min-width:0;">
               <a href="${v.url}" target="_blank" style="font-size:13px;font-weight:600;color:var(--text);text-decoration:none;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(v.title)}</a>
@@ -2872,14 +2946,14 @@ function openVideoModal(video) {
     <h3 style="font-size:15px;font-weight:600;margin-bottom:6px;line-height:1.4;">${escHtml(video.title)}</h3>
     <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">📺 ${escHtml(video.channel)} · ${timeSince(video.publishedAt)}</div>
     <div style="display:flex;gap:16px;margin-bottom:16px;">
-      <div style="text-align:center;"><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--red);">${formatNum(video.views)}</div><div style="font-size:11px;color:var(--muted);">Views</div></div>
-      <div style="text-align:center;"><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;">${formatNum(video.likes)}</div><div style="font-size:11px;color:var(--muted);">Likes</div></div>
-      <div style="text-align:center;"><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;">${formatNum(video.comments)}</div><div style="font-size:11px;color:var(--muted);">Comments</div></div>
+      <div style="text-align:center;"><div style="font-family:Bebas Neue,sans-serif;font-size:22px;color:var(--red);">${formatNum(video.views)}</div><div style="font-size:11px;color:var(--muted);">Views</div></div>
+      <div style="text-align:center;"><div style="font-family:Bebas Neue,sans-serif;font-size:22px;">${formatNum(video.likes)}</div><div style="font-size:11px;color:var(--muted);">Likes</div></div>
+      <div style="text-align:center;"><div style="font-family:Bebas Neue,sans-serif;font-size:22px;">${formatNum(video.comments)}</div><div style="font-size:11px;color:var(--muted);">Comments</div></div>
     </div>
     ${video.description ? `<p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6;">${escHtml(video.description)}...</p>` : ''}
     <div style="display:flex;gap:10px;">
-      <button onclick="watchVideo('${video.url}')" style="flex:2;padding:12px;background:var(--red);border:none;color:white;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">▶ Watch on YouTube</button>
-      <button onclick="toggleBookmark(${JSON.stringify(video).replace(/"/g,'&quot;')});document.getElementById('videoModal').classList.remove('active')" style="flex:1;padding:12px;background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;">${isBookmarked?'🔖 Saved':'🔖 Save'}</button>
+      <button onclick="watchVideo('${video.url}')" style="flex:2;padding:12px;background:var(--red);border:none;color:white;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:DM Sans,sans-serif;">▶ Watch on YouTube</button>
+      <button onclick="toggleBookmark(${JSON.stringify(video).replace(/"/g,'&quot;')});document.getElementById('videoModal').classList.remove('active')" style="flex:1;padding:12px;background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:13px;cursor:pointer;font-family:DM Sans,sans-serif;">${isBookmarked?'🔖 Saved':'🔖 Save'}</button>
     </div>
   `;
   modal.classList.add('active');
