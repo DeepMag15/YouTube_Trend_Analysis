@@ -9,7 +9,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   :root {
-    --red: #FF1F1F; --red-dark: #CC0000;
+    --red: #E8400C; --red-dark: #C43008;
     --black: #0A0A0A; --dark: #111111;
     --card: #161616; --card2: #1C1C1C;
     --border: #252525; --text: #F0F0F0;
@@ -443,7 +443,29 @@
 <aside class="sidebar">
   <a href="index.html" class="sidebar-logo">
     <div class="logo-dot"></div>
-    <div class="logo-text">TREND<span>PULSE</span></div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="width:26px;height:26px;flex-shrink:0;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52" fill="none">
+  <defs>
+    <linearGradient id="wg" x1="0" y1="52" x2="52" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#E02020"/>
+      <stop offset="50%" stop-color="#FF5A1A"/>
+      <stop offset="100%" stop-color="#FF9A00"/>
+    </linearGradient>
+    <linearGradient id="bg2" x1="0" y1="52" x2="52" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1B3A6B"/>
+      <stop offset="100%" stop-color="#2657A8"/>
+    </linearGradient>
+  </defs>
+  <!-- Pulse waveform path -->
+  <path d="M2 32 L10 32 L14 18 L20 42 L26 14 L30 36 L34 26 L38 32 L50 32" stroke="url(#wg)" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Upward arrow -->
+  <line x1="30" y1="30" x2="46" y2="10" stroke="url(#bg2)" stroke-width="3" stroke-linecap="round"/>
+  <polygon points="46,10 38,12 44,18" fill="url(#bg2)"/>
+  <!-- Play button triangle -->
+  <polygon points="20,23 20,31 27,27" fill="url(#wg)" opacity=".9"/>
+</svg></div>
+      <div class="logo-text">TREND<span>PULSE</span></div>
+    </div>
   </a>
 
   <div class="sidebar-section">
@@ -555,7 +577,7 @@
 
 <!-- DAILY LIMIT BANNER -->
 <div id="limitBanner" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9998;width:92%;max-width:520px;">
-  <div style="background:#141414;border:1px solid rgba(255,31,31,.18);border-radius:16px;padding:22px 24px;box-shadow:0 24px 64px rgba(0,0,0,.7);position:relative;">
+  <div style="background:#111625;border:1px solid rgba(255,31,31,.18);border-radius:16px;padding:22px 24px;box-shadow:0 24px 64px rgba(0,0,0,.7);position:relative;">
     <button onclick="document.getElementById('limitBanner').style.display='none'" style="position:absolute;top:14px;right:14px;background:none;border:1px solid #2A2A2A;color:#555;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;">✕</button>
     <!-- Basic plan message -->
     <div id="limitBannerBasic">
@@ -593,7 +615,7 @@
 
 <!-- SETTINGS PANEL -->
 <div id="settingsOverlay" style="display:none;position:fixed;inset:0;z-index:9990;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);" onclick="if(event.target===this)closeSettings()">
-  <div style="position:absolute;right:0;top:0;bottom:0;width:400px;max-width:100vw;background:#141414;border-left:1px solid #242424;display:flex;flex-direction:column;overflow:hidden;animation:slideInRight .3s ease;">
+  <div style="position:absolute;right:0;top:0;bottom:0;width:400px;max-width:100vw;background:#111625;border-left:1px solid #242424;display:flex;flex-direction:column;overflow:hidden;animation:slideInRight .3s ease;">
     <div style="padding:20px 24px;border-bottom:1px solid #242424;display:flex;align-items:center;justify-content:space-between;">
       <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;">⚙️ SETTINGS</div>
       <button onclick="closeSettings()" style="background:none;border:1px solid #2A2A2A;color:#888;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .2s;" onmouseover="this.style.color='#F0F0F0'" onmouseout="this.style.color='#888'">✕</button>
@@ -617,14 +639,14 @@
           </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:28px;">
-          <div style="background:#1A1A1A;border:1px solid #242424;border-radius:10px;padding:16px;">
+          <div style="background:#161C2E;border:1px solid #242424;border-radius:10px;padding:16px;">
             <div style="font-size:10px;color:#555;font-family:'Space Mono',monospace;letter-spacing:1px;margin-bottom:6px;">DAILY REFRESHES USED</div>
             <div style="display:flex;align-items:center;gap:12px;">
               <div id="settingsCallsBar" style="flex:1;height:6px;background:#242424;border-radius:3px;overflow:hidden;"><div id="settingsCallsFill" style="height:100%;background:#FF1F1F;border-radius:3px;transition:width .6s;"></div></div>
               <div id="settingsCallsText" style="font-family:'Space Mono',monospace;font-size:12px;color:#F0F0F0;"></div>
             </div>
           </div>
-          <div id="settingsMemberSince" style="background:#1A1A1A;border:1px solid #242424;border-radius:10px;padding:16px;">
+          <div id="settingsMemberSince" style="background:#161C2E;border:1px solid #242424;border-radius:10px;padding:16px;">
             <div style="font-size:10px;color:#555;font-family:'Space Mono',monospace;letter-spacing:1px;margin-bottom:4px;">MEMBER SINCE</div>
             <div id="settingsJoinDate" style="font-size:14px;font-weight:500;"></div>
           </div>
@@ -635,7 +657,7 @@
       <div id="spanel-plan" style="display:none;">
         <div id="planCurrentInfo" style="margin-bottom:20px;"></div>
         <!-- Basic plan card -->
-        <div style="background:#1A1A1A;border:1px solid #242424;border-radius:12px;padding:20px;margin-bottom:12px;position:relative;">
+        <div style="background:#161C2E;border:1px solid #242424;border-radius:12px;padding:20px;margin-bottom:12px;position:relative;">
           <div id="basicPlanActive" style="display:none;position:absolute;top:12px;right:12px;background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.2);color:#00C853;padding:2px 9px;border-radius:100px;font-size:10px;font-family:'Space Mono',monospace;">CURRENT</div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;margin-bottom:4px;">FREE PLAN</div>
           <div style="font-size:24px;font-weight:700;color:#F0F0F0;margin-bottom:12px;">$0<span style="font-size:13px;color:#888;font-weight:400;">/month</span></div>
@@ -669,29 +691,29 @@
           <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:3px;margin-bottom:4px;">TREND<span style="color:#FF1F1F;">PULSE</span></div>
           <div style="font-size:12px;color:#555;font-family:'Space Mono',monospace;letter-spacing:1.5px;">YOUTUBE TREND ANALYZER</div>
         </div>
-        <div style="background:#1A1A1A;border:1px solid #242424;border-radius:10px;padding:18px;margin-bottom:14px;">
+        <div style="background:#161C2E;border:1px solid #242424;border-radius:10px;padding:18px;margin-bottom:14px;">
           <div style="font-size:10px;color:#555;font-family:'Space Mono',monospace;letter-spacing:1px;margin-bottom:8px;">WHAT IS TRENDPULSE?</div>
           <div style="font-size:13px;color:#AAA;line-height:1.7;">TrendPulse is a real-time YouTube trend analytics dashboard. It pulls live data directly from YouTube Data API v3 to show you what the world is watching — broken down by country, category, and content type (Videos vs Shorts).</div>
         </div>
         <div style="font-size:11px;color:#555;font-family:'Space Mono',monospace;letter-spacing:1px;margin-bottom:10px;">TOOLS & SECTIONS</div>
         <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
-          <div style="background:#1A1A1A;border:1px solid #242424;border-radius:8px;padding:12px 14px;">
+          <div style="background:#161C2E;border:1px solid #242424;border-radius:8px;padding:12px 14px;">
             <div style="font-size:12px;font-weight:600;margin-bottom:3px;">🔥 Trending Videos</div>
             <div style="font-size:12px;color:#666;line-height:1.5;">Top 10 long-form videos per category, ranked by views. Filter by region and category from the topbar.</div>
           </div>
-          <div style="background:#1A1A1A;border:1px solid #242424;border-radius:8px;padding:12px 14px;">
+          <div style="background:#161C2E;border:1px solid #242424;border-radius:8px;padding:12px 14px;">
             <div style="font-size:12px;font-weight:600;margin-bottom:3px;">📱 Trending Shorts</div>
             <div style="font-size:12px;color:#666;line-height:1.5;">Top 20 YouTube Shorts (≤60 seconds) shown in a native vertical portrait grid. Opens directly on youtube.com/shorts.</div>
           </div>
-          <div style="background:#1A1A1A;border:1px solid #242424;border-radius:8px;padding:12px 14px;">
+          <div style="background:#161C2E;border:1px solid #242424;border-radius:8px;padding:12px 14px;">
             <div style="font-size:12px;font-weight:600;margin-bottom:3px;">📊 Trend Charts</div>
             <div style="font-size:12px;color:#666;line-height:1.5;">Views-over-time line chart and category doughnut — filterable by category and duration type (Videos / Shorts / Both).</div>
           </div>
-          <div style="background:#1A1A1A;border:1px solid #242424;border-radius:8px;padding:12px 14px;">
+          <div style="background:#161C2E;border:1px solid #242424;border-radius:8px;padding:12px 14px;">
             <div style="font-size:12px;font-weight:600;margin-bottom:3px;">📺 Top Channels</div>
             <div style="font-size:12px;color:#666;line-height:1.5;">Which channels appear most in trending. Ranked by total views. Filter by category and content type.</div>
           </div>
-          <div style="background:#1A1A1A;border:1px solid #242424;border-radius:8px;padding:12px 14px;">
+          <div style="background:#161C2E;border:1px solid #242424;border-radius:8px;padding:12px 14px;">
             <div style="font-size:12px;font-weight:600;margin-bottom:3px;">🔖 Bookmarks</div>
             <div style="font-size:12px;color:#666;line-height:1.5;">Save any trending video or Short for later reference. Bookmarks persist across sessions.</div>
           </div>
@@ -704,7 +726,7 @@
 
 <!-- UPGRADE / PAYMENT MODAL -->
 <div id="upgradeModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);backdrop-filter:blur(14px);display:none;align-items:center;justify-content:center;">
-  <div style="background:#141414;border:1px solid rgba(255,215,0,.2);border-radius:20px;padding:40px;width:90%;max-width:460px;position:relative;animation:popIn .3s ease;">
+  <div style="background:#111625;border:1px solid rgba(255,215,0,.2);border-radius:20px;padding:40px;width:90%;max-width:460px;position:relative;animation:popIn .3s ease;">
     <button onclick="closeUpgradeModal()" style="position:absolute;top:16px;right:16px;background:none;border:1px solid #2A2A2A;color:#555;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;">✕</button>
     <div style="text-align:center;margin-bottom:28px;">
       <div style="font-size:40px;margin-bottom:12px;">⭐</div>
@@ -712,7 +734,7 @@
       <div style="font-size:14px;color:#888;">Unlock 6 refreshes/day for a full month</div>
     </div>
     <!-- What you get -->
-    <div style="background:#1A1A1A;border:1px solid #242424;border-radius:12px;padding:18px;margin-bottom:22px;">
+    <div style="background:#161C2E;border:1px solid #242424;border-radius:12px;padding:18px;margin-bottom:22px;">
       <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
         <div style="display:flex;align-items:center;gap:10px;"><div style="color:#FFD700;font-size:16px;">⭐</div><div><strong>6 refreshes/day</strong> <span style="color:#888;">(vs 3 on Free)</span></div></div>
         <div style="display:flex;align-items:center;gap:10px;"><div style="color:#00C853;font-size:16px;">✓</div><div>All 15 categories + 30+ regions</div></div>
@@ -732,19 +754,19 @@
         <div style="font-size:10px;color:#555;font-family:'Space Mono',monospace;letter-spacing:1px;margin-bottom:7px;">CARD NUMBER</div>
         <input id="payCard" type="text" maxlength="19" placeholder="1234 5678 9012 3456"
           oninput="this.value=this.value.replace(/[^0-9]/g,'').replace(/(.{4})/g,'$1 ').trim()"
-          style="width:100%;padding:11px 14px;background:#1A1A1A;border:1px solid #2C2C2C;border-radius:8px;color:#F0F0F0;font-size:14px;font-family:'Space Mono',monospace;outline:none;letter-spacing:2px;" onfocus="this.style.borderColor='#FF1F1F'" onblur="this.style.borderColor='#2C2C2C'">
+          style="width:100%;padding:11px 14px;background:#161C2E;border:1px solid #2C2C2C;border-radius:8px;color:#F0F0F0;font-size:14px;font-family:'Space Mono',monospace;outline:none;letter-spacing:2px;" onfocus="this.style.borderColor='#FF1F1F'" onblur="this.style.borderColor='#2C2C2C'">
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
         <div>
           <div style="font-size:10px;color:#555;font-family:'Space Mono',monospace;letter-spacing:1px;margin-bottom:7px;">EXPIRY</div>
           <input id="payExpiry" type="text" maxlength="5" placeholder="MM/YY"
             oninput="let v=this.value.replace(/[^0-9]/g,'');if(v.length>=2)v=v.slice(0,2)+'/'+v.slice(2);this.value=v;"
-            style="width:100%;padding:11px 14px;background:#1A1A1A;border:1px solid #2C2C2C;border-radius:8px;color:#F0F0F0;font-size:14px;font-family:'Space Mono',monospace;outline:none;" onfocus="this.style.borderColor='#FF1F1F'" onblur="this.style.borderColor='#2C2C2C'">
+            style="width:100%;padding:11px 14px;background:#161C2E;border:1px solid #2C2C2C;border-radius:8px;color:#F0F0F0;font-size:14px;font-family:'Space Mono',monospace;outline:none;" onfocus="this.style.borderColor='#FF1F1F'" onblur="this.style.borderColor='#2C2C2C'">
         </div>
         <div>
           <div style="font-size:10px;color:#555;font-family:'Space Mono',monospace;letter-spacing:1px;margin-bottom:7px;">CVV</div>
           <input id="payCvv" type="text" maxlength="4" placeholder="•••"
-            style="width:100%;padding:11px 14px;background:#1A1A1A;border:1px solid #2C2C2C;border-radius:8px;color:#F0F0F0;font-size:14px;font-family:'Space Mono',monospace;outline:none;" onfocus="this.style.borderColor='#FF1F1F'" onblur="this.style.borderColor='#2C2C2C'">
+            style="width:100%;padding:11px 14px;background:#161C2E;border:1px solid #2C2C2C;border-radius:8px;color:#F0F0F0;font-size:14px;font-family:'Space Mono',monospace;outline:none;" onfocus="this.style.borderColor='#FF1F1F'" onblur="this.style.borderColor='#2C2C2C'">
         </div>
       </div>
       <div id="payMsg" style="margin-bottom:10px;"></div>
@@ -1227,7 +1249,7 @@ async function loadTrending() {
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;gap:16px;text-align:center;padding:40px 20px;">
           <div style="font-size:48px;">⚠️</div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--red);">COULD NOT LOAD DATA</div>
-          <div style="font-size:13px;color:#888;max-width:480px;line-height:1.8;background:#1a1a1a;padding:16px 20px;border-radius:10px;border:1px solid #2a2a2a;text-align:left;">
+          <div style="font-size:13px;color:#888;max-width:480px;line-height:1.8;background:#161C2E;padding:16px 20px;border-radius:10px;border:1px solid #2a2a2a;text-align:left;">
             <strong style="color:var(--text);">Error:</strong> ${friendlyMsg}
           </div>
           <button onclick="loadTrending()" style="padding:10px 28px;background:var(--red);border:none;color:white;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">
@@ -2023,7 +2045,148 @@ function updateChartPoolSize() {
   if (el) el.textContent = `${pool.length} video${pool.length!==1?'s':''} in view`;
 }
 
-// ─── CHARTS VIEW ───
+// ═══════════════════════════════════════════════════════════════
+// CHARTS VIEW — rich multi-metric dashboard with duration request
+// ═══════════════════════════════════════════════════════════════
+
+// ─── Chart color palette ───
+const CHART_COLORS = [
+  '#E5131F','#FF5A2A','#FF9800','#FFD700','#00C853',
+  '#00BCD4','#2196F3','#7C3AED','#E91E63','#FF6B9D',
+  '#4CAF50','#8BC34A','#CDDC39','#FFC107','#FF7043'
+];
+
+// ─── Duration request modal shown before charts load ───
+function showDurationModal(callback) {
+  const existing = document.getElementById('durModal');
+  if (existing) { existing.remove(); }
+
+  const overlay = document.createElement('div');
+  overlay.id = 'durModal';
+  overlay.style.cssText = `
+    position:fixed;inset:0;z-index:3000;
+    background:rgba(0,0,0,.85);backdrop-filter:blur(12px);
+    display:flex;align-items:center;justify-content:center;
+    animation:fadeInModal .25s ease;
+  `;
+  overlay.innerHTML = `
+    <style>
+      @keyframes fadeInModal{from{opacity:0;transform:scale(.96);}to{opacity:1;transform:scale(1);}}
+      .dur-modal{background:var(--card);border:1px solid var(--border);border-radius:16px;
+        padding:32px;width:90%;max-width:520px;position:relative;}
+      .dur-modal h2{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;margin-bottom:6px;color:var(--text);}
+      .dur-modal p{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6;}
+      .dur-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px;}
+      .dur-opt{padding:14px;border:2px solid var(--border);border-radius:10px;
+        cursor:pointer;transition:all .2s;text-align:center;background:var(--dark);}
+      .dur-opt:hover{border-color:var(--red);background:rgba(229,19,31,.06);}
+      .dur-opt.selected{border-color:var(--red);background:rgba(229,19,31,.1);}
+      .dur-opt-days{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:var(--red);}
+      .dur-opt-label{font-size:11px;color:var(--muted);margin-top:2px;font-family:'Space Mono',monospace;letter-spacing:.5px;}
+      .dur-type-row{display:flex;gap:8px;margin-bottom:20px;}
+      .dur-type-btn{flex:1;padding:9px;border:1px solid var(--border);border-radius:8px;
+        background:var(--dark);color:var(--muted);font-size:12px;cursor:pointer;
+        font-family:'DM Sans',sans-serif;transition:all .2s;text-align:center;}
+      .dur-type-btn.active{border-color:var(--red);background:rgba(229,19,31,.1);color:var(--text);}
+      .dur-apply{width:100%;padding:13px;background:var(--red);border:none;color:#fff;
+        border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;
+        cursor:pointer;transition:background .2s;}
+      .dur-apply:hover{background:#C41019;}
+      .dur-close{position:absolute;top:14px;right:16px;background:none;border:none;
+        color:var(--muted);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:4px;}
+      .dur-close:hover{color:var(--text);}
+    </style>
+    <div class="dur-modal">
+      <button class="dur-close" onclick="document.getElementById('durModal').remove()">✕</button>
+      <h2>📊 SET ANALYSIS PERIOD</h2>
+      <p>Choose the time range and content type for your trend analysis. Charts will be generated from your loaded trending data.</p>
+      <div class="dur-grid">
+        <div class="dur-opt selected" data-days="7"   onclick="selectDurOpt(this)"><div class="dur-opt-days">7</div><div class="dur-opt-label">DAYS</div></div>
+        <div class="dur-opt"          data-days="30"  onclick="selectDurOpt(this)"><div class="dur-opt-days">30</div><div class="dur-opt-label">DAYS</div></div>
+        <div class="dur-opt"          data-days="90"  onclick="selectDurOpt(this)"><div class="dur-opt-days">90</div><div class="dur-opt-label">DAYS (3 months)</div></div>
+        <div class="dur-opt"          data-days="365" onclick="selectDurOpt(this)"><div class="dur-opt-days">365</div><div class="dur-opt-label">DAYS (1 year)</div></div>
+      </div>
+      <div class="dur-type-row">
+        <div class="dur-type-btn active" data-type="all"    onclick="selectDurType(this)">🔀 All Content</div>
+        <div class="dur-type-btn"        data-type="videos" onclick="selectDurType(this)">🎬 Videos Only</div>
+        <div class="dur-type-btn"        data-type="shorts" onclick="selectDurType(this)">📱 Shorts Only</div>
+      </div>
+      <button class="dur-apply" onclick="applyDurModal('${callback}')">GENERATE CHARTS →</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+}
+
+// Replaces applyDurModal string injection — store callback directly
+let _chartCallback = null;
+function showDurationModalCb(cb) {
+  _chartCallback = cb;
+  const existing = document.getElementById('durModal');
+  if (existing) existing.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'durModal';
+  overlay.style.cssText = `position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.85);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;animation:fdIM .25s ease;`;
+  overlay.innerHTML = `
+    <style>
+      @keyframes fdIM{from{opacity:0;transform:scale(.96);}to{opacity:1;transform:scale(1);}}
+      #durModal .dm{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px;width:90%;max-width:500px;position:relative;}
+      #durModal h2{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;margin-bottom:6px;color:var(--text);}
+      #durModal p{font-size:13px;color:var(--muted);margin-bottom:22px;line-height:1.6;}
+      .dg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px;}
+      .do{padding:14px 8px;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:all .18s;text-align:center;background:var(--dark);}
+      .do:hover{border-color:var(--red);}
+      .do.sel{border-color:var(--red);background:rgba(229,19,31,.09);}
+      .do-n{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--red);}
+      .do-l{font-size:9px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:.5px;margin-top:2px;}
+      .dtr{display:flex;gap:8px;margin-bottom:20px;}
+      .dtb{flex:1;padding:9px 6px;border:1px solid var(--border);border-radius:8px;background:var(--dark);color:var(--muted);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .18s;text-align:center;}
+      .dtb.sel{border-color:var(--red);background:rgba(229,19,31,.09);color:var(--text);}
+      .da{width:100%;padding:13px;background:var(--red);border:none;color:#fff;border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;cursor:pointer;}
+      .da:hover{background:#C41019;}
+      .dcl{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:4px;}
+      .dcl:hover{color:var(--text);}
+    </style>
+    <div class="dm">
+      <button class="dcl" onclick="document.getElementById('durModal').remove()">✕</button>
+      <h2>📊 ANALYSIS PERIOD</h2>
+      <p>Select the time range and content type. Charts are built from your loaded YouTube trending data.</p>
+      <div class="dg">
+        <div class="do sel" data-days="7">  <div class="do-n">7</div>  <div class="do-l">DAYS</div></div>
+        <div class="do"     data-days="30"> <div class="do-n">30</div> <div class="do-l">DAYS</div></div>
+        <div class="do"     data-days="90"> <div class="do-n">90</div> <div class="do-l">90 DAYS</div></div>
+        <div class="do"     data-days="365"><div class="do-n">365</div><div class="do-l">1 YEAR</div></div>
+      </div>
+      <div class="dtr">
+        <div class="dtb sel" data-type="all">🔀 All</div>
+        <div class="dtb"     data-type="videos">🎬 Videos</div>
+        <div class="dtb"     data-type="shorts">📱 Shorts</div>
+      </div>
+      <button class="da" onclick="applyDurModal()">GENERATE CHARTS →</button>
+    </div>
+  `;
+  overlay.querySelectorAll('.do').forEach(el => el.addEventListener('click', function(){
+    overlay.querySelectorAll('.do').forEach(x=>x.classList.remove('sel'));
+    this.classList.add('sel');
+  }));
+  overlay.querySelectorAll('.dtb').forEach(el => el.addEventListener('click', function(){
+    overlay.querySelectorAll('.dtb').forEach(x=>x.classList.remove('sel'));
+    this.classList.add('sel');
+  }));
+  overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
+function applyDurModal() {
+  const overlay = document.getElementById('durModal');
+  if (!overlay) return;
+  const days = parseInt(overlay.querySelector('.do.sel')?.dataset.days || 30);
+  const type = overlay.querySelector('.dtb.sel')?.dataset.type || 'all';
+  overlay.remove();
+  if (_chartCallback) _chartCallback(days, type);
+}
+
 function renderCharts() {
   const content = document.getElementById('mainContent');
   const hasAny  = STATE.videos.length || STATE.shorts.length;
@@ -2031,201 +2194,379 @@ function renderCharts() {
     content.innerHTML = renderEmptyDataState('📊', 'TREND CHARTS', 'Load trending data first by clicking ↺ Refresh.');
     return;
   }
+  showDurationModalCb((days, type) => buildChartsView(days, type));
+}
 
-  const activeDur = document.getElementById('chartDurFilter')?.value || 'videos';
-  const activeCat = document.getElementById('chartCatFilter')?.value || '';
+function buildChartsView(days, type) {
+  const content = document.getElementById('mainContent');
+
+  let pool = type==='videos' ? [...STATE.videos] : type==='shorts' ? [...STATE.shorts] : [...STATE.videos,...STATE.shorts];
+
+  const now = new Date();
+  const cutoff = new Date(now - days * 86400000);
+
+  // Bucket by day
+  const dayBuckets = {}; // date → {views, likes, comments, count}
+  for(let i=days-1;i>=0;i--) {
+    const d=new Date(now-i*86400000);
+    dayBuckets[d.toLocaleDateString('en-CA')] = {views:0,likes:0,comments:0,count:0};
+  }
+  pool.forEach(v => {
+    const key = new Date(v.publishedAt).toLocaleDateString('en-CA');
+    if(dayBuckets[key]) {
+      dayBuckets[key].views    += v.views;
+      dayBuckets[key].likes    += v.likes;
+      dayBuckets[key].comments += v.comments;
+      dayBuckets[key].count++;
+    }
+  });
+
+  // Category data
+  const catMap = {};
+  pool.forEach(v => {
+    const cat = CATEGORIES.find(c=>String(c.id)===String(v.categoryId));
+    const name = cat ? (cat.icon+' '+cat.name) : 'Other';
+    if(!catMap[name]) catMap[name] = {views:0,likes:0,comments:0,count:0,color:CHART_COLORS[Object.keys(catMap).length%CHART_COLORS.length]};
+    catMap[name].views    += v.views;
+    catMap[name].likes    += v.likes;
+    catMap[name].comments += v.comments;
+    catMap[name].count++;
+  });
+  const catSorted = Object.entries(catMap).sort((a,b)=>b[1].views-a[1].views);
+
+  // Top videos
+  const topVideos = [...pool].sort((a,b)=>b.views-a.views).slice(0,10);
+
+  // Engagement rate
+  const engMap = {};
+  pool.forEach(v => {
+    const cat = CATEGORIES.find(c=>String(c.id)===String(v.categoryId));
+    const name = cat ? (cat.icon+' '+cat.name) : 'Other';
+    if(!engMap[name]) engMap[name] = {totalEng:0, totalViews:0};
+    if(v.views>0) { engMap[name].totalEng += v.likes+v.comments; engMap[name].totalViews += v.views; }
+  });
+  const engSorted = Object.entries(engMap)
+    .map(([k,v])=>({name:k, rate: v.totalViews>0 ? (v.totalEng/v.totalViews*100) : 0}))
+    .sort((a,b)=>b.rate-a.rate).slice(0,8);
+
+  const dateLabels = Object.keys(dayBuckets).map(k => {
+    const d=new Date(k);
+    return days<=7 ? d.toLocaleDateString('en',{weekday:'short'}) :
+           days<=30 ? d.toLocaleDateString('en',{month:'short',day:'numeric'}) :
+           d.toLocaleDateString('en',{month:'short',day:'numeric'});
+  });
+
+  const typeLabel = type==='videos'?'Videos':type==='shorts'?'Shorts':'All Content';
+  const typeColor = type==='shorts'?'#FF5A2A':type==='all'?'#7C3AED':'#E5131F';
+  const totalViews = pool.reduce((s,v)=>s+v.views,0);
+  const totalLikes = pool.reduce((s,v)=>s+v.likes,0);
+  const avgViews   = pool.length ? Math.round(totalViews/pool.length) : 0;
+  const engRate    = totalViews>0 ? ((totalLikes/totalViews)*100).toFixed(2) : '0.00';
 
   content.innerHTML = `
-    <div class="panel grid-full" style="margin-bottom:20px;overflow:visible;">
-      ${buildChartFilterBar(activeDur, activeCat)}
-      <div style="padding:0;"></div>
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--text);">📊 TREND ANALYSIS</div>
+        <div style="font-size:12px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:1px;margin-top:3px;">
+          ${typeLabel} · Last ${days} days · ${pool.length} videos · ${STATE.region}
+        </div>
+      </div>
+      <button onclick="renderCharts()" style="padding:8px 18px;border:1px solid var(--border);background:var(--card);color:var(--muted);border-radius:8px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;"
+        onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+        ⚙ Change Period
+      </button>
     </div>
-    <div class="grid-two">
+
+    <!-- KPI Row -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+      ${[
+        ['👁️', formatNum(totalViews), 'TOTAL VIEWS', '#E5131F'],
+        ['🎬', pool.length, 'VIDEOS ANALYSED', '#FF9800'],
+        ['📊', formatNum(avgViews), 'AVG VIEWS/VIDEO', '#00C853'],
+        ['💬', engRate+'%', 'ENGAGEMENT RATE', '#2196F3']
+      ].map(([ic,val,lbl,col])=>`
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;border-top:3px solid ${col};">
+          <div style="font-size:20px;margin-bottom:8px;">${ic}</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:${col};line-height:1;">${val}</div>
+          <div style="font-size:9px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:1px;margin-top:4px;">${lbl}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <!-- Row 1: Views timeline + Category doughnut -->
+    <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:16px;margin-bottom:16px;">
       <div class="panel">
         <div class="panel-header">
-          <div class="panel-title">📈 TRENDING VIEWS OVER TIME</div>
-          <select id="chartTimeRange" onchange="updateMainChart()"
-            style="background:var(--card);border:1px solid var(--border);color:var(--text);padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;">
-            <option value="7">Last 7 Days</option>
-            <option value="30" selected>Last 30 Days</option>
-            <option value="90">Last 90 Days</option>
-            <option value="365">Last 1 Year</option>
-          </select>
+          <div class="panel-title">📈 VIEWS BY PUBLISH DATE</div>
+          <div style="display:flex;gap:6px;">
+            <button id="mChart_views" onclick="switchMainMetric('views')"  style="padding:5px 12px;border:1px solid var(--red);background:var(--red);color:#fff;border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;">Views</button>
+            <button id="mChart_likes" onclick="switchMainMetric('likes')"  style="padding:5px 12px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;">Likes</button>
+            <button id="mChart_count" onclick="switchMainMetric('count')"  style="padding:5px 12px;border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:5px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;">Count</button>
+          </div>
         </div>
-        <div class="panel-body">
-          <div class="chart-container"><canvas id="trendChart"></canvas></div>
-        </div>
+        <div class="panel-body"><div class="chart-container"><canvas id="mainTimeline"></canvas></div></div>
       </div>
       <div class="panel">
-        <div class="panel-header">
-          <div class="panel-title">🏷️ CATEGORY BREAKDOWN</div>
-        </div>
-        <div class="panel-body">
-          <div class="chart-container"><canvas id="catChart"></canvas></div>
-        </div>
+        <div class="panel-header"><div class="panel-title">🏷️ CATEGORY SHARE</div></div>
+        <div class="panel-body"><div class="chart-container"><canvas id="catDonut"></canvas></div></div>
       </div>
     </div>
-    <div class="panel grid-full">
-      <div class="panel-header">
-        <div class="panel-title">📊 CATEGORY PERFORMANCE</div>
+
+    <!-- Row 2: Category bar chart + Engagement rate -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">📊 VIEWS BY CATEGORY</div></div>
+        <div class="panel-body"><div class="chart-container"><canvas id="catBarChart"></canvas></div></div>
       </div>
-      <div class="panel-body">
-        <div class="cat-breakdown" id="catBreakdown"></div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">💬 ENGAGEMENT RATE BY CATEGORY</div></div>
+        <div class="panel-body"><div class="chart-container"><canvas id="engChart"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- Row 3: Likes vs Views scatter + Videos/day bar -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">📐 LIKES vs VIEWS (TOP 50)</div></div>
+        <div class="panel-body"><div class="chart-container"><canvas id="scatterChart"></canvas></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">📅 VIDEOS PUBLISHED PER DAY</div></div>
+        <div class="panel-body"><div class="chart-container"><canvas id="countBarChart"></canvas></div></div>
+      </div>
+    </div>
+
+    <!-- Row 4: Top 10 videos table -->
+    <div class="panel grid-full" style="margin-bottom:20px;">
+      <div class="panel-header"><div class="panel-title">🔥 TOP 10 TRENDING VIDEOS</div></div>
+      <div class="panel-body" style="padding:0;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="background:var(--dark);border-bottom:1px solid var(--border);">
+              <th style="padding:10px 16px;text-align:left;font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:1px;font-weight:400;">#</th>
+              <th style="padding:10px 16px;text-align:left;font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:1px;font-weight:400;">TITLE</th>
+              <th style="padding:10px 16px;text-align:right;font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:1px;font-weight:400;">VIEWS</th>
+              <th style="padding:10px 16px;text-align:right;font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:1px;font-weight:400;">LIKES</th>
+              <th style="padding:10px 16px;text-align:right;font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:1px;font-weight:400;">ENG%</th>
+              <th style="padding:10px 16px;text-align:center;font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:1px;font-weight:400;">OPEN</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${topVideos.map((v,i)=>{
+              const eng = v.views>0?((v.likes/v.views)*100).toFixed(2)+'%':'—';
+              const medal = i<3?['🥇','🥈','🥉'][i]:'';
+              return `<tr style="border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s;" 
+                onmouseover="this.style.background='rgba(229,19,31,.04)'" onmouseout="this.style.background='transparent'">
+                <td style="padding:10px 16px;font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--muted);">${medal||i+1}</td>
+                <td style="padding:10px 16px;max-width:320px;">
+                  <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(v.title)}</div>
+                  <div style="font-size:11px;color:var(--muted);margin-top:2px;">${escHtml(v.channel)} · ${v.duration}</div>
+                </td>
+                <td style="padding:10px 16px;text-align:right;font-family:'Space Mono',monospace;font-size:12px;color:var(--red);">${formatNum(v.views)}</td>
+                <td style="padding:10px 16px;text-align:right;font-family:'Space Mono',monospace;font-size:12px;color:#FF9800;">${formatNum(v.likes)}</td>
+                <td style="padding:10px 16px;text-align:right;font-family:'Space Mono',monospace;font-size:12px;color:var(--green);">${eng}</td>
+                <td style="padding:10px 16px;text-align:center;">
+                  <a href="${v.url}" target="_blank" style="padding:4px 10px;background:var(--red);color:#fff;border-radius:5px;font-size:11px;text-decoration:none;font-family:'DM Sans',sans-serif;">▶</a>
+                </td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
       </div>
     </div>
   `;
 
-  // Sync hidden dur filter input
-  let inp = document.getElementById('chartDurFilter');
-  if (!inp) { inp = document.createElement('input'); inp.type='hidden'; inp.id='chartDurFilter'; document.body.appendChild(inp); }
-  inp.value = activeDur;
+  // Store data for metric switching
+  window._chartData = { dayBuckets, dateLabels, catSorted, engSorted, pool, typeColor, days };
 
   setTimeout(() => {
-    updateChartPoolSize();
-    initTrendChart();
-    initCatChart();
-    renderCatBreakdown();
+    drawMainTimeline('views');
+    drawCatDonut(catSorted);
+    drawCatBarChart(catSorted);
+    drawEngChart(engSorted);
+    drawScatterChart(pool);
+    drawCountBarChart(dayBuckets, dateLabels);
   }, 50);
 }
 
-function initTrendChart() {
-  const ctx = document.getElementById('trendChart')?.getContext('2d');
-  if (!ctx) return;
-  if (STATE.chartInstance) { STATE.chartInstance.destroy(); STATE.chartInstance = null; }
-
-  const pool = getFilteredVideos();
-  const days = parseInt(document.getElementById('chartTimeRange')?.value || 30);
-  const now  = new Date();
-
-  const buckets = {};
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(now - i * 86400000);
-    buckets[d.toDateString()] = 0;
-  }
-  pool.forEach(v => {
-    if (!v.publishedAt) return;
-    const key = new Date(v.publishedAt).toDateString();
-    if (key in buckets) buckets[key] += v.views;
+function switchMainMetric(metric) {
+  ['views','likes','count'].forEach(m => {
+    const btn = document.getElementById('mChart_'+m);
+    if(!btn) return;
+    btn.style.background    = m===metric ? 'var(--red)' : 'transparent';
+    btn.style.borderColor   = m===metric ? 'var(--red)' : 'var(--border)';
+    btn.style.color         = m===metric ? '#fff' : 'var(--muted)';
   });
+  drawMainTimeline(metric);
+}
 
-  const labels = Object.keys(buckets).map(k => {
-    const d = new Date(k);
-    return days <= 7
-      ? d.toLocaleDateString('en', { weekday: 'short' })
-      : d.toLocaleDateString('en', { month: 'short', day: 'numeric' });
-  });
+function drawMainTimeline(metric) {
+  const ctx = document.getElementById('mainTimeline')?.getContext('2d');
+  if(!ctx) return;
+  if(STATE.chartInstance) { STATE.chartInstance.destroy(); STATE.chartInstance=null; }
+  const d = window._chartData; if(!d) return;
+  const vals = Object.values(d.dayBuckets).map(b => b[metric] || 0);
+  const col  = metric==='likes'?'#FF9800' : metric==='count'?'#00C853' : d.typeColor;
+  const lbl  = metric==='views'?'Views' : metric==='likes'?'Likes' : 'Videos Published';
 
-  const durType = document.getElementById('chartDurFilter')?.value || 'videos';
-  const lineColor = durType === 'shorts' ? '#F97316' : durType === 'all' ? '#A855F7' : '#FF1F1F';
+  // Gradient fill
+  const gradient = ctx.createLinearGradient(0,0,0,300);
+  gradient.addColorStop(0, col+'55');
+  gradient.addColorStop(1, col+'05');
 
   STATE.chartInstance = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Views (by publish date)',
-        data: Object.values(buckets),
-        borderColor: lineColor,
-        backgroundColor: lineColor + '14',
-        borderWidth: 2, fill: true, tension: 0.4,
-        pointRadius: days <= 7 ? 4 : 2,
-        pointHoverRadius: 6,
-        pointBackgroundColor: lineColor,
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#1C1C1C', borderColor: '#252525', borderWidth: 1,
-          titleColor: '#F0F0F0', bodyColor: '#777',
-          callbacks: { label: c => ' ' + formatNum(c.raw) + ' views' }
+    type:'line',
+    data:{ labels:d.dateLabels, datasets:[{
+      label:lbl, data:vals,
+      borderColor:col, backgroundColor:gradient,
+      borderWidth:2, fill:true, tension:0.4,
+      pointRadius: d.days<=7?5:2,
+      pointHoverRadius:7, pointBackgroundColor:col,
+      pointBorderColor:'#111', pointBorderWidth:2,
+    }]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'#1C1C1C',borderColor:'#333',borderWidth:1,
+          titleColor:'#F0F0F0',bodyColor:'#888',padding:10,
+          callbacks:{label:c=>` ${formatNum(c.raw)} ${lbl.toLowerCase()}`}
         }
       },
-      scales: {
-        x: { grid: { color: '#1E1E1E' }, ticks: { color: '#555', maxTicksLimit: 8 } },
-        y: { grid: { color: '#1E1E1E' }, ticks: { color: '#555', callback: v => formatNum(v) } }
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555',maxTicksLimit:10,font:{size:10}}},
+        y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555',callback:v=>formatNum(v),font:{size:10}},beginAtZero:true}
       }
     }
   });
 }
 
-function updateMainChart() { initTrendChart(); }
-
-function initCatChart() {
-  const ctx = document.getElementById('catChart')?.getContext('2d');
-  if (!ctx) return;
-  if (STATE.catChartInstance) { STATE.catChartInstance.destroy(); STATE.catChartInstance = null; }
-
-  const pool = getFilteredVideos();
-  const catCounts = {};
-  pool.forEach(v => {
-    const cat = CATEGORIES.find(c => String(c.id) === String(v.categoryId))?.name || 'Other';
-    catCounts[cat] = (catCounts[cat] || 0) + 1;
-  });
-
-  const sorted = Object.entries(catCounts).sort((a,b) => b[1]-a[1]).slice(0, 8);
-  if (!sorted.length) return;
-  const colors = ['#FF1F1F','#FF6B35','#FFD700','#00C853','#2196F3','#9C27B0','#FF9800','#00BCD4'];
-
+function drawCatDonut(catSorted) {
+  const ctx = document.getElementById('catDonut')?.getContext('2d');
+  if(!ctx||!catSorted.length) return;
+  if(STATE.catChartInstance) { STATE.catChartInstance.destroy(); STATE.catChartInstance=null; }
+  const top8 = catSorted.slice(0,8);
   STATE.catChartInstance = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: sorted.map(([k]) => k),
-      datasets: [{ data: sorted.map(([,v]) => v), backgroundColor: colors, borderWidth: 0, hoverBorderWidth: 2, hoverBorderColor: '#fff' }]
+    type:'doughnut',
+    data:{
+      labels:top8.map(([k])=>k),
+      datasets:[{data:top8.map(([,v])=>v.views),backgroundColor:CHART_COLORS.slice(0,8),
+        borderWidth:2,borderColor:'#111',hoverOffset:8}]
     },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'right', labels: { color: '#777', font: { size: 11 }, boxWidth: 12, padding: 8 } },
-        tooltip: {
-          backgroundColor: '#1C1C1C', borderColor: '#252525', borderWidth: 1,
-          titleColor: '#F0F0F0', bodyColor: '#777'
-        }
-      },
-      cutout: '65%'
+    options:{
+      responsive:true,maintainAspectRatio:false,cutout:'60%',
+      plugins:{
+        legend:{position:'right',labels:{color:'#888',font:{size:11},boxWidth:10,padding:6}},
+        tooltip:{backgroundColor:'#1C1C1C',borderColor:'#333',borderWidth:1,titleColor:'#F0F0F0',bodyColor:'#888',
+          callbacks:{label:c=>`${formatNum(c.raw)} views`}}
+      }
     }
   });
 }
 
-function renderCatBreakdown() {
-  const el = document.getElementById('catBreakdown');
-  if (!el) return;
-
-  const pool = getFilteredVideos();
-  const catData = {};
-  pool.forEach(v => {
-    const cat  = CATEGORIES.find(c => String(c.id) === String(v.categoryId));
-    const name = cat?.name || 'Other';
-    if (!catData[name]) catData[name] = { views: 0, likes: 0, count: 0 };
-    catData[name].views += v.views;
-    catData[name].likes += v.likes;
-    catData[name].count++;
+function drawCatBarChart(catSorted) {
+  const ctx = document.getElementById('catBarChart')?.getContext('2d');
+  if(!ctx||!catSorted.length) return;
+  const top10 = catSorted.slice(0,10);
+  new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:top10.map(([k])=>k.substring(0,18)),
+      datasets:[{
+        label:'Views',
+        data:top10.map(([,v])=>v.views),
+        backgroundColor:CHART_COLORS.slice(0,10).map(c=>c+'BB'),
+        borderColor:CHART_COLORS.slice(0,10),
+        borderWidth:1,borderRadius:4
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'#1C1C1C',borderColor:'#333',borderWidth:1,titleColor:'#F0F0F0',bodyColor:'#888',callbacks:{label:c=>`${formatNum(c.raw)} views`}}},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555',callback:v=>formatNum(v),font:{size:10}}},
+        y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#aaa',font:{size:10}}}
+      }
+    }
   });
-
-  const sorted  = Object.entries(catData).sort((a,b) => b[1].views - a[1].views);
-  const maxViews = sorted[0]?.[1].views || 1;
-
-  if (!sorted.length) {
-    el.innerHTML = `<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">No data for the selected filters.</div>`;
-    return;
-  }
-
-  el.innerHTML = sorted.slice(0, 12).map(([name, d]) => `
-    <div class="cat-bar-item">
-      <div class="cat-bar-label">
-        <span>${name} <span style="color:#444;font-size:10px;">(${d.count} video${d.count!==1?'s':''})</span></span>
-        <span>${formatNum(d.views)}</span>
-      </div>
-      <div class="cat-bar-track">
-        <div class="cat-bar-fill" style="width:${(d.views/maxViews*100).toFixed(1)}%"></div>
-      </div>
-    </div>
-  `).join('');
 }
 
-// ─── CHANNELS VIEW ───
+function drawEngChart(engSorted) {
+  const ctx = document.getElementById('engChart')?.getContext('2d');
+  if(!ctx||!engSorted.length) return;
+  new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:engSorted.map(e=>e.name.substring(0,16)),
+      datasets:[{
+        label:'Engagement %',
+        data:engSorted.map(e=>parseFloat(e.rate.toFixed(3))),
+        backgroundColor:'rgba(229,19,31,.6)',
+        borderColor:'#E5131F',borderWidth:1,borderRadius:4
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'#1C1C1C',borderColor:'#333',borderWidth:1,titleColor:'#F0F0F0',bodyColor:'#888',callbacks:{label:c=>`${c.raw}% engagement`}}},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555',callback:v=>v+'%',font:{size:10}}},
+        y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#aaa',font:{size:10}}}
+      }
+    }
+  });
+}
+
+function drawScatterChart(pool) {
+  const ctx = document.getElementById('scatterChart')?.getContext('2d');
+  if(!ctx) return;
+  const pts = pool.slice(0,50).map(v=>({x:v.views,y:v.likes,label:v.title.substring(0,30)}));
+  new Chart(ctx, {
+    type:'scatter',
+    data:{datasets:[{label:'Videos',data:pts,backgroundColor:'rgba(229,19,31,.55)',borderColor:'#E5131F',borderWidth:1,pointRadius:5,pointHoverRadius:7}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'#1C1C1C',borderColor:'#333',borderWidth:1,titleColor:'#F0F0F0',bodyColor:'#888',
+        callbacks:{label:c=>`👁 ${formatNum(c.raw.x)}  👍 ${formatNum(c.raw.y)}`}}},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555',callback:v=>formatNum(v),font:{size:10}},title:{display:true,text:'Views',color:'#555',font:{size:11}}},
+        y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555',callback:v=>formatNum(v),font:{size:10}},title:{display:true,text:'Likes',color:'#555',font:{size:11}}}
+      }
+    }
+  });
+}
+
+function drawCountBarChart(dayBuckets, dateLabels) {
+  const ctx = document.getElementById('countBarChart')?.getContext('2d');
+  if(!ctx) return;
+  const counts = Object.values(dayBuckets).map(b=>b.count);
+  const max = Math.max(...counts);
+  const colors = counts.map(c=> c===max ? '#E5131F' : 'rgba(229,19,31,.35)');
+  new Chart(ctx, {
+    type:'bar',
+    data:{labels:dateLabels,datasets:[{label:'Videos',data:counts,backgroundColor:colors,borderColor:'transparent',borderRadius:3}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{backgroundColor:'#1C1C1C',borderColor:'#333',borderWidth:1,titleColor:'#F0F0F0',bodyColor:'#888',callbacks:{label:c=>`${c.raw} video${c.raw!==1?'s':''} published`}}},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555',maxTicksLimit:10,font:{size:10}}},
+        y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#555',font:{size:10}},beginAtZero:true}
+      }
+    }
+  });
+}
+
+// Stub: keep backward compat
+function initTrendChart()    { if(window._chartData) drawMainTimeline('views'); }
+function initCatChart()      { if(window._chartData) drawCatDonut(window._chartData.catSorted); }
+function renderCatBreakdown(){ }
+function updateMainChart()   { if(window._chartData) drawMainTimeline('views'); }
+
+// ═══════════════════════════════════════════════════════════════
+// CHANNELS VIEW — per-category top 10 with trending content
+// ═══════════════════════════════════════════════════════════════
 function renderChannels() {
   const content = document.getElementById('mainContent');
   const hasAny  = STATE.videos.length || STATE.shorts.length;
@@ -2233,137 +2574,258 @@ function renderChannels() {
     content.innerHTML = renderEmptyDataState('📺', 'TOP CHANNELS', 'Load trending data first by clicking ↺ Refresh.');
     return;
   }
-
-  const activeDur = document.getElementById('chartDurFilter')?.value || 'videos';
-  const activeCat = document.getElementById('chartCatFilter')?.value || '';
-
-  content.innerHTML = `
-    <div class="panel grid-full" style="margin-bottom:20px;overflow:visible;">
-      ${buildChartFilterBar(activeDur, activeCat)}
-      <div style="padding:0;"></div>
-    </div>
-    <div id="channelContent"></div>
-  `;
-
-  // Sync hidden filter input
-  let inp = document.getElementById('chartDurFilter');
-  if (!inp) { inp = document.createElement('input'); inp.type='hidden'; inp.id='chartDurFilter'; document.body.appendChild(inp); }
-  inp.value = activeDur;
-
-  updateChartPoolSize();
-  renderChannelContent();
+  showDurationModalCb((days, type) => buildChannelsView(days, type));
 }
 
-function renderChannelContent() {
-  const container = document.getElementById('channelContent');
-  if (!container) return;
+function buildChannelsView(days, type) {
+  const content = document.getElementById('mainContent');
 
-  const pool = getFilteredVideos();
+  let pool = type==='videos' ? [...STATE.videos] : type==='shorts' ? [...STATE.shorts] : [...STATE.videos,...STATE.shorts];
 
-  if (!pool.length) {
-    container.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--muted);font-size:14px;">No channels found for the selected filters.<br><span style="font-size:12px;color:#444;">Try switching to a different duration type or category.</span></div>`;
-    return;
-  }
+  const typeLabel = type==='videos'?'Videos':type==='shorts'?'Shorts':'All Content';
 
-  const channelMap = {};
+  // Build channel map across all videos
+  const globalChannelMap = {};
   pool.forEach(v => {
-    if (!channelMap[v.channel]) channelMap[v.channel] = { name: v.channel, videos: 0, views: 0, likes: 0, shorts: 0 };
-    channelMap[v.channel].views += v.views;
-    channelMap[v.channel].likes += v.likes;
-    if ((v.durationSec||0) <= SHORTS_MAX_SEC) channelMap[v.channel].shorts++;
-    else channelMap[v.channel].videos++;
+    if(!globalChannelMap[v.channel]) globalChannelMap[v.channel] = {name:v.channel,channelId:v.channelId,videos:[],totalViews:0,totalLikes:0,totalComments:0};
+    globalChannelMap[v.channel].videos.push(v);
+    globalChannelMap[v.channel].totalViews    += v.views;
+    globalChannelMap[v.channel].totalLikes    += v.likes;
+    globalChannelMap[v.channel].totalComments += v.comments;
+  });
+  const globalTop = Object.values(globalChannelMap).sort((a,b)=>b.totalViews-a.totalViews);
+  const totalViews = globalTop.reduce((s,c)=>s+c.totalViews,0);
+
+  // Build per-category channel maps
+  const nonEmptyCats = CATEGORIES.filter(cat => {
+    if(!cat.id) return false;
+    return pool.some(v => String(v.categoryId)===String(cat.id));
   });
 
-  const channels = Object.values(channelMap).sort((a,b) => b.views - a.views);
-  const total = channels.reduce((s,c) => s+c.views, 0);
-
-  container.innerHTML = `
-    <div class="stats-row">
+  // Global stats row
+  const statsHtml = `
+    <div class="stats-row" style="margin-bottom:20px;">
       <div class="stat-card red">
         <div class="stat-icon">📺</div>
-        <div class="stat-value">${channels.length}</div>
+        <div class="stat-value">${globalTop.length}</div>
         <div class="stat-label">UNIQUE CHANNELS</div>
-        <div class="stat-change">${pool.length} video${pool.length!==1?'s':''} analysed</div>
+        <div class="stat-change">${pool.length} videos analysed</div>
       </div>
       <div class="stat-card gold">
         <div class="stat-icon">🏆</div>
-        <div class="stat-value" style="font-size:16px;letter-spacing:0;">${(channels[0]?.name||'–').substring(0,14)}</div>
+        <div class="stat-value" style="font-size:15px;letter-spacing:0;">${(globalTop[0]?.name||'–').substring(0,14)}</div>
         <div class="stat-label">#1 CHANNEL</div>
-        <div class="stat-change">${formatNum(channels[0]?.views||0)} views</div>
+        <div class="stat-change">${formatNum(globalTop[0]?.totalViews||0)} views</div>
       </div>
       <div class="stat-card green">
         <div class="stat-icon">👁️</div>
-        <div class="stat-value">${formatNum(total)}</div>
+        <div class="stat-value">${formatNum(totalViews)}</div>
         <div class="stat-label">TOTAL VIEWS</div>
         <div class="stat-change">Across all channels</div>
       </div>
       <div class="stat-card blue">
-        <div class="stat-icon">📊</div>
-        <div class="stat-value">${(pool.length / Math.max(channels.length,1)).toFixed(1)}</div>
-        <div class="stat-label">AVG VIDEOS/CHANNEL</div>
-        <div class="stat-change">In current filter</div>
+        <div class="stat-icon">📂</div>
+        <div class="stat-value">${nonEmptyCats.length}</div>
+        <div class="stat-label">ACTIVE CATEGORIES</div>
+        <div class="stat-change">With trending content</div>
       </div>
-    </div>
-    <div class="grid-two">
+    </div>`;
+
+  // Global top 10 + chart
+  const globalTop10Html = `
+    <div style="display:grid;grid-template-columns:1.1fr .9fr;gap:16px;margin-bottom:20px;">
       <div class="panel">
-        <div class="panel-header"><div class="panel-title">🏆 TOP CHANNELS BY VIEWS</div></div>
-        <div class="panel-body">
-          ${channels.slice(0, 15).map((ch, i) => `
-            <div class="channel-item">
-              <div class="channel-rank ${i<3?'gold':''}">${i<3?['🥇','🥈','🥉'][i]:i+1}</div>
-              <div class="channel-icon">${ch.name[0]?.toUpperCase()||'?'}</div>
-              <div class="channel-info">
-                <div class="channel-name">${escHtml(ch.name)}</div>
-                <div class="channel-videos">
-                  ${ch.videos ? `${ch.videos} video${ch.videos>1?'s':''}` : ''}${ch.videos&&ch.shorts?' · ':''}${ch.shorts ? `${ch.shorts} short${ch.shorts>1?'s':''}` : ''}
+        <div class="panel-header"><div class="panel-title">🏆 GLOBAL TOP 10 CHANNELS</div><div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;">${typeLabel}</div></div>
+        <div class="panel-body" style="padding:0;">
+          ${globalTop.slice(0,10).map((ch,i) => {
+            const engRate = ch.totalViews>0 ? ((ch.totalLikes/ch.totalViews)*100).toFixed(2) : '0.00';
+            const shareW  = totalViews>0 ? (ch.totalViews/totalViews*100).toFixed(1) : '0';
+            const medal   = i<3 ? ['🥇','🥈','🥉'][i] : '';
+            const initials= ch.name.split(' ').map(w=>w[0]).join('').toUpperCase().substring(0,2);
+            const avatarBg= CHART_COLORS[i%CHART_COLORS.length];
+            return `
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.04);
+                transition:background .15s;" onmouseover="this.style.background='rgba(229,19,31,.04)'" onmouseout="this.style.background='transparent'"
+                onclick="showChannelVideos('${escHtml(ch.name).replace(/'/g,"\\'")}',${JSON.stringify(ch.videos).replace(/</g,'\\u003c')})">
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;width:28px;text-align:center;color:${i<3?'#FFD700':'var(--dim)'};">${medal||i+1}</div>
+                <div style="width:36px;height:36px;border-radius:50%;background:${avatarBg};display:flex;align-items:center;justify-content:center;
+                  font-family:'Bebas Neue',sans-serif;font-size:14px;color:#fff;flex-shrink:0;">${initials}</div>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(ch.name)}</div>
+                  <div style="display:flex;gap:8px;margin-top:3px;align-items:center;">
+                    <div style="flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;">
+                      <div style="height:100%;width:${shareW}%;background:${avatarBg};border-radius:2px;"></div>
+                    </div>
+                    <span style="font-size:9px;color:var(--muted);font-family:'Space Mono',monospace;flex-shrink:0;">${shareW}%</span>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <div class="channel-views">${formatNum(ch.views)}</div>
-                <div style="font-size:10px;color:var(--muted);text-align:right;">👍 ${formatNum(ch.likes)}</div>
-              </div>
-            </div>
-          `).join('')}
+                <div style="text-align:right;flex-shrink:0;">
+                  <div style="font-family:'Space Mono',monospace;font-size:12px;color:var(--red);">${formatNum(ch.totalViews)}</div>
+                  <div style="font-size:10px;color:${engRate>=3?'var(--green)':engRate>=1?'#FF9800':'var(--muted)'};margin-top:2px;">${engRate}% eng</div>
+                </div>
+              </div>`;
+          }).join('')}
         </div>
       </div>
       <div class="panel">
-        <div class="panel-header"><div class="panel-title">📊 TOP 8 CHANNELS — VIEWS</div></div>
-        <div class="panel-body">
-          <div class="chart-container"><canvas id="channelChart"></canvas></div>
-        </div>
+        <div class="panel-header"><div class="panel-title">📊 TOP 10 — VIEWS SHARE</div></div>
+        <div class="panel-body"><div class="chart-container"><canvas id="globalChannelChart"></canvas></div></div>
       </div>
+    </div>`;
+
+  // Per-category sections
+  const catSectionsHtml = nonEmptyCats.map(cat => {
+    const catVideos = pool.filter(v=>String(v.categoryId)===String(cat.id));
+    const catChanMap = {};
+    catVideos.forEach(v=>{
+      if(!catChanMap[v.channel]) catChanMap[v.channel]={name:v.channel,channelId:v.channelId,videos:[],totalViews:0,totalLikes:0};
+      catChanMap[v.channel].videos.push(v);
+      catChanMap[v.channel].totalViews += v.views;
+      catChanMap[v.channel].totalLikes += v.likes;
+    });
+    const catChans = Object.values(catChanMap).sort((a,b)=>b.totalViews-a.totalViews).slice(0,10);
+    if(!catChans.length) return '';
+
+    const catMaxViews = catChans[0]?.totalViews||1;
+    const topCatVideo = [...catVideos].sort((a,b)=>b.views-a.views)[0];
+
+    return `
+      <div class="panel" style="margin-bottom:16px;">
+        <div class="panel-header" style="background:rgba(229,19,31,.05);border-bottom:2px solid rgba(229,19,31,.2);">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:22px;">${cat.icon}</span>
+            <div>
+              <div class="panel-title" style="font-size:14px;">${cat.name.toUpperCase()} — TOP ${catChans.length} CHANNELS</div>
+              <div style="font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:.5px;">${catVideos.length} videos · ${formatNum(catVideos.reduce((s,v)=>s+v.views,0))} total views</div>
+            </div>
+          </div>
+          ${topCatVideo ? `<div style="margin-left:auto;text-align:right;display:flex;align-items:center;gap:10px;">
+            <div>
+              <div style="font-size:9px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:.5px;margin-bottom:2px;">🔥 TOP VIDEO</div>
+              <a href="${topCatVideo.url}" target="_blank" style="font-size:11px;color:var(--red);text-decoration:none;display:block;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(topCatVideo.title)}</a>
+            </div>
+          </div>` : ''}
+        </div>
+        <div class="panel-body" style="padding:0;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid var(--border);">
+            <div style="padding:8px 16px;font-size:9px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:.5px;border-right:1px solid var(--border);">CHANNEL / TRENDING CONTENT</div>
+            <div style="padding:8px 16px;font-size:9px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:.5px;display:flex;gap:32px;">
+              <span>VIEWS</span><span>LIKES</span><span>VIDEOS</span><span>ENG%</span>
+            </div>
+          </div>
+          ${catChans.map((ch,i)=>{
+            const eng = ch.totalViews>0?((ch.totalLikes/ch.totalViews)*100).toFixed(2):'0.00';
+            const barW = (ch.totalViews/catMaxViews*100).toFixed(1);
+            const topV = ch.videos.sort((a,b)=>b.views-a.views)[0];
+            const avatarBg = CHART_COLORS[i%CHART_COLORS.length];
+            const initials  = ch.name.split(' ').map(w=>w[0]).join('').toUpperCase().substring(0,2);
+            return `
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid rgba(255,255,255,.03);
+                transition:background .15s;" onmouseover="this.style.background='rgba(229,19,31,.03)'" onmouseout="this.style.background='transparent'">
+                <div style="padding:12px 16px;border-right:1px solid rgba(255,255,255,.04);">
+                  <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+                    <div style="width:30px;height:30px;border-radius:50%;background:${avatarBg};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:12px;color:#fff;flex-shrink:0;">${initials}</div>
+                    <div>
+                      <div style="font-size:13px;font-weight:600;color:var(--text);">${escHtml(ch.name)}</div>
+                      <div style="height:2px;width:${barW}%;background:${avatarBg};border-radius:1px;margin-top:4px;"></div>
+                    </div>
+                    <span style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--dim);margin-left:auto;">${i<3?['🥇','🥈','🥉'][i]:i+1}</span>
+                  </div>
+                  ${topV ? `<div style="margin-left:40px;">
+                    <a href="${topV.url}" target="_blank" style="font-size:11px;color:rgba(255,255,255,.55);text-decoration:none;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px;" 
+                      title="${escHtml(topV.title)}">▶ ${escHtml(topV.title)}</a>
+                    <div style="font-size:10px;color:var(--muted);margin-top:2px;">${topV.duration} · ${formatNum(topV.views)} views</div>
+                  </div>` : ''}
+                </div>
+                <div style="padding:12px 16px;display:flex;align-items:center;gap:0;">
+                  <div style="flex:1;font-family:'Space Mono',monospace;font-size:12px;color:var(--red);">${formatNum(ch.totalViews)}</div>
+                  <div style="flex:1;font-family:'Space Mono',monospace;font-size:12px;color:#FF9800;">${formatNum(ch.totalLikes)}</div>
+                  <div style="flex:1;font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);">${ch.videos.length}</div>
+                  <div style="flex:1;font-family:'Space Mono',monospace;font-size:12px;color:${parseFloat(eng)>=3?'var(--green)':parseFloat(eng)>=1?'#FF9800':'var(--muted)'};">${eng}%</div>
+                </div>
+              </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }).join('');
+
+  content.innerHTML = `
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;">
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;">📺 TOP CHANNELS</div>
+        <div style="font-size:12px;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:1px;margin-top:3px;">${typeLabel} · ${STATE.region} · ${pool.length} videos</div>
+      </div>
+      <button onclick="renderChannels()" style="padding:8px 18px;border:1px solid var(--border);background:var(--card);color:var(--muted);border-radius:8px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;"
+        onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+        ⚙ Change Period
+      </button>
     </div>
+    ${statsHtml}
+    ${globalTop10Html}
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--muted);margin-bottom:14px;">BY CATEGORY</div>
+    ${catSectionsHtml || '<div style="text-align:center;padding:40px;color:var(--muted);font-size:13px;">No category data available.</div>'}
   `;
 
-  setTimeout(() => {
-    const ctx = document.getElementById('channelChart')?.getContext('2d');
-    if (!ctx) return;
-    const top8 = channels.slice(0, 8);
-    const durType = document.getElementById('chartDurFilter')?.value || 'videos';
-    const barColor = durType === 'shorts' ? '#F97316' : durType === 'all' ? '#A855F7' : '#FF1F1F';
+  // Draw global channel chart
+  setTimeout(()=>{
+    const ctx = document.getElementById('globalChannelChart')?.getContext('2d');
+    if(!ctx) return;
+    const top10 = globalTop.slice(0,10);
+    const totalV = top10.reduce((s,c)=>s+c.totalViews,0);
     new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: top8.map(c => c.name.substring(0, 14)),
-        datasets: [{
-          label: 'Views',
-          data: top8.map(c => c.views),
-          backgroundColor: barColor + 'B3',
-          borderColor: barColor,
-          borderWidth: 1, borderRadius: 4
-        }]
+      type:'doughnut',
+      data:{
+        labels:top10.map(c=>c.name.substring(0,16)),
+        datasets:[{data:top10.map(c=>c.totalViews),backgroundColor:CHART_COLORS.slice(0,10),borderWidth:2,borderColor:'#111',hoverOffset:6}]
       },
-      options: {
-        responsive: true, maintainAspectRatio: false, indexAxis: 'y',
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' ' + formatNum(c.raw) + ' views' } } },
-        scales: {
-          x: { grid: { color: '#1E1E1E' }, ticks: { color: '#555', callback: v => formatNum(v) } },
-          y: { grid: { color: '#1E1E1E' }, ticks: { color: '#888', font: { size: 11 } } }
+      options:{
+        responsive:true,maintainAspectRatio:false,cutout:'55%',
+        plugins:{
+          legend:{position:'right',labels:{color:'#777',font:{size:10},boxWidth:9,padding:5}},
+          tooltip:{backgroundColor:'#1C1C1C',borderColor:'#333',borderWidth:1,titleColor:'#F0F0F0',bodyColor:'#888',
+            callbacks:{label:c=>`${formatNum(c.raw)} views (${totalV>0?(c.raw/totalV*100).toFixed(1):0}%)`}}
         }
       }
     });
-  }, 50);
+  },50);
 }
+
+// Show modal with all videos for a channel
+function showChannelVideos(name, videos) {
+  const sorted = [...videos].sort((a,b)=>b.views-a.views).slice(0,20);
+  const overlay = document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.88);backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:20px;';
+  overlay.innerHTML=`
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;width:90%;max-width:660px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;">
+      <div style="padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;">📺 ${escHtml(name)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">${sorted.length} trending videos</div>
+        </div>
+        <button onclick="this.closest('[style]').remove()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 8px;">✕</button>
+      </div>
+      <div style="overflow-y:auto;flex:1;">
+        ${sorted.map((v,i)=>`
+          <div style="display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s;"
+            onmouseover="this.style.background='rgba(229,19,31,.04)'" onmouseout="this.style.background='transparent'">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--dim);width:24px;">${i+1}</div>
+            <img src="${v.thumbnail}" alt="" style="width:80px;height:45px;object-fit:cover;border-radius:6px;flex-shrink:0;background:var(--dark);" onerror="this.style.display='none'">
+            <div style="flex:1;min-width:0;">
+              <a href="${v.url}" target="_blank" style="font-size:13px;font-weight:600;color:var(--text);text-decoration:none;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(v.title)}</a>
+              <div style="font-size:11px;color:var(--muted);margin-top:3px;">${v.duration} · ${new Date(v.publishedAt).toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'})}</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0;">
+              <div style="font-family:'Space Mono',monospace;font-size:12px;color:var(--red);">${formatNum(v.views)}</div>
+              <div style="font-size:10px;color:var(--muted);">👍 ${formatNum(v.likes)}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.remove();});
+  document.body.appendChild(overlay);
+}
+
 
 // ─── BOOKMARKS VIEW ───
 function renderBookmarks() {
