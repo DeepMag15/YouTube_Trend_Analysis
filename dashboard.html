@@ -1363,8 +1363,8 @@ async function loadTrending() {
       }
     }
     // Sort both by views descending, re-rank
-    STATE.videos.sort((a,b) => b.views - a.views).forEach((v,i) => v.rank = i+1);
-    STATE.shorts.sort((a,b) => b.views - a.views).forEach((v,i) => v.rank = i+1);
+    STATE.videos.sort((a,b) => b.trendingScore - a.trendingScore).forEach((v,i) => v.rank = i+1);
+    STATE.shorts.sort((a,b) => b.trendingScore - a.trendingScore).forEach((v,i) => v.rank = i+1);
 
     document.getElementById('trendingCount').textContent =
       STATE.videos.length + STATE.shorts.length || 0;
@@ -1410,26 +1410,35 @@ function mapVideo(item, i) {
   const sn   = item.snippet       || {};
   const st   = item.statistics    || {};
   const cd   = item.contentDetails|| {};
-  const tn   = sn.thumbnails      || {};
 
-  // Pick highest-quality thumbnail available
-  const thumb = (tn.maxres || tn.standard || tn.high || tn.medium || tn.default || {}).url || '';
+  const views = parseInt(st.viewCount || 0);
+  const likes = parseInt(st.likeCount || 0);
+
+  // 🧠 Calculate time since published (in hours)
+  const published = new Date(sn.publishedAt || Date.now());
+  const now = new Date();
+  const hours = Math.max(1, (now - published) / (1000 * 60 * 60));
+
+  // 🔥 TRENDING SCORE FORMULA
+  const trendingScore = (views * 0.6 + likes * 0.4) / hours;
 
   return {
-    id:          item.id,
-    title:       sn.title        || '(no title)',
-    channel:     sn.channelTitle || '',
-    channelId:   sn.channelId    || '',
-    thumbnail:   thumb,
-    views:       parseInt(st.viewCount    || 0),
-    likes:       parseInt(st.likeCount    || 0),
-    comments:    parseInt(st.commentCount || 0),
-    duration:    formatDuration(cd.duration),
+    id: item.id,
+    title: sn.title || '(no title)',
+    channel: sn.channelTitle || '',
+    thumbnail: (sn.thumbnails?.high || {}).url || '',
+    views,
+    likes,
+    comments: parseInt(st.commentCount || 0),
+    duration: formatDuration(cd.duration),
     durationSec: parseDurationSec(cd.duration),
-    categoryId:  sn.categoryId   || '',
-    publishedAt: sn.publishedAt  || '',
-    url:         `https://www.youtube.com/watch?v=${item.id}`,
-    rank:        i + 1,
+    publishedAt: sn.publishedAt,
+    url: `https://www.youtube.com/watch?v=${item.id}`,
+
+    // ⭐ ADD THIS
+    trendingScore: trendingScore,
+
+    rank: i + 1,
   };
 }
 
