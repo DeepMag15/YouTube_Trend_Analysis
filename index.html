@@ -6,6 +6,13 @@
 <title>TrendPulse — YouTube Trends Analyzer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://ztvoonnsefhvplngayhw.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_WK-cS6XSK8Ng1Tp_0gpqbw_JMzXlpg8';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+</script>
+
 <style>
 :root{
   --red:#FF1F1F;--red-dim:rgba(255,31,31,.12);--red-glow:rgba(255,31,31,.25);
@@ -1964,13 +1971,9 @@ const obs=new IntersectionObserver(entries=>{
 document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
 
 // ══════════════════════════════════════
-// AUTH
+// AUTH — Supabase Integration
 // ══════════════════════════════════════
-const ADMIN_EMAIL='deepmagar505@gmail.com';
-const ADMIN_PASS='Deep#1234';
-function getUsers(){return JSON.parse(localStorage.getItem('tp_users_db')||'{}');}
-function saveUsers(db){localStorage.setItem('tp_users_db',JSON.stringify(db));}
-function openModal(t='login'){document.getElementById('authModal').classList.add('active');switchTab(t);}
+async function openModal(t='login'){document.getElementById('authModal').classList.add('active');switchTab(t);}
 function closeModal(){document.getElementById('authModal').classList.remove('active');}
 function handleModalClick(e){if(e.target===document.getElementById('authModal'))closeModal();}
 function switchTab(tab){
@@ -1981,46 +1984,62 @@ function switchTab(tab){
   document.getElementById('modalSub').textContent=l?'Sign in to access your trend dashboard':'Create a free account in seconds';
 }
 function showMsg(el,msg,type){el.innerHTML=`<div class="msg ${type}">${msg}</div>`;}
-function handleLogin(){
+
+async function handleLogin(){
   const email=document.getElementById('loginEmail').value.trim().toLowerCase();
   const pass=document.getElementById('loginPassword').value;
   const el=document.getElementById('loginMsg');
   if(!email||!pass){showMsg(el,'Please fill in all fields','error');return;}
-  if(email===ADMIN_EMAIL.toLowerCase()&&pass===ADMIN_PASS){
-    localStorage.setItem('tp_user',JSON.stringify({email,username:'Admin',role:'admin'}));
-    localStorage.setItem('tp_token','admin_'+Date.now());
-    showMsg(el,'Welcome, Admin! Redirecting...','success');
-    setTimeout(()=>window.location.href='admin.html',900);return;
-  }
-  const db=getUsers();
-  if(!db[email]){showMsg(el,'No account found. Please sign up first.','error');return;}
-  if(db[email].password!==pass){showMsg(el,'Incorrect password.','error');return;}
-  localStorage.setItem('tp_user',JSON.stringify({email,username:db[email].username,role:'user'}));
-  localStorage.setItem('tp_token','user_'+Date.now());
-  showMsg(el,'Welcome back! Redirecting...','success');
-  setTimeout(()=>window.location.href='dashboard.html',800);
+  
+  showMsg(el,'Signing in...','info');
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if(error){showMsg(el,error.message,'error');return;}
+
+  // Fetch profile to get role
+  const { data: profile, error: pError } = await sb.from('profiles').select('*').eq('id', data.user.id).single();
+  if(pError){showMsg(el,'Session active but profile failed: '+pError.message,'error');return;}
+
+  const role = profile.role || 'user';
+  localStorage.setItem('tp_user', JSON.stringify({ email, username: profile.username, role: role }));
+  localStorage.setItem('tp_token', data.session.access_token);
+  
+  showMsg(el,`Welcome back, ${profile.username}! Redirecting...`,'success');
+  setTimeout(()=>window.location.href= (role==='admin'?'admin.html':'dashboard.html'), 800);
 }
-function handleSignup(){
+
+async function handleSignup(){
   const username=document.getElementById('signupUsername').value.trim();
   const email=document.getElementById('signupEmail').value.trim().toLowerCase();
   const pass=document.getElementById('signupPassword').value;
   const el=document.getElementById('signupMsg');
   if(!username||!email||!pass){showMsg(el,'Please fill in all fields','error');return;}
   if(pass.length<8){showMsg(el,'Password must be at least 8 characters','error');return;}
-  if(email===ADMIN_EMAIL.toLowerCase()){showMsg(el,'This email is not available.','error');return;}
-  const db=getUsers();
-  if(db[email]){showMsg(el,'An account already exists with this email.','error');return;}
-  db[email]={username,password:pass,joinedAt:new Date().toISOString(),calls:{}};
-  saveUsers(db);
-  localStorage.setItem('tp_user',JSON.stringify({email,username,role:'user'}));
-  localStorage.setItem('tp_token','user_'+Date.now());
-  showMsg(el,'Account created! Redirecting...','success');
-  setTimeout(()=>window.location.href='dashboard.html',1000);
+
+  showMsg(el,'Creating account...','info');
+  const { data, error } = await sb.auth.signUp({ 
+    email, 
+    password: pass,
+    options: { data: { username: username } }
+  });
+  if(error){showMsg(el,error.message,'error');return;}
+
+  showMsg(el,'Account created! Directing to dashboard...','success');
+  // Trigger on_auth_user_created handles profile creation
+  localStorage.setItem('tp_user', JSON.stringify({ email, username, role: 'user' }));
+  localStorage.setItem('tp_token', data.session?.access_token || 'pending');
+  setTimeout(()=>window.location.href='dashboard.html', 1000);
 }
-if(localStorage.getItem('tp_token')){
-  const u=JSON.parse(localStorage.getItem('tp_user')||'{}');
-  document.getElementById('navActions').innerHTML=`<a href="${u.role==='admin'?'admin.html':'dashboard.html'}" class="btn-red">→ Dashboard</a>`;
+
+async function checkSession() {
+  const { data: { session } } = await sb.auth.getSession();
+  if(session) {
+    const { data: profile } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
+    if(profile) {
+      document.getElementById('navActions').innerHTML=`<a href="${profile.role==='admin'?'admin.html':'dashboard.html'}" class="btn-red">→ Dashboard</a>`;
+    }
+  }
 }
+checkSession();
 
 // ── Init dome last so page renders fast
 buildDomeCats();
