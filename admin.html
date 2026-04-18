@@ -1,672 +1,1477 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Panel — TrendPulse</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<style>
-  :root {
-    --red:#FF1F1F; --red-dark:#CC0000;
-    --black:#0A0A0A; --dark:#0F0F0F;
-    --card:#141414; --card2:#1A1A1A;
-    --border:#222222; --text:#F0F0F0;
-    --muted:#666; --gold:#FFD700;
-    --green:#00D46A; --blue:#3B82F6;
-    --orange:#F97316; --purple:#A855F7;
-    --sidebar:260px;
-  }
-  *{margin:0;padding:0;box-sizing:border-box;}
-  html,body{height:100%;}
-  body{
-    font-family:'DM Sans',sans-serif;
-    background:var(--black);color:var(--text);
-    display:flex;height:100vh;overflow:hidden;
-  }
-  ::-webkit-scrollbar{width:4px;height:4px;}
-  ::-webkit-scrollbar-track{background:var(--dark);}
-  ::-webkit-scrollbar-thumb{background:#2a2a2a;border-radius:2px;}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel — TrendPulse</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://ztvoonnsefhvplngayhw.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_WK-cS6XSK8Ng1Tp_0gpqbw_JMzXlpg8';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  </script>
+  <style>
+    :root {
+      --red: #FF1F1F;
+      --red-dark: #CC0000;
+      --black: #0A0A0A;
+      --dark: #0F0F0F;
+      --card: #141414;
+      --card2: #1A1A1A;
+      --border: #222222;
+      --text: #F0F0F0;
+      --muted: #666;
+      --gold: #FFD700;
+      --green: #00D46A;
+      --blue: #3B82F6;
+      --orange: #F97316;
+      --purple: #A855F7;
+      --sidebar: 260px;
+    }
 
-  /* ── SIDEBAR ── */
-  .sidebar{
-    width:var(--sidebar);background:var(--dark);
-    border-right:1px solid var(--border);
-    display:flex;flex-direction:column;
-    flex-shrink:0;overflow-y:auto;z-index:100;
-  }
-  .sidebar-logo{
-    padding:22px 20px;border-bottom:1px solid var(--border);
-    display:flex;align-items:center;gap:10px;text-decoration:none;
-  }
-  .logo-dot{width:9px;height:9px;background:var(--red);border-radius:50%;animation:blink 1.4s infinite;}
-  @keyframes blink{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(1.3);}}
-  .logo-text{font-family:'Bebas Neue',sans-serif;font-size:21px;letter-spacing:3px;color:var(--text);}
-  .logo-text span{color:var(--red);}
-  .admin-badge{
-    margin-left:auto;background:rgba(168,85,247,.15);
-    border:1px solid rgba(168,85,247,.3);
-    color:#A855F7;font-size:9px;font-family:'Space Mono',monospace;
-    padding:3px 8px;border-radius:4px;letter-spacing:1px;
-  }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-  .sb-section{padding:18px 14px 6px;}
-  .sb-label{
-    font-family:'Space Mono',monospace;font-size:9px;
-    letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;
-    padding:0 6px;
-  }
-  .nav-item{
-    display:flex;align-items:center;gap:10px;
-    padding:9px 12px;border-radius:8px;
-    color:var(--muted);font-size:13px;font-weight:500;
-    cursor:pointer;transition:all .18s;margin-bottom:1px;
-    border:none;background:none;width:100%;text-align:left;
-    text-decoration:none;
-  }
-  .nav-item:hover{background:var(--card2);color:var(--text);}
-  .nav-item.active{background:rgba(255,31,31,.1);color:var(--text);border-left:2px solid var(--red);}
-  .nav-item .ni{width:16px;text-align:center;font-size:14px;}
-  .nav-pill{
-    margin-left:auto;font-size:10px;font-weight:700;
-    padding:2px 7px;border-radius:100px;
-    font-family:'Space Mono',monospace;
-  }
-  .pill-red{background:rgba(255,31,31,.2);color:var(--red);}
-  .pill-green{background:rgba(0,212,106,.15);color:var(--green);}
-  .pill-orange{background:rgba(249,115,22,.15);color:var(--orange);}
+    html,
+    body {
+      height: 100%;
+    }
 
-  .sb-divider{height:1px;background:var(--border);margin:8px 14px;}
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--black);
+      color: var(--text);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
 
-  .sb-user{
-    margin-top:auto;padding:14px;border-top:1px solid var(--border);
-    display:flex;align-items:center;gap:10px;
-  }
-  .user-av{
-    width:34px;height:34px;background:var(--purple);
-    border-radius:50%;display:flex;align-items:center;justify-content:center;
-    font-weight:700;font-size:13px;flex-shrink:0;
-  }
-  .user-inf{flex:1;min-width:0;}
-  .user-nm{font-size:12px;font-weight:600;}
-  .user-role{font-size:10px;color:var(--purple);}
-  .logout-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:15px;padding:4px;border-radius:4px;transition:color .2s;}
-  .logout-btn:hover{color:var(--red);}
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
 
-  /* ── MAIN ── */
-  .main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+    ::-webkit-scrollbar-track {
+      background: var(--dark);
+    }
 
-  .topbar{
-    padding:14px 28px;background:var(--dark);
-    border-bottom:1px solid var(--border);
-    display:flex;align-items:center;gap:14px;flex-shrink:0;
-  }
-  .topbar-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;flex:1;}
-  .topbar-time{
-    font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);
-    background:var(--card);padding:6px 12px;border-radius:6px;border:1px solid var(--border);
-  }
-  .tb-btn{
-    background:var(--card);border:1px solid var(--border);
-    color:var(--muted);padding:7px 14px;border-radius:7px;
-    cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;
-    transition:all .2s;display:flex;align-items:center;gap:6px;
-  }
-  .tb-btn:hover{color:var(--text);border-color:var(--red);}
-  .tb-btn.danger:hover{border-color:var(--red);color:var(--red);}
-  .tb-btn.primary{background:var(--red);border-color:var(--red);color:white;}
-  .tb-btn.primary:hover{background:var(--red-dark);}
+    ::-webkit-scrollbar-thumb {
+      background: #2a2a2a;
+      border-radius: 2px;
+    }
 
-  .content{flex:1;overflow-y:auto;padding:24px 28px;}
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar);
+      background: var(--dark);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      overflow-y: auto;
+      z-index: 100;
+    }
 
-  /* ── CARDS ── */
-  .stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px;}
-  .stat-card{
-    background:var(--card);border:1px solid var(--border);
-    border-radius:10px;padding:18px 18px;
-    position:relative;overflow:hidden;
-  }
-  .stat-glow{
-    position:absolute;top:-30px;right:-30px;
-    width:80px;height:80px;border-radius:50%;
-    opacity:.06;
-  }
-  .stat-icon-wrap{
-    width:36px;height:36px;border-radius:8px;
-    display:flex;align-items:center;justify-content:center;
-    font-size:16px;margin-bottom:12px;
-  }
-  .stat-num{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;line-height:1;}
-  .stat-lbl{font-size:11px;color:var(--muted);margin-top:3px;letter-spacing:.4px;}
-  .stat-delta{font-size:10px;margin-top:5px;font-family:'Space Mono',monospace;}
-  .delta-up{color:var(--green);}
-  .delta-down{color:var(--red);}
+    .sidebar-logo {
+      padding: 22px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
 
-  /* ── PANELS ── */
-  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;}
-  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:18px;}
-  .grid-full{margin-bottom:18px;}
+    .logo-dot {
+      width: 9px;
+      height: 9px;
+      background: var(--red);
+      border-radius: 50%;
+      animation: blink 1.4s infinite;
+    }
 
-  .panel{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
-  .ph{
-    padding:14px 18px;border-bottom:1px solid var(--border);
-    display:flex;align-items:center;justify-content:space-between;
-  }
-  .pt{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1.5px;display:flex;align-items:center;gap:8px;}
-  .pb{padding:18px;}
+    @keyframes blink {
 
-  /* ── API KEY CARDS ── */
-  .api-keys-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
-  .api-key-card{
-    background:var(--card2);border:1px solid var(--border);
-    border-radius:10px;padding:20px;position:relative;overflow:hidden;
-    transition:border-color .2s;
-  }
-  .api-key-card.active-key{border-color:var(--green);}
-  .api-key-card.warn-key{border-color:var(--orange);}
-  .api-key-card.dead-key{border-color:#333;opacity:.6;}
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
 
-  .key-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
-  .key-priority{
-    font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;
-    padding:3px 10px;border-radius:4px;
-  }
-  .key-priority.p1{background:rgba(0,212,106,.1);color:var(--green);}
-  .key-priority.p2{background:rgba(59,130,246,.1);color:var(--blue);}
-  .key-priority.p3{background:rgba(249,115,22,.1);color:var(--orange);}
+      50% {
+        opacity: .5;
+        transform: scale(1.3);
+      }
+    }
 
-  .key-status-dot{
-    width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:2px;
-  }
-  .dot-green{background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 2s infinite;}
-  .dot-orange{background:var(--orange);}
-  .dot-red{background:var(--red);}
-  .dot-grey{background:#444;}
+    .logo-text {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 21px;
+      letter-spacing: 3px;
+      color: var(--text);
+    }
 
-  .key-name{font-size:14px;font-weight:600;margin-bottom:4px;}
-  .key-value{
-    font-family:'Space Mono',monospace;font-size:10px;
-    color:var(--muted);background:var(--black);
-    padding:7px 10px;border-radius:6px;border:1px solid var(--border);
-    margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;
-    word-break:break-all;
-  }
-  .copy-btn{
-    background:none;border:none;color:var(--muted);cursor:pointer;
-    font-size:13px;padding:2px 6px;border-radius:4px;transition:color .2s;flex-shrink:0;
-  }
-  .copy-btn:hover{color:var(--text);}
+    .logo-text span {
+      color: var(--red);
+    }
 
-  .quota-block{margin-bottom:14px;}
-  .quota-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
-  .quota-label{font-size:11px;color:var(--muted);}
-  .quota-nums{font-family:'Space Mono',monospace;font-size:11px;}
-  .quota-used{color:var(--text);}
-  .quota-total{color:var(--muted);}
-  .quota-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
-  .quota-fill{height:100%;border-radius:3px;transition:width .8s ease;}
-  .fill-green{background:var(--green);}
-  .fill-orange{background:var(--orange);}
-  .fill-red{background:var(--red);}
+    .admin-badge {
+      margin-left: auto;
+      background: rgba(168, 85, 247, .15);
+      border: 1px solid rgba(168, 85, 247, .3);
+      color: #A855F7;
+      font-size: 9px;
+      font-family: 'Space Mono', monospace;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 1px;
+    }
 
-  .key-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px;}
-  .km-item{background:var(--black);border:1px solid var(--border);border-radius:6px;padding:8px 10px;}
-  .km-val{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;}
-  .km-lbl{font-size:10px;color:var(--muted);margin-top:2px;}
+    .sb-section {
+      padding: 18px 14px 6px;
+    }
 
-  .key-actions{display:flex;gap:8px;}
-  .key-btn{
-    flex:1;padding:7px;font-size:11px;font-family:'DM Sans',sans-serif;
-    border-radius:6px;cursor:pointer;transition:all .2s;text-align:center;
-    display:flex;align-items:center;justify-content:center;gap:4px;
-  }
-  .key-btn.edit{background:transparent;border:1px solid var(--border);color:var(--muted);}
-  .key-btn.edit:hover{border-color:var(--blue);color:var(--blue);}
-  .key-btn.rotate{background:transparent;border:1px solid var(--border);color:var(--muted);}
-  .key-btn.rotate:hover{border-color:var(--green);color:var(--green);}
-  .key-btn.disable{background:transparent;border:1px solid var(--border);color:var(--muted);}
-  .key-btn.disable:hover{border-color:var(--red);color:var(--red);}
+    .sb-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      padding: 0 6px;
+    }
 
-  .active-indicator{
-    position:absolute;top:0;right:0;
-    background:var(--green);color:var(--black);
-    font-size:9px;font-family:'Space Mono',monospace;font-weight:700;
-    padding:4px 10px;border-radius:0 10px 0 8px;letter-spacing:1px;
-  }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .18s;
+      margin-bottom: 1px;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      text-decoration: none;
+    }
 
-  /* ── USAGE CHART ── */
-  .chart-container{height:220px;position:relative;}
-  .chart-sm{height:160px;}
+    .nav-item:hover {
+      background: var(--card2);
+      color: var(--text);
+    }
 
-  /* ── USAGE LOG TABLE ── */
-  .log-table{width:100%;border-collapse:collapse;}
-  .log-table th{
-    font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;
-    color:var(--muted);text-transform:uppercase;padding:10px 14px;
-    text-align:left;border-bottom:1px solid var(--border);
-    background:var(--dark);
-  }
-  .log-table td{
-    padding:11px 14px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.03);
-    vertical-align:middle;
-  }
-  .log-table tr:hover td{background:rgba(255,255,255,.015);}
-  .log-table tr:last-child td{border-bottom:none;}
-  .status-badge{
-    font-size:10px;font-family:'Space Mono',monospace;
-    padding:3px 10px;border-radius:4px;
-  }
-  .badge-ok{background:rgba(0,212,106,.1);color:var(--green);}
-  .badge-warn{background:rgba(249,115,22,.12);color:var(--orange);}
-  .badge-err{background:rgba(255,31,31,.1);color:var(--red);}
-  .badge-skip{background:rgba(255,255,255,.05);color:var(--muted);}
+    .nav-item.active {
+      background: rgba(255, 31, 31, .1);
+      color: var(--text);
+      border-left: 2px solid var(--red);
+    }
 
-  /* ── USERS TABLE ── */
-  .users-table{width:100%;border-collapse:collapse;}
-  .users-table th{
-    font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;
-    color:var(--muted);text-transform:uppercase;padding:10px 14px;
-    text-align:left;border-bottom:1px solid var(--border);
-    background:var(--dark);
-  }
-  .users-table td{
-    padding:11px 14px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.03);
-    vertical-align:middle;
-  }
-  .users-table tr:hover td{background:rgba(255,255,255,.02);}
-  .users-table tr:last-child td{border-bottom:none;}
-  .u-av{
-    width:28px;height:28px;border-radius:50%;
-    display:inline-flex;align-items:center;justify-content:center;
-    font-size:11px;font-weight:700;flex-shrink:0;
-  }
+    .nav-item .ni {
+      width: 16px;
+      text-align: center;
+      font-size: 14px;
+    }
 
-  /* ── ADD KEY MODAL ── */
-  .modal-overlay{
-    position:fixed;inset:0;z-index:9999;
-    background:rgba(0,0,0,.88);backdrop-filter:blur(10px);
-    display:flex;align-items:center;justify-content:center;
-    opacity:0;pointer-events:none;transition:opacity .3s;
-  }
-  .modal-overlay.open{opacity:1;pointer-events:all;}
-  .modal{
-    background:var(--card);border:1px solid var(--border);
-    border-radius:14px;padding:32px;width:90%;max-width:480px;
-    transform:translateY(18px);transition:transform .3s;position:relative;
-  }
-  .modal-overlay.open .modal{transform:translateY(0);}
-  .modal-x{
-    position:absolute;top:18px;right:18px;background:var(--card2);
-    border:1px solid var(--border);color:var(--muted);
-    width:28px;height:28px;border-radius:50%;cursor:pointer;
-    font-size:13px;display:flex;align-items:center;justify-content:center;
-    transition:all .2s;
-  }
-  .modal-x:hover{color:var(--text);}
-  .modal h3{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;margin-bottom:6px;}
-  .modal p.sub{font-size:13px;color:var(--muted);margin-bottom:24px;}
-  .fg{margin-bottom:16px;}
-  .fg label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase;}
-  .fg input,.fg select{
-    width:100%;background:var(--dark);border:1px solid var(--border);
-    color:var(--text);padding:10px 14px;border-radius:8px;
-    font-family:'Space Mono',monospace;font-size:12px;outline:none;
-    transition:border-color .2s;
-  }
-  .fg input:focus,.fg select:focus{border-color:var(--red);}
-  .fg select{font-family:'DM Sans',sans-serif;font-size:13px;}
-  .modal-submit{
-    width:100%;padding:12px;background:var(--red);border:none;
-    color:white;border-radius:8px;font-size:14px;font-weight:600;
-    cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px;
-    transition:background .2s;
-  }
-  .modal-submit:hover{background:var(--red-dark);}
+    .nav-pill {
+      margin-left: auto;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 100px;
+      font-family: 'Space Mono', monospace;
+    }
 
-  /* ── TOAST ── */
-  .toast-wrap{position:fixed;bottom:22px;right:22px;z-index:9999;display:flex;flex-direction:column;gap:8px;}
-  .toast{
-    background:var(--card2);border:1px solid var(--border);
-    border-radius:8px;padding:11px 16px;font-size:12px;
-    display:flex;align-items:center;gap:10px;
-    transform:translateX(110%);transition:transform .3s;
-    min-width:240px;max-width:340px;
-    box-shadow:0 8px 30px rgba(0,0,0,.5);
-  }
-  .toast.show{transform:translateX(0);}
-  .toast.s{border-left:3px solid var(--green);}
-  .toast.e{border-left:3px solid var(--red);}
-  .toast.i{border-left:3px solid var(--blue);}
+    .pill-red {
+      background: rgba(255, 31, 31, .2);
+      color: var(--red);
+    }
 
-  /* ── TIMELINE ── */
-  .timeline{display:flex;flex-direction:column;gap:0;}
-  .tl-item{
-    display:flex;gap:14px;padding:12px 0;
-    border-bottom:1px solid rgba(255,255,255,.03);
-  }
-  .tl-item:last-child{border-bottom:none;}
-  .tl-dot{
-    width:8px;height:8px;border-radius:50%;
-    flex-shrink:0;margin-top:4px;
-  }
-  .tl-line{display:flex;flex-direction:column;flex:1;min-width:0;}
-  .tl-title{font-size:12px;margin-bottom:2px;}
-  .tl-time{font-size:10px;color:var(--muted);font-family:'Space Mono',monospace;}
+    .pill-green {
+      background: rgba(0, 212, 106, .15);
+      color: var(--green);
+    }
 
-  /* ── DONUT LEGEND ── */
-  .donut-legend{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
-  .dl-item{display:flex;align-items:center;gap:8px;font-size:12px;}
-  .dl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-  .dl-name{flex:1;color:var(--muted);}
-  .dl-pct{font-family:'Space Mono',monospace;font-size:11px;}
+    .pill-orange {
+      background: rgba(249, 115, 22, .15);
+      color: var(--orange);
+    }
 
-  /* ── GAUGE ── */
-  .gauge-wrap{display:flex;flex-direction:column;align-items:center;padding:10px 0;}
-  .gauge-num{font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:2px;}
-  .gauge-sub{font-size:11px;color:var(--muted);letter-spacing:.5px;}
+    .sb-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 8px 14px;
+    }
 
-  /* ── RESPONSIVE ── */
-  @media(max-width:1200px){.stats-row{grid-template-columns:repeat(3,1fr);}.api-keys-grid{grid-template-columns:1fr;}}
-  @media(max-width:900px){.sidebar{display:none;}.content{padding:16px;}.grid-2,.grid-3{grid-template-columns:1fr;}}
-</style>
+    .sb-user {
+      margin-top: auto;
+      padding: 14px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-av {
+      width: 34px;
+      height: 34px;
+      background: var(--purple);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .user-inf {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .user-nm {
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .user-role {
+      font-size: 10px;
+      color: var(--purple);
+    }
+
+    .logout-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 15px;
+      padding: 4px;
+      border-radius: 4px;
+      transition: color .2s;
+    }
+
+    .logout-btn:hover {
+      color: var(--red);
+    }
+
+    /* ── MAIN ── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .topbar {
+      padding: 14px 28px;
+      background: var(--dark);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+
+    .topbar-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 2px;
+      flex: 1;
+    }
+
+    .topbar-time {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      background: var(--card);
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .tb-btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 7px 14px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+      transition: all .2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tb-btn:hover {
+      color: var(--text);
+      border-color: var(--red);
+    }
+
+    .tb-btn.danger:hover {
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    .tb-btn.primary {
+      background: var(--red);
+      border-color: var(--red);
+      color: white;
+    }
+
+    .tb-btn.primary:hover {
+      background: var(--red-dark);
+    }
+
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 28px;
+    }
+
+    /* ── CARDS ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 18px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-glow {
+      position: absolute;
+      top: -30px;
+      right: -30px;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      opacity: .06;
+    }
+
+    .stat-icon-wrap {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      margin-bottom: 12px;
+    }
+
+    .stat-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      letter-spacing: 1px;
+      line-height: 1;
+    }
+
+    .stat-lbl {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 3px;
+      letter-spacing: .4px;
+    }
+
+    .stat-delta {
+      font-size: 10px;
+      margin-top: 5px;
+      font-family: 'Space Mono', monospace;
+    }
+
+    .delta-up {
+      color: var(--green);
+    }
+
+    .delta-down {
+      color: var(--red);
+    }
+
+    /* ── PANELS ── */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .grid-full {
+      margin-bottom: 18px;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .ph {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .pt {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 16px;
+      letter-spacing: 1.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pb {
+      padding: 18px;
+    }
+
+    /* ── API KEY CARDS ── */
+    .api-keys-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .api-key-card {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color .2s;
+    }
+
+    .api-key-card.active-key {
+      border-color: var(--green);
+    }
+
+    .api-key-card.warn-key {
+      border-color: var(--orange);
+    }
+
+    .api-key-card.dead-key {
+      border-color: #333;
+      opacity: .6;
+    }
+
+    .key-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .key-priority {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      padding: 3px 10px;
+      border-radius: 4px;
+    }
+
+    .key-priority.p1 {
+      background: rgba(0, 212, 106, .1);
+      color: var(--green);
+    }
+
+    .key-priority.p2 {
+      background: rgba(59, 130, 246, .1);
+      color: var(--blue);
+    }
+
+    .key-priority.p3 {
+      background: rgba(249, 115, 22, .1);
+      color: var(--orange);
+    }
+
+    .key-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .dot-green {
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+      animation: blink 2s infinite;
+    }
+
+    .dot-orange {
+      background: var(--orange);
+    }
+
+    .dot-red {
+      background: var(--red);
+    }
+
+    .dot-grey {
+      background: #444;
+    }
+
+    .key-name {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .key-value {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      color: var(--muted);
+      background: var(--black);
+      padding: 7px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      word-break: break-all;
+    }
+
+    .copy-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 13px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: color .2s;
+      flex-shrink: 0;
+    }
+
+    .copy-btn:hover {
+      color: var(--text);
+    }
+
+    .quota-block {
+      margin-bottom: 14px;
+    }
+
+    .quota-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .quota-label {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .quota-nums {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+    }
+
+    .quota-used {
+      color: var(--text);
+    }
+
+    .quota-total {
+      color: var(--muted);
+    }
+
+    .quota-bar {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .quota-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width .8s ease;
+    }
+
+    .fill-green {
+      background: var(--green);
+    }
+
+    .fill-orange {
+      background: var(--orange);
+    }
+
+    .fill-red {
+      background: var(--red);
+    }
+
+    .key-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .km-item {
+      background: var(--black);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+    }
+
+    .km-val {
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .km-lbl {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .key-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .key-btn {
+      flex: 1;
+      padding: 7px;
+      font-size: 11px;
+      font-family: 'DM Sans', sans-serif;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all .2s;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .key-btn.edit {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .key-btn.edit:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    .key-btn.rotate {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .key-btn.rotate:hover {
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .key-btn.disable {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .key-btn.disable:hover {
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    .active-indicator {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: var(--green);
+      color: var(--black);
+      font-size: 9px;
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 0 10px 0 8px;
+      letter-spacing: 1px;
+    }
+
+    /* ── USAGE CHART ── */
+    .chart-container {
+      height: 220px;
+      position: relative;
+    }
+
+    .chart-sm {
+      height: 160px;
+    }
+
+    /* ── USAGE LOG TABLE ── */
+    .log-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .log-table th {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      color: var(--muted);
+      text-transform: uppercase;
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      background: var(--dark);
+    }
+
+    .log-table td {
+      padding: 11px 14px;
+      font-size: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, .03);
+      vertical-align: middle;
+    }
+
+    .log-table tr:hover td {
+      background: rgba(255, 255, 255, .015);
+    }
+
+    .log-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .status-badge {
+      font-size: 10px;
+      font-family: 'Space Mono', monospace;
+      padding: 3px 10px;
+      border-radius: 4px;
+    }
+
+    .badge-ok {
+      background: rgba(0, 212, 106, .1);
+      color: var(--green);
+    }
+
+    .badge-warn {
+      background: rgba(249, 115, 22, .12);
+      color: var(--orange);
+    }
+
+    .badge-err {
+      background: rgba(255, 31, 31, .1);
+      color: var(--red);
+    }
+
+    .badge-skip {
+      background: rgba(255, 255, 255, .05);
+      color: var(--muted);
+    }
+
+    /* ── USERS TABLE ── */
+    .users-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .users-table th {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      color: var(--muted);
+      text-transform: uppercase;
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      background: var(--dark);
+    }
+
+    .users-table td {
+      padding: 11px 14px;
+      font-size: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, .03);
+      vertical-align: middle;
+    }
+
+    .users-table tr:hover td {
+      background: rgba(255, 255, 255, .02);
+    }
+
+    .users-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .u-av {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* ── ADD KEY MODAL ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(0, 0, 0, .88);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 32px;
+      width: 90%;
+      max-width: 480px;
+      transform: translateY(18px);
+      transition: transform .3s;
+      position: relative;
+    }
+
+    .modal-overlay.open .modal {
+      transform: translateY(0);
+    }
+
+    .modal-x {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .2s;
+    }
+
+    .modal-x:hover {
+      color: var(--text);
+    }
+
+    .modal h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 26px;
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+    }
+
+    .modal p.sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    .fg {
+      margin-bottom: 16px;
+    }
+
+    .fg label {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+
+    .fg input,
+    .fg select {
+      width: 100%;
+      background: var(--dark);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .fg input:focus,
+    .fg select:focus {
+      border-color: var(--red);
+    }
+
+    .fg select {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+    }
+
+    .modal-submit {
+      width: 100%;
+      padding: 12px;
+      background: var(--red);
+      border: none;
+      color: white;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      margin-top: 8px;
+      transition: background .2s;
+    }
+
+    .modal-submit:hover {
+      background: var(--red-dark);
+    }
+
+    /* ── TOAST ── */
+    .toast-wrap {
+      position: fixed;
+      bottom: 22px;
+      right: 22px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 16px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transform: translateX(110%);
+      transition: transform .3s;
+      min-width: 240px;
+      max-width: 340px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, .5);
+    }
+
+    .toast.show {
+      transform: translateX(0);
+    }
+
+    .toast.s {
+      border-left: 3px solid var(--green);
+    }
+
+    .toast.e {
+      border-left: 3px solid var(--red);
+    }
+
+    .toast.i {
+      border-left: 3px solid var(--blue);
+    }
+
+    /* ── TIMELINE ── */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .tl-item {
+      display: flex;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, .03);
+    }
+
+    .tl-item:last-child {
+      border-bottom: none;
+    }
+
+    .tl-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+
+    .tl-line {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .tl-title {
+      font-size: 12px;
+      margin-bottom: 2px;
+    }
+
+    .tl-time {
+      font-size: 10px;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+    }
+
+    /* ── DONUT LEGEND ── */
+    .donut-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .dl-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .dl-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .dl-name {
+      flex: 1;
+      color: var(--muted);
+    }
+
+    .dl-pct {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+    }
+
+    /* ── GAUGE ── */
+    .gauge-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 0;
+    }
+
+    .gauge-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 42px;
+      letter-spacing: 2px;
+    }
+
+    .gauge-sub {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: .5px;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:1200px) {
+      .stats-row {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .api-keys-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media(max-width:900px) {
+      .sidebar {
+        display: none;
+      }
+
+      .content {
+        padding: 16px;
+      }
+
+      .grid-2,
+      .grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<!-- ═══ SIDEBAR ═══ -->
-<aside class="sidebar">
-  <a href="index.html" class="sidebar-logo">
-    <div class="logo-dot"></div>
-    <div class="logo-text">TREND<span>PULSE</span></div>
-    <span class="admin-badge">ADMIN</span>
-  </a>
-
-  <div class="sb-section">
-    <div class="sb-label">Overview</div>
-    <button class="nav-item active" onclick="setView('overview',this)">
-      <span class="ni">📊</span> Dashboard
-    </button>
-    <button class="nav-item" onclick="setView('prefetch',this)">
-      <span class="ni">📡</span> Pre-fetch Data
-      <span class="nav-pill pill-green" id="sbCacheCount">–</span>
-    </button>
-    <button class="nav-item" onclick="setView('apikeys',this)">
-      <span class="ni">🔑</span> API Keys
-      <span class="nav-pill pill-green" id="sbKeyCount">3</span>
-    </button>
-    <button class="nav-item" onclick="setView('usage',this)">
-      <span class="ni">📈</span> Usage Logs
-      <span class="nav-pill pill-orange" id="sbLogCount">–</span>
-    </button>
-  </div>
-
-  <div class="sb-divider"></div>
-
-  <div class="sb-section">
-    <div class="sb-label">Management</div>
-    <button class="nav-item" onclick="setView('users',this)">
-      <span class="ni">👥</span> Users
-      <span class="nav-pill pill-red" id="sbUserCount">–</span>
-    </button>
-    <button class="nav-item" onclick="setView('regions',this)">
-      <span class="ni">🌍</span> Regions
-    </button>
-    <button class="nav-item" onclick="setView('categories',this)">
-      <span class="ni">🏷️</span> Categories
-    </button>
-    <button class="nav-item" onclick="setView('settings',this)">
-      <span class="ni">⚙️</span> Settings
-    </button>
-  </div>
-
-  <div class="sb-divider"></div>
-
-  <div class="sb-section">
-    <div class="sb-label">Quick Links</div>
-    <a class="nav-item" href="dashboard.html">
-      <span class="ni">🔥</span> User Dashboard
+  <!-- ═══ SIDEBAR ═══ -->
+  <aside class="sidebar">
+    <a href="index.html" class="sidebar-logo">
+      <div class="logo-dot"></div>
+      <div class="logo-text">TREND<span>PULSE</span></div>
+      <span class="admin-badge">ADMIN</span>
     </a>
-    <a class="nav-item" href="index.html">
-      <span class="ni">🏠</span> Landing Page
-    </a>
+
+    <div class="sb-section">
+      <div class="sb-label">Overview</div>
+      <button class="nav-item active" onclick="setView('overview',this)">
+        <span class="ni">📊</span> Dashboard
+      </button>
+      <button class="nav-item" onclick="setView('prefetch',this)">
+        <span class="ni">📡</span> Pre-fetch Data
+        <span class="nav-pill pill-green" id="sbCacheCount">–</span>
+      </button>
+      <button class="nav-item" onclick="setView('apikeys',this)">
+        <span class="ni">🔑</span> API Keys
+        <span class="nav-pill pill-green" id="sbKeyCount">3</span>
+      </button>
+      <button class="nav-item" onclick="setView('usage',this)">
+        <span class="ni">📈</span> Usage Logs
+        <span class="nav-pill pill-orange" id="sbLogCount">–</span>
+      </button>
+    </div>
+
+    <div class="sb-divider"></div>
+
+    <div class="sb-section">
+      <div class="sb-label">Management</div>
+      <button class="nav-item" onclick="setView('users',this)">
+        <span class="ni">👥</span> Users
+        <span class="nav-pill pill-red" id="sbUserCount">–</span>
+      </button>
+      <button class="nav-item" onclick="setView('regions',this)">
+        <span class="ni">🌍</span> Regions
+      </button>
+      <button class="nav-item" onclick="setView('categories',this)">
+        <span class="ni">🏷️</span> Categories
+      </button>
+      <button class="nav-item" onclick="setView('settings',this)">
+        <span class="ni">⚙️</span> Settings
+      </button>
+    </div>
+
+    <div class="sb-divider"></div>
+
+    <div class="sb-section">
+      <div class="sb-label">Quick Links</div>
+      <a class="nav-item" href="dashboard.html">
+        <span class="ni">🔥</span> User Dashboard
+      </a>
+      <a class="nav-item" href="index.html">
+        <span class="ni">🏠</span> Landing Page
+      </a>
+    </div>
+
+    <div class="sb-user">
+      <div class="user-av">A</div>
+      <div class="user-inf">
+        <div class="user-nm" id="adminName">Admin</div>
+        <div class="user-role">SUPERADMIN</div>
+      </div>
+      <button class="logout-btn" onclick="logout()" title="Logout">↩</button>
+    </div>
+  </aside>
+
+  <!-- ═══ MAIN ═══ -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbarTitle">📊 ADMIN DASHBOARD</div>
+      <div class="topbar-time" id="liveTime">–</div>
+      <button class="tb-btn" onclick="exportData()">⬇ Export</button>
+      <button class="tb-btn primary" onclick="openAddKeyModal()">+ Add API Key</button>
+    </div>
+    <div class="content" id="content"></div>
   </div>
 
-  <div class="sb-user">
-    <div class="user-av">A</div>
-    <div class="user-inf">
-      <div class="user-nm" id="adminName">Admin</div>
-      <div class="user-role">SUPERADMIN</div>
+  <!-- ADD / EDIT KEY MODAL -->
+  <div class="modal-overlay" id="keyModal">
+    <div class="modal">
+      <button class="modal-x" onclick="closeModal()">✕</button>
+      <h3 id="modalTitle">ADD API KEY</h3>
+      <p class="sub" id="modalSub">Add a new YouTube Data API v3 key to the rotation pool</p>
+      <div class="fg">
+        <label>KEY NAME</label>
+        <input type="text" id="mKeyName" placeholder="e.g. Primary Key">
+      </div>
+      <div class="fg">
+        <label>API KEY</label>
+        <input type="text" id="mKeyValue" placeholder="AIzaSy...">
+      </div>
+      <div class="fg">
+        <label>PRIORITY</label>
+        <select id="mKeyPriority">
+          <option value="1">1 — Primary (First used)</option>
+          <option value="2">2 — Secondary (Backup)</option>
+          <option value="3">3 — Tertiary (Final backup)</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>DAILY QUOTA LIMIT</label>
+        <input type="number" id="mKeyQuota" value="10000" placeholder="10000">
+      </div>
+      <button class="modal-submit" onclick="saveKey()">Save API Key</button>
     </div>
-    <button class="logout-btn" onclick="logout()" title="Logout">↩</button>
   </div>
-</aside>
 
-<!-- ═══ MAIN ═══ -->
-<div class="main">
-  <div class="topbar">
-    <div class="topbar-title" id="topbarTitle">📊 ADMIN DASHBOARD</div>
-    <div class="topbar-time" id="liveTime">–</div>
-    <button class="tb-btn" onclick="exportData()">⬇ Export</button>
-    <button class="tb-btn primary" onclick="openAddKeyModal()">+ Add API Key</button>
-  </div>
-  <div class="content" id="content"></div>
-</div>
+  <div class="toast-wrap" id="toasts"></div>
 
-<!-- ADD / EDIT KEY MODAL -->
-<div class="modal-overlay" id="keyModal">
-  <div class="modal">
-    <button class="modal-x" onclick="closeModal()">✕</button>
-    <h3 id="modalTitle">ADD API KEY</h3>
-    <p class="sub" id="modalSub">Add a new YouTube Data API v3 key to the rotation pool</p>
-    <div class="fg">
-      <label>KEY NAME</label>
-      <input type="text" id="mKeyName" placeholder="e.g. Primary Key">
-    </div>
-    <div class="fg">
-      <label>API KEY</label>
-      <input type="text" id="mKeyValue" placeholder="AIzaSy...">
-    </div>
-    <div class="fg">
-      <label>PRIORITY</label>
-      <select id="mKeyPriority">
-        <option value="1">1 — Primary (First used)</option>
-        <option value="2">2 — Secondary (Backup)</option>
-        <option value="3">3 — Tertiary (Final backup)</option>
-      </select>
-    </div>
-    <div class="fg">
-      <label>DAILY QUOTA LIMIT</label>
-      <input type="number" id="mKeyQuota" value="10000" placeholder="10000">
-    </div>
-    <button class="modal-submit" onclick="saveKey()">Save API Key</button>
-  </div>
-</div>
+  <script>
+    // ═══════════════════════════════════════════════
+    // STATE & STORAGE
+    // ═══════════════════════════════════════════════
+    const ADMIN_PASS = 'admin123'; // Change in production
 
-<div class="toast-wrap" id="toasts"></div>
+    let STATE = {
+      view: 'overview',
+      editingKeyId: null,
+      apiKeys: [],
+      users: [],
+      logs: [],
+      charts: {},
+    };
 
-<script>
-// ═══════════════════════════════════════════════
-// STATE & STORAGE
-// ═══════════════════════════════════════════════
-const ADMIN_PASS = 'admin123'; // Change in production
+    // Load/Init data from localStorage (simulates DB for pure-frontend demo)
+    function loadData() {
+      // ── Clean up any stale placeholder keys left in user-facing storage ──
+      try {
+        const stale = JSON.parse(localStorage.getItem('tp_api_keys') || '[]');
+        const cleaned = stale.filter(k => isRealKey(k));
+        localStorage.setItem('tp_api_keys', JSON.stringify(cleaned));
+      } catch (e) { localStorage.setItem('tp_api_keys', '[]'); }
 
-let STATE = {
-  view: 'overview',
-  editingKeyId: null,
-  apiKeys: [],
-  users: [],
-  logs: [],
-  charts: {},
-};
+      const savedKeys = JSON.parse(localStorage.getItem('admin_api_keys') || 'null');
+      STATE.apiKeys = savedKeys || [
+        { id: 1, name: 'Primary Key', value: '', priority: 1, quota: 10000, used: 0, status: 'active', requests: 0, errors: 0, lastUsed: new Date().toISOString(), addedAt: new Date().toISOString().split('T')[0] },
+        { id: 2, name: 'Secondary Key', value: '', priority: 2, quota: 10000, used: 0, status: 'active', requests: 0, errors: 0, lastUsed: new Date().toISOString(), addedAt: new Date().toISOString().split('T')[0] },
+        { id: 3, name: 'Tertiary Key', value: '', priority: 3, quota: 10000, used: 0, status: 'active', requests: 0, errors: 0, lastUsed: new Date().toISOString(), addedAt: new Date().toISOString().split('T')[0] },
+      ];
 
-// Load/Init data from localStorage (simulates DB for pure-frontend demo)
-function loadData() {
-  // ── Clean up any stale placeholder keys left in user-facing storage ──
-  try {
-    const stale = JSON.parse(localStorage.getItem('tp_api_keys') || '[]');
-    const cleaned = stale.filter(k => isRealKey(k));
-    localStorage.setItem('tp_api_keys', JSON.stringify(cleaned));
-  } catch(e) { localStorage.setItem('tp_api_keys', '[]'); }
+      // Only persist real keys to user-facing storage — never placeholders
+      syncUserKeys();
 
-  const savedKeys = JSON.parse(localStorage.getItem('admin_api_keys') || 'null');
-  STATE.apiKeys = savedKeys || [
-    { id:1, name:'Primary Key',   value:'', priority:1, quota:10000, used:0, status:'active',  requests:0, errors:0, lastUsed: new Date().toISOString(), addedAt: new Date().toISOString().split('T')[0] },
-    { id:2, name:'Secondary Key', value:'', priority:2, quota:10000, used:0, status:'active',  requests:0, errors:0, lastUsed: new Date().toISOString(), addedAt: new Date().toISOString().split('T')[0] },
-    { id:3, name:'Tertiary Key',  value:'', priority:3, quota:10000, used:0, status:'active',  requests:0, errors:0, lastUsed: new Date().toISOString(), addedAt: new Date().toISOString().split('T')[0] },
-  ];
+      STATE.users = JSON.parse(localStorage.getItem('admin_users') || 'null') || [
+        { id: 1, username: 'johndoe', email: 'john@example.com', region: 'US', joined: '2025-01-12', lastLogin: '2025-03-05', bookmarks: 14, status: 'active' },
+        { id: 2, username: 'sakura_jp', email: 'sakura@example.com', region: 'JP', joined: '2025-01-18', lastLogin: '2025-03-06', bookmarks: 7, status: 'active' },
+        { id: 3, username: 'mumbaiuser', email: 'rohan@example.com', region: 'IN', joined: '2025-01-20', lastLogin: '2025-03-04', bookmarks: 23, status: 'active' },
+        { id: 4, username: 'testuser99', email: 'test@example.com', region: 'GB', joined: '2025-02-01', lastLogin: '2025-02-28', bookmarks: 2, status: 'inactive' },
+        { id: 5, username: 'lena_de', email: 'lena@example.com', region: 'DE', joined: '2025-02-10', lastLogin: '2025-03-06', bookmarks: 9, status: 'active' },
+        { id: 6, username: 'carlos_br', email: 'carlos@example.com', region: 'BR', joined: '2025-02-15', lastLogin: '2025-03-01', bookmarks: 5, status: 'active' },
+      ];
 
-  // Only persist real keys to user-facing storage — never placeholders
-  syncUserKeys();
+      STATE.logs = generateLogs();
+      updateSidebarCounts();
+    }
 
-  STATE.users = JSON.parse(localStorage.getItem('admin_users') || 'null') || [
-    { id:1, username:'johndoe',    email:'john@example.com',    region:'US', joined:'2025-01-12', lastLogin:'2025-03-05', bookmarks:14, status:'active'  },
-    { id:2, username:'sakura_jp',  email:'sakura@example.com',  region:'JP', joined:'2025-01-18', lastLogin:'2025-03-06', bookmarks:7,  status:'active'  },
-    { id:3, username:'mumbaiuser', email:'rohan@example.com',   region:'IN', joined:'2025-01-20', lastLogin:'2025-03-04', bookmarks:23, status:'active'  },
-    { id:4, username:'testuser99', email:'test@example.com',    region:'GB', joined:'2025-02-01', lastLogin:'2025-02-28', bookmarks:2,  status:'inactive'},
-    { id:5, username:'lena_de',    email:'lena@example.com',    region:'DE', joined:'2025-02-10', lastLogin:'2025-03-06', bookmarks:9,  status:'active'  },
-    { id:6, username:'carlos_br',  email:'carlos@example.com',  region:'BR', joined:'2025-02-15', lastLogin:'2025-03-01', bookmarks:5,  status:'active'  },
-  ];
+    function isRealKey(value) {
+      // A real YouTube Data API key starts with 'AIza' and is ~39 chars long
+      return value && value.startsWith('AIza') && value.length >= 30 && !value.includes('here') && !value.includes('key-');
+    }
 
-  STATE.logs = generateLogs();
-  updateSidebarCounts();
-}
+    function syncUserKeys() {
+      // Only write REAL, non-placeholder, active keys to tp_api_keys
+      const realKeys = STATE.apiKeys
+        .filter(k => k.status !== 'disabled' && isRealKey(k.value))
+        .map(k => k.value);
+      localStorage.setItem('tp_api_keys', JSON.stringify(realKeys));
+    }
 
-function isRealKey(value) {
-  // A real YouTube Data API key starts with 'AIza' and is ~39 chars long
-  return value && value.startsWith('AIza') && value.length >= 30 && !value.includes('here') && !value.includes('key-');
-}
+    function updateSidebarCounts() {
+      const realActive = STATE.apiKeys.filter(k => k.status !== 'disabled' && isRealKey(k.value)).length;
+      const sbKey = document.getElementById('sbKeyCount');
+      const sbLog = document.getElementById('sbLogCount');
+      const sbUsr = document.getElementById('sbUserCount');
+      if (sbKey) sbKey.textContent = realActive;
+      if (sbLog) sbLog.textContent = STATE.logs?.length || 0;
+      if (sbUsr) sbUsr.textContent = STATE.users?.length || 0;
+      updateCacheCount();
+    }
 
-function syncUserKeys() {
-  // Only write REAL, non-placeholder, active keys to tp_api_keys
-  const realKeys = STATE.apiKeys
-    .filter(k => k.status !== 'disabled' && isRealKey(k.value))
-    .map(k => k.value);
-  localStorage.setItem('tp_api_keys', JSON.stringify(realKeys));
-}
+    function saveKeys() {
+      localStorage.setItem('admin_api_keys', JSON.stringify(STATE.apiKeys));
+      syncUserKeys();
+      updateSidebarCounts();
+    }
 
-function updateSidebarCounts() {
-  const realActive = STATE.apiKeys.filter(k => k.status !== 'disabled' && isRealKey(k.value)).length;
-  const sbKey = document.getElementById('sbKeyCount');
-  const sbLog = document.getElementById('sbLogCount');
-  const sbUsr = document.getElementById('sbUserCount');
-  if (sbKey) sbKey.textContent = realActive;
-  if (sbLog) sbLog.textContent = STATE.logs?.length || 0;
-  if (sbUsr) sbUsr.textContent = STATE.users?.length || 0;
-  updateCacheCount();
-}
+    function updateCacheCount() {
+      const cache = JSON.parse(localStorage.getItem('tp_prefetch_cache') || 'null');
+      const el = document.getElementById('sbCacheCount');
+      if (!el) return;
+      if (cache && cache.categories) {
+        const n = Object.keys(cache.categories).length;
+        el.textContent = n + ' cats';
+        el.className = 'nav-pill pill-green';
+      } else {
+        el.textContent = 'none';
+        el.className = 'nav-pill pill-orange';
+      }
+    }
 
-function saveKeys() {
-  localStorage.setItem('admin_api_keys', JSON.stringify(STATE.apiKeys));
-  syncUserKeys();
-  updateSidebarCounts();
-}
+    function generateLogs() {
+      const actions = ['trending_fetch', 'video_details', 'search_query', 'channel_info', 'category_list'];
+      const regions = ['US', 'IN', 'JP', 'GB', 'BR', 'DE', 'KR', 'FR', 'AU', 'MX'];
+      const logs = [];
+      for (let i = 0; i < 60; i++) {
+        const keyId = [1, 1, 1, 2, 2, 3][Math.floor(Math.random() * 6)];
+        const key = STATE.apiKeys.find(k => k.id === keyId);
+        const ok = Math.random() > 0.08;
+        logs.push({
+          id: i + 1,
+          keyId,
+          keyName: key?.name || 'Key ' + keyId,
+          action: actions[Math.floor(Math.random() * actions.length)],
+          region: regions[Math.floor(Math.random() * regions.length)],
+          units: [1, 100, 50, 25, 200][Math.floor(Math.random() * 5)],
+          status: ok ? 'success' : (Math.random() > .5 ? 'quota_exceeded' : 'error'),
+          ts: new Date(Date.now() - i * 14 * 60000).toISOString(),
+        });
+      }
+      return logs;
+    }
 
-function updateCacheCount() {
-  const cache = JSON.parse(localStorage.getItem('tp_prefetch_cache') || 'null');
-  const el = document.getElementById('sbCacheCount');
-  if (!el) return;
-  if (cache && cache.categories) {
-    const n = Object.keys(cache.categories).length;
-    el.textContent = n + ' cats';
-    el.className = 'nav-pill pill-green';
-  } else {
-    el.textContent = 'none';
-    el.className = 'nav-pill pill-orange';
-  }
-}
-
-function generateLogs() {
-  const actions = ['trending_fetch','video_details','search_query','channel_info','category_list'];
-  const regions = ['US','IN','JP','GB','BR','DE','KR','FR','AU','MX'];
-  const logs = [];
-  for (let i = 0; i < 60; i++) {
-    const keyId = [1,1,1,2,2,3][Math.floor(Math.random()*6)];
-    const key = STATE.apiKeys.find(k=>k.id===keyId);
-    const ok = Math.random() > 0.08;
-    logs.push({
-      id: i+1,
-      keyId,
-      keyName: key?.name || 'Key '+keyId,
-      action: actions[Math.floor(Math.random()*actions.length)],
-      region: regions[Math.floor(Math.random()*regions.length)],
-      units: [1,100,50,25,200][Math.floor(Math.random()*5)],
-      status: ok ? 'success' : (Math.random()>.5 ? 'quota_exceeded' : 'error'),
-      ts: new Date(Date.now() - i * 14 * 60000).toISOString(),
+    // ═══════════════════════════════════════════════
+    // INIT & AUTH
+    // ═══════════════════════════════════════════════
+    document.addEventListener('DOMContentLoaded', () => {
+      initAdmin();
     });
-  }
-  return logs;
-}
 
-// ═══════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
-  checkAdminAuth();
-  loadData();
-  startClock();
-  updateCacheCount();
-  setView('overview');
-});
+    async function initAdmin() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
 
-function checkAdminAuth() {
-  const user = JSON.parse(localStorage.getItem('tp_user') || 'null');
-  const token = localStorage.getItem('tp_token');
-  if (!user || !token || user.role !== 'admin') {
-    // Not admin — redirect to landing page
-    localStorage.removeItem('tp_token');
-    localStorage.removeItem('tp_user');
-    window.location.href = 'index.html';
-    return;
-  }
-  document.getElementById('adminName').textContent = user.username || 'Admin';
-}
+      const { data: profile, error } = await sb.from('profiles').select('*').eq('id', session.user.id).single();
+      if (error || profile.role !== 'admin') {
+        console.error("Access denied:", error);
+        window.location.href = 'dashboard.html'; // Regular users go to dashboard
+        return;
+      }
 
-function startClock() {
-  function tick() {
-    document.getElementById('liveTime').textContent = new Date().toLocaleTimeString('en-US', { hour12:false });
-  }
-  tick(); setInterval(tick, 1000);
-}
+      document.getElementById('adminName').textContent = profile.username || 'Admin';
 
-// ═══════════════════════════════════════════════
-// VIEW ROUTER
-// ═══════════════════════════════════════════════
-function setView(view, el) {
-  STATE.view = view;
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  if (el) el.classList.add('active');
+      await loadData();
+      startClock();
+      updateCacheCount();
+      setView('overview');
+    }
 
-  const titles = {
-    overview:'📊 ADMIN DASHBOARD', apikeys:'🔑 API KEY MANAGER',
-    prefetch:'📡 PRE-FETCH DATA CACHE',
-    usage:'📈 USAGE LOGS', users:'👥 USER MANAGEMENT',
-    regions:'🌍 REGIONS', categories:'🏷️ CATEGORIES', settings:'⚙️ SETTINGS'
-  };
-  document.getElementById('topbarTitle').textContent = titles[view] || '';
+    async function loadData() {
+      // Fetch API Keys
+      const { data: keys, error: kError } = await sb.from('api_keys').select('*').order('priority', { ascending: true });
+      if (!kError) {
+        STATE.apiKeys = keys.map(k => ({
+          id: k.id,
+          name: k.key_name,
+          value: k.api_key,
+          priority: k.priority,
+          quota: k.quota_limit,
+          used: k.quota_used,
+          status: k.status,
+          requests: 0, // transient
+          errors: 0,   // transient
+          lastUsed: k.last_used,
+          addedAt: k.created_at.split('T')[0]
+        }));
+      }
 
-  // Destroy charts
-  Object.values(STATE.charts).forEach(c => { try { c.destroy(); } catch(e){} });
-  STATE.charts = {};
+      // Fetch Users
+      const { data: users, error: uError } = await sb.from('profiles').select('*').order('joined_at', { ascending: false });
+      if (!uError) {
+        STATE.users = users.map(u => ({
+          id: u.id,
+          username: u.username,
+          email: u.email,
+          region: u.region,
+          joined: u.joined_at.split('T')[0],
+          lastLogin: '–',
+          bookmarks: 0,
+          status: u.status || 'active'
+        }));
+      }
 
-  const c = document.getElementById('content');
-  c.innerHTML = '';
+      STATE.logs = generateLogs();
+      updateSidebarCounts();
+      syncUserKeys();
+    }
 
-  const views = { overview:renderOverview, apikeys:renderApiKeys, prefetch:renderPrefetch, usage:renderUsage, users:renderUsers, regions:renderRegions, categories:renderCategories, settings:renderSettings };
-  (views[view] || renderOverview)();
-}
+    function startClock() {
+      function tick() {
+        const el = document.getElementById('liveTime');
+        if (el) el.textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
+      }
+      tick(); setInterval(tick, 1000);
+    }
 
-// ═══════════════════════════════════════════════
-// OVERVIEW
-// ═══════════════════════════════════════════════
-function renderOverview() {
-  const totalQuota = STATE.apiKeys.reduce((s,k) => s + k.quota, 0);
-  const totalUsed = STATE.apiKeys.reduce((s,k) => s + k.used, 0);
-  const totalReqs = STATE.apiKeys.reduce((s,k) => s + k.requests, 0);
-  const activeKeys = STATE.apiKeys.filter(k => k.status !== 'disabled').length;
-  const activeUsers = STATE.users.filter(u => u.status === 'active').length;
-  const todayLogs = STATE.logs.filter(l => new Date(l.ts) > new Date(Date.now() - 86400000)).length;
+    // ═══════════════════════════════════════════════
+    // VIEW ROUTER
+    // ═══════════════════════════════════════════════
+    function setView(view, el) {
+      STATE.view = view;
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      if (el) el.classList.add('active');
 
-  document.getElementById('content').innerHTML = `
+      const titles = {
+        overview: '📊 ADMIN DASHBOARD', apikeys: '🔑 API KEY MANAGER',
+        prefetch: '📡 PRE-FETCH DATA CACHE',
+        usage: '📈 USAGE LOGS', users: '👥 USER MANAGEMENT',
+        regions: '🌍 REGIONS', categories: '🏷️ CATEGORIES', settings: '⚙️ SETTINGS'
+      };
+      document.getElementById('topbarTitle').textContent = titles[view] || '';
+
+      // Destroy charts
+      Object.values(STATE.charts).forEach(c => { try { c.destroy(); } catch (e) { } });
+      STATE.charts = {};
+
+      const c = document.getElementById('content');
+      c.innerHTML = '';
+
+      const views = { overview: renderOverview, apikeys: renderApiKeys, prefetch: renderPrefetch, usage: renderUsage, users: renderUsers, regions: renderRegions, categories: renderCategories, settings: renderSettings };
+      (views[view] || renderOverview)();
+    }
+
+    // ═══════════════════════════════════════════════
+    // OVERVIEW
+    // ═══════════════════════════════════════════════
+    function renderOverview() {
+      const totalQuota = STATE.apiKeys.reduce((s, k) => s + k.quota, 0);
+      const totalUsed = STATE.apiKeys.reduce((s, k) => s + k.used, 0);
+      const totalReqs = STATE.apiKeys.reduce((s, k) => s + k.requests, 0);
+      const activeKeys = STATE.apiKeys.filter(k => k.status !== 'disabled').length;
+      const activeUsers = STATE.users.filter(u => u.status === 'active').length;
+      const todayLogs = STATE.logs.filter(l => new Date(l.ts) > new Date(Date.now() - 86400000)).length;
+
+      document.getElementById('content').innerHTML = `
     <div class="stats-row">
       <div class="stat-card">
         <div class="stat-glow" style="background:var(--red)"></div>
@@ -680,7 +1485,7 @@ function renderOverview() {
         <div class="stat-icon-wrap" style="background:rgba(0,212,106,.08);">📊</div>
         <div class="stat-num">${fmtNum(totalUsed)}</div>
         <div class="stat-lbl">UNITS USED TODAY</div>
-        <div class="stat-delta ${(totalUsed/totalQuota)>.8?'delta-down':'delta-up'}">${((totalUsed/totalQuota)*100).toFixed(1)}% of quota</div>
+        <div class="stat-delta ${(totalUsed / totalQuota) > .8 ? 'delta-down' : 'delta-up'}">${((totalUsed / totalQuota) * 100).toFixed(1)}% of quota</div>
       </div>
       <div class="stat-card">
         <div class="stat-glow" style="background:var(--blue)"></div>
@@ -699,7 +1504,7 @@ function renderOverview() {
       <div class="stat-card">
         <div class="stat-glow" style="background:var(--orange)"></div>
         <div class="stat-icon-wrap" style="background:rgba(249,115,22,.08);">⚠️</div>
-        <div class="stat-num">${STATE.apiKeys.filter(k=>k.status==='warning').length}</div>
+        <div class="stat-num">${STATE.apiKeys.filter(k => k.status === 'warning').length}</div>
         <div class="stat-lbl">KEYS NEAR LIMIT</div>
         <div class="stat-delta delta-down">Action needed</div>
       </div>
@@ -738,149 +1543,149 @@ function renderOverview() {
     </div>
   `;
 
-  setTimeout(() => {
-    initUsageChart();
-    initKeyPieChart();
-    renderKeyStatusSummary();
-    renderActivityTimeline();
-    initQuotaChart();
-  }, 50);
-}
-
-function initUsageChart() {
-  const ctx = document.getElementById('usageChart')?.getContext('2d');
-  if (!ctx) return;
-  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const colors = ['rgba(255,31,31,.8)','rgba(59,130,246,.7)','rgba(249,115,22,.7)'];
-
-  STATE.charts.usage = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: days,
-      datasets: STATE.apiKeys.map((k, i) => ({
-        label: k.name,
-        data: Array.from({length:7}, () => Math.floor(Math.random()*3000)+200),
-        backgroundColor: colors[i] || '#555',
-        borderRadius: 4, borderSkipped: false,
-      }))
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins: { legend: { labels: { color:'#666', font:{size:11} } }, tooltip: { callbacks: { label: c => ` ${fmtNum(c.raw)} units` } } },
-      scales: {
-        x: { stacked:true, grid:{color:'#1a1a1a'}, ticks:{color:'#555'} },
-        y: { stacked:true, grid:{color:'#1a1a1a'}, ticks:{color:'#555', callback: v => fmtNum(v)} }
-      }
+      setTimeout(() => {
+        initUsageChart();
+        initKeyPieChart();
+        renderKeyStatusSummary();
+        renderActivityTimeline();
+        initQuotaChart();
+      }, 50);
     }
-  });
-}
 
-function initKeyPieChart() {
-  const ctx = document.getElementById('keyPieChart')?.getContext('2d');
-  if (!ctx) return;
-  const colors = ['#FF1F1F','#3B82F6','#F97316'];
-  const total = STATE.apiKeys.reduce((s,k)=>s+k.requests,0)||1;
+    function initUsageChart() {
+      const ctx = document.getElementById('usageChart')?.getContext('2d');
+      if (!ctx) return;
+      const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      const colors = ['rgba(255,31,31,.8)', 'rgba(59,130,246,.7)', 'rgba(249,115,22,.7)'];
 
-  STATE.charts.pie = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: STATE.apiKeys.map(k=>k.name),
-      datasets:[{ data: STATE.apiKeys.map(k=>k.requests), backgroundColor:colors, borderWidth:0, hoverBorderWidth:2, hoverBorderColor:'#fff' }]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false, cutout:'70%',
-      plugins: { legend:{display:false}, tooltip:{ callbacks:{ label: c => ` ${c.raw} requests (${((c.raw/total)*100).toFixed(1)}%)` } } }
+      STATE.charts.usage = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: days,
+          datasets: STATE.apiKeys.map((k, i) => ({
+            label: k.name,
+            data: Array.from({ length: 7 }, () => Math.floor(Math.random() * 3000) + 200),
+            backgroundColor: colors[i] || '#555',
+            borderRadius: 4, borderSkipped: false,
+          }))
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#666', font: { size: 11 } } }, tooltip: { callbacks: { label: c => ` ${fmtNum(c.raw)} units` } } },
+          scales: {
+            x: { stacked: true, grid: { color: '#1a1a1a' }, ticks: { color: '#555' } },
+            y: { stacked: true, grid: { color: '#1a1a1a' }, ticks: { color: '#555', callback: v => fmtNum(v) } }
+          }
+        }
+      });
     }
-  });
 
-  const leg = document.getElementById('keyLegend');
-  if (leg) leg.innerHTML = STATE.apiKeys.map((k,i) => `
+    function initKeyPieChart() {
+      const ctx = document.getElementById('keyPieChart')?.getContext('2d');
+      if (!ctx) return;
+      const colors = ['#FF1F1F', '#3B82F6', '#F97316'];
+      const total = STATE.apiKeys.reduce((s, k) => s + k.requests, 0) || 1;
+
+      STATE.charts.pie = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: STATE.apiKeys.map(k => k.name),
+          datasets: [{ data: STATE.apiKeys.map(k => k.requests), backgroundColor: colors, borderWidth: 0, hoverBorderWidth: 2, hoverBorderColor: '#fff' }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: '70%',
+          plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.raw} requests (${((c.raw / total) * 100).toFixed(1)}%)` } } }
+        }
+      });
+
+      const leg = document.getElementById('keyLegend');
+      if (leg) leg.innerHTML = STATE.apiKeys.map((k, i) => `
     <div class="dl-item">
       <div class="dl-dot" style="background:${colors[i]}"></div>
       <div class="dl-name">${k.name}</div>
-      <div class="dl-pct">${((k.requests/total)*100).toFixed(0)}%</div>
+      <div class="dl-pct">${((k.requests / total) * 100).toFixed(0)}%</div>
     </div>
   `).join('');
-}
+    }
 
-function renderKeyStatusSummary() {
-  const el = document.getElementById('keyStatusSummary');
-  if (!el) return;
-  el.innerHTML = STATE.apiKeys.map(k => {
-    const pct = (k.used/k.quota)*100;
-    const dotClass = k.status==='active'?'dot-green': k.status==='warning'?'dot-orange': k.status==='disabled'?'dot-grey':'dot-red';
-    const fillClass = pct<70?'fill-green': pct<90?'fill-orange':'fill-red';
-    return `
+    function renderKeyStatusSummary() {
+      const el = document.getElementById('keyStatusSummary');
+      if (!el) return;
+      el.innerHTML = STATE.apiKeys.map(k => {
+        const pct = (k.used / k.quota) * 100;
+        const dotClass = k.status === 'active' ? 'dot-green' : k.status === 'warning' ? 'dot-orange' : k.status === 'disabled' ? 'dot-grey' : 'dot-red';
+        const fillClass = pct < 70 ? 'fill-green' : pct < 90 ? 'fill-orange' : 'fill-red';
+        return `
       <div style="margin-bottom:14px;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
           <div class="key-status-dot ${dotClass}"></div>
           <span style="font-size:12px;font-weight:600;">${k.name}</span>
           <span style="margin-left:auto;font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);">${fmtNum(k.used)} / ${fmtNum(k.quota)}</span>
         </div>
-        <div class="quota-bar"><div class="quota-fill ${fillClass}" style="width:${Math.min(pct,100)}%"></div></div>
-        <div style="font-size:10px;color:var(--muted);margin-top:4px;">${pct.toFixed(1)}% used · ${fmtNum(k.quota-k.used)} remaining</div>
+        <div class="quota-bar"><div class="quota-fill ${fillClass}" style="width:${Math.min(pct, 100)}%"></div></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px;">${pct.toFixed(1)}% used · ${fmtNum(k.quota - k.used)} remaining</div>
       </div>
     `;
-  }).join('');
-}
+      }).join('');
+    }
 
-function renderActivityTimeline() {
-  const el = document.getElementById('activityTimeline');
-  if (!el) return;
-  const colors = { success:'var(--green)', quota_exceeded:'var(--orange)', error:'var(--red)' };
-  el.innerHTML = STATE.logs.slice(0,8).map(l => `
+    function renderActivityTimeline() {
+      const el = document.getElementById('activityTimeline');
+      if (!el) return;
+      const colors = { success: 'var(--green)', quota_exceeded: 'var(--orange)', error: 'var(--red)' };
+      el.innerHTML = STATE.logs.slice(0, 8).map(l => `
     <div class="tl-item">
-      <div class="tl-dot" style="background:${colors[l.status]||'#555'}"></div>
+      <div class="tl-dot" style="background:${colors[l.status] || '#555'}"></div>
       <div class="tl-line">
         <div class="tl-title">${l.keyName} — <span style="color:var(--muted)">${l.action}</span> [${l.region}]</div>
         <div class="tl-time">${timeSince(l.ts)} · ${l.units} units · <span style="color:${colors[l.status]}">${l.status}</span></div>
       </div>
     </div>
   `).join('');
-}
-
-function initQuotaChart() {
-  const ctx = document.getElementById('quotaChart')?.getContext('2d');
-  if (!ctx) return;
-  const colors = ['#FF1F1F','#3B82F6','#F97316'];
-  STATE.charts.quota = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: STATE.apiKeys.map(k=>k.name.replace(' Key','')),
-      datasets: [
-        { label:'Used', data: STATE.apiKeys.map(k=>k.used), backgroundColor: colors.map(c=>c+'cc'), borderRadius:4 },
-        { label:'Remaining', data: STATE.apiKeys.map(k=>k.quota-k.used), backgroundColor:'rgba(255,255,255,.05)', borderRadius:4 },
-      ]
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{labels:{color:'#555',font:{size:10}}}, tooltip:{ callbacks:{ label: c => ` ${fmtNum(c.raw)} units` } } },
-      scales:{
-        x:{stacked:true,grid:{color:'#1a1a1a'},ticks:{color:'#555',font:{size:10}}},
-        y:{stacked:true,grid:{color:'#1a1a1a'},ticks:{color:'#555',callback:v=>fmtNum(v)}}
-      }
     }
-  });
-}
 
-// ═══════════════════════════════════════════════
-// API KEYS VIEW
-// ═══════════════════════════════════════════════
-function renderApiKeys() {
-  const totalUsed  = STATE.apiKeys.reduce((s,k)=>s+k.used,0);
-  const totalQuota = STATE.apiKeys.reduce((s,k)=>s+k.quota,0);
-  const activeKey  = STATE.apiKeys.find(k=>k.status==='active' && isRealKey(k.value));
+    function initQuotaChart() {
+      const ctx = document.getElementById('quotaChart')?.getContext('2d');
+      if (!ctx) return;
+      const colors = ['#FF1F1F', '#3B82F6', '#F97316'];
+      STATE.charts.quota = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: STATE.apiKeys.map(k => k.name.replace(' Key', '')),
+          datasets: [
+            { label: 'Used', data: STATE.apiKeys.map(k => k.used), backgroundColor: colors.map(c => c + 'cc'), borderRadius: 4 },
+            { label: 'Remaining', data: STATE.apiKeys.map(k => k.quota - k.used), backgroundColor: 'rgba(255,255,255,.05)', borderRadius: 4 },
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#555', font: { size: 10 } } }, tooltip: { callbacks: { label: c => ` ${fmtNum(c.raw)} units` } } },
+          scales: {
+            x: { stacked: true, grid: { color: '#1a1a1a' }, ticks: { color: '#555', font: { size: 10 } } },
+            y: { stacked: true, grid: { color: '#1a1a1a' }, ticks: { color: '#555', callback: v => fmtNum(v) } }
+          }
+        }
+      });
+    }
 
-  document.getElementById('content').innerHTML = `
+    // ═══════════════════════════════════════════════
+    // API KEYS VIEW
+    // ═══════════════════════════════════════════════
+    function renderApiKeys() {
+      const totalUsed = STATE.apiKeys.reduce((s, k) => s + k.used, 0);
+      const totalQuota = STATE.apiKeys.reduce((s, k) => s + k.quota, 0);
+      const activeKey = STATE.apiKeys.find(k => k.status === 'active' && isRealKey(k.value));
+
+      document.getElementById('content').innerHTML = `
     <div class="stats-row" style="grid-template-columns:repeat(4,1fr);">
       <div class="stat-card">
         <div class="stat-icon-wrap" style="background:rgba(255,31,31,.1);">🔑</div>
-        <div class="stat-num">${STATE.apiKeys.filter(k=>isRealKey(k.value)).length}</div>
+        <div class="stat-num">${STATE.apiKeys.filter(k => isRealKey(k.value)).length}</div>
         <div class="stat-lbl">VALID KEYS</div>
       </div>
       <div class="stat-card">
         <div class="stat-icon-wrap" style="background:rgba(0,212,106,.08);">✅</div>
-        <div class="stat-num">${STATE.apiKeys.filter(k=>k.status==='active'&&isRealKey(k.value)).length}</div>
+        <div class="stat-num">${STATE.apiKeys.filter(k => k.status === 'active' && isRealKey(k.value)).length}</div>
         <div class="stat-lbl">ACTIVE KEYS</div>
       </div>
       <div class="stat-card">
@@ -890,7 +1695,7 @@ function renderApiKeys() {
       </div>
       <div class="stat-card">
         <div class="stat-icon-wrap" style="background:rgba(59,130,246,.08);">🔄</div>
-        <div class="stat-num">${activeKey ? 'KEY '+activeKey.priority : 'NONE'}</div>
+        <div class="stat-num">${activeKey ? 'KEY ' + activeKey.priority : 'NONE'}</div>
         <div class="stat-lbl">CURRENTLY ACTIVE</div>
       </div>
     </div>
@@ -934,26 +1739,26 @@ function renderApiKeys() {
       </div>
       <div class="pb">
         <div style="display:flex;align-items:center;gap:0;position:relative;">
-          ${STATE.apiKeys.sort((a,b)=>a.priority-b.priority).map((k,i) => {
-            const real = isRealKey(k.value);
-            const pct  = real ? (k.used/k.quota)*100 : 0;
-            const status = !real ? '⬜' : k.status==='disabled'?'🚫': pct>=100?'❌': pct>=80?'⚠️':'✅';
-            const isAct  = k===activeKey;
-            return `
-              <div style="flex:1;padding:14px 16px;background:${isAct?'rgba(0,212,106,.06)':'var(--card2)'};border:1px solid ${isAct?'var(--green)':'var(--border)'};border-radius:8px;${i<STATE.apiKeys.length-1?'margin-right:2px;':''}position:relative;">
-                ${isAct?'<div style="position:absolute;top:-1px;right:-1px;background:var(--green);color:var(--black);font-size:9px;font-family:\'Space Mono\',monospace;font-weight:700;padding:3px 8px;border-radius:0 8px 0 8px;letter-spacing:1px;">ACTIVE</div>':''}
+          ${STATE.apiKeys.sort((a, b) => a.priority - b.priority).map((k, i) => {
+        const real = isRealKey(k.value);
+        const pct = real ? (k.used / k.quota) * 100 : 0;
+        const status = !real ? '⬜' : k.status === 'disabled' ? '🚫' : pct >= 100 ? '❌' : pct >= 80 ? '⚠️' : '✅';
+        const isAct = k === activeKey;
+        return `
+              <div style="flex:1;padding:14px 16px;background:${isAct ? 'rgba(0,212,106,.06)' : 'var(--card2)'};border:1px solid ${isAct ? 'var(--green)' : 'var(--border)'};border-radius:8px;${i < STATE.apiKeys.length - 1 ? 'margin-right:2px;' : ''}position:relative;">
+                ${isAct ? '<div style="position:absolute;top:-1px;right:-1px;background:var(--green);color:var(--black);font-size:9px;font-family:\'Space Mono\',monospace;font-weight:700;padding:3px 8px;border-radius:0 8px 0 8px;letter-spacing:1px;">ACTIVE</div>' : ''}
                 <div style="font-size:10px;color:var(--muted);font-family:\'Space Mono\',monospace;margin-bottom:4px;">PRIORITY ${k.priority}</div>
                 <div style="font-size:13px;font-weight:600;margin-bottom:8px;">${status} ${k.name}</div>
                 ${real ? `
                 <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:5px;">
-                  <div style="height:100%;width:${Math.min(pct,100)}%;background:${pct>=100?'var(--red)':pct>=80?'var(--orange)':'var(--green)'};border-radius:2px;"></div>
+                  <div style="height:100%;width:${Math.min(pct, 100)}%;background:${pct >= 100 ? 'var(--red)' : pct >= 80 ? 'var(--orange)' : 'var(--green)'};border-radius:2px;"></div>
                 </div>
                 <div style="font-size:10px;color:var(--muted);">${fmtNum(k.used)} / ${fmtNum(k.quota)} units</div>
                 ` : `<div style="font-size:10px;color:#444;">No key set</div>`}
               </div>
-              ${i<STATE.apiKeys.length-1?'<div style="display:flex;align-items:center;padding:0 4px;color:var(--muted);font-size:18px;">→</div>':''}
+              ${i < STATE.apiKeys.length - 1 ? '<div style="display:flex;align-items:center;padding:0 4px;color:var(--muted);font-size:18px;">→</div>' : ''}
             `;
-          }).join('')}
+      }).join('')}
         </div>
       </div>
     </div>
@@ -968,25 +1773,25 @@ function renderApiKeys() {
     </div>
   `;
 
-  // Pre-fill the test input with first real key
-  const firstReal = STATE.apiKeys.find(k => isRealKey(k.value));
-  if (firstReal) document.getElementById('diagKeyInput').value = firstReal.value;
+      // Pre-fill the test input with first real key
+      const firstReal = STATE.apiKeys.find(k => isRealKey(k.value));
+      if (firstReal) document.getElementById('diagKeyInput').value = firstReal.value;
 
-  renderKeyCards();
-  setTimeout(initHourlyChart, 50);
-}
+      renderKeyCards();
+      setTimeout(initHourlyChart, 50);
+    }
 
-function renderKeyCards() {
-  const grid = document.getElementById('apiKeysGrid');
-  if (!grid) return;
-  const priorityClass = ['p1','p2','p3'];
-  const dotClass = { active:'dot-green', warning:'dot-orange', disabled:'dot-grey', dead:'dot-red' };
+    function renderKeyCards() {
+      const grid = document.getElementById('apiKeysGrid');
+      if (!grid) return;
+      const priorityClass = ['p1', 'p2', 'p3'];
+      const dotClass = { active: 'dot-green', warning: 'dot-orange', disabled: 'dot-grey', dead: 'dot-red' };
 
-  const hasRealKeys = STATE.apiKeys.some(k => isRealKey(k.value) && k.status !== 'disabled');
+      const hasRealKeys = STATE.apiKeys.some(k => isRealKey(k.value) && k.status !== 'disabled');
 
-  let warningBanner = '';
-  if (!hasRealKeys) {
-    warningBanner = `
+      let warningBanner = '';
+      if (!hasRealKeys) {
+        warningBanner = `
       <div style="background:rgba(255,215,0,.07);border:1px solid rgba(255,215,0,.25);border-radius:10px;padding:16px 20px;margin-bottom:18px;display:flex;align-items:center;gap:14px;">
         <div style="font-size:28px;">⚠️</div>
         <div>
@@ -995,30 +1800,30 @@ function renderKeyCards() {
         </div>
       </div>
     `;
-  }
+      }
 
-  grid.innerHTML = warningBanner + STATE.apiKeys.sort((a,b)=>a.priority-b.priority).map(k => {
-    const realKey = isRealKey(k.value);
-    const pct = realKey ? (k.used/k.quota)*100 : 0;
-    const fillCls = pct<70?'fill-green': pct<90?'fill-orange':'fill-red';
-    const cardCls = !realKey ? 'dead-key' : k.status==='active'?'active-key': k.status==='warning'?'warn-key': k.status==='disabled'?'dead-key':'';
-    const isActiveKey = realKey && STATE.apiKeys.find(x => x.status==='active' && isRealKey(x.value))?.id === k.id;
-    const maskedKey = realKey
-      ? k.value.substring(0,8) + '••••••••' + k.value.slice(-4)
-      : '— not set —';
+      grid.innerHTML = warningBanner + STATE.apiKeys.sort((a, b) => a.priority - b.priority).map(k => {
+        const realKey = isRealKey(k.value);
+        const pct = realKey ? (k.used / k.quota) * 100 : 0;
+        const fillCls = pct < 70 ? 'fill-green' : pct < 90 ? 'fill-orange' : 'fill-red';
+        const cardCls = !realKey ? 'dead-key' : k.status === 'active' ? 'active-key' : k.status === 'warning' ? 'warn-key' : k.status === 'disabled' ? 'dead-key' : '';
+        const isActiveKey = realKey && STATE.apiKeys.find(x => x.status === 'active' && isRealKey(x.value))?.id === k.id;
+        const maskedKey = realKey
+          ? k.value.substring(0, 8) + '••••••••' + k.value.slice(-4)
+          : '— not set —';
 
-    return `
+        return `
       <div class="api-key-card ${cardCls}" id="keyCard${k.id}">
         ${isActiveKey ? '<div class="active-indicator">● ACTIVE</div>' : ''}
         <div class="key-header">
           <div>
-            <div class="key-priority ${priorityClass[k.priority-1] || 'p3'}">PRIORITY ${k.priority}</div>
+            <div class="key-priority ${priorityClass[k.priority - 1] || 'p3'}">PRIORITY ${k.priority}</div>
           </div>
           <div class="key-status-dot ${realKey ? (dotClass[k.status] || 'dot-grey') : 'dot-grey'}"></div>
         </div>
         <div class="key-name">${escHtml(k.name)}</div>
         <div class="key-value">
-          <span id="keyval${k.id}" style="color:${realKey?'inherit':'var(--muted)'};">${maskedKey}</span>
+          <span id="keyval${k.id}" style="color:${realKey ? 'inherit' : 'var(--muted)'};">${maskedKey}</span>
           ${realKey ? `<button class="copy-btn" onclick="toggleReveal(${k.id})" title="Reveal/Copy">👁</button>` : ''}
         </div>
         ${realKey ? `
@@ -1028,11 +1833,11 @@ function renderKeyCards() {
             <span class="quota-nums"><span class="quota-used">${fmtNum(k.used)}</span> <span class="quota-total">/ ${fmtNum(k.quota)}</span></span>
           </div>
           <div class="quota-bar">
-            <div class="quota-fill ${fillCls}" style="width:${Math.min(pct,100)}%" id="qfill${k.id}"></div>
+            <div class="quota-fill ${fillCls}" style="width:${Math.min(pct, 100)}%" id="qfill${k.id}"></div>
           </div>
           <div style="font-size:10px;color:var(--muted);margin-top:4px;display:flex;justify-content:space-between;">
             <span>${pct.toFixed(1)}% consumed</span>
-            <span>${fmtNum(k.quota-k.used)} remaining</span>
+            <span>${fmtNum(k.quota - k.used)} remaining</span>
           </div>
         </div>
         <div class="key-meta">
@@ -1041,7 +1846,7 @@ function renderKeyCards() {
             <div class="km-lbl">Requests</div>
           </div>
           <div class="km-item">
-            <div class="km-val" style="color:${k.errors>0?'var(--red)':'var(--green)'}">${k.errors}</div>
+            <div class="km-val" style="color:${k.errors > 0 ? 'var(--red)' : 'var(--green)'}">${k.errors}</div>
             <div class="km-lbl">Errors</div>
           </div>
           <div class="km-item">
@@ -1049,7 +1854,7 @@ function renderKeyCards() {
             <div class="km-lbl">Last Used</div>
           </div>
           <div class="km-item">
-            <div class="km-val" style="font-size:11px;color:${k.status==='active'?'var(--green)':k.status==='warning'?'var(--orange)':'var(--muted)'}">●&nbsp;${k.status.toUpperCase()}</div>
+            <div class="km-val" style="font-size:11px;color:${k.status === 'active' ? 'var(--green)' : k.status === 'warning' ? 'var(--orange)' : 'var(--muted)'}">●&nbsp;${k.status.toUpperCase()}</div>
             <div class="km-lbl">Status</div>
           </div>
         </div>
@@ -1057,143 +1862,143 @@ function renderKeyCards() {
         <div class="key-actions">
           <button class="key-btn edit" onclick="openEditKeyModal(${k.id})">✏ Edit</button>
           ${realKey ? `<button class="key-btn rotate" onclick="resetQuota(${k.id})">↺ Reset</button>` : ''}
-          ${realKey ? `<button class="key-btn disable" onclick="toggleKeyStatus(${k.id})">${k.status==='disabled'?'▶ Enable':'⏸ Disable'}</button>` : ''}
+          ${realKey ? `<button class="key-btn disable" onclick="toggleKeyStatus(${k.id})">${k.status === 'disabled' ? '▶ Enable' : '⏸ Disable'}</button>` : ''}
         </div>
       </div>
     `;
-  }).join('');
-}
+      }).join('');
+    }
 
-async function runDiagnostics() {
-  const key = document.getElementById('diagKeyInput')?.value?.trim();
-  const box = document.getElementById('diagResult');
-  if (!box) return;
+    async function runDiagnostics() {
+      const key = document.getElementById('diagKeyInput')?.value?.trim();
+      const box = document.getElementById('diagResult');
+      if (!box) return;
 
-  if (!key || !key.startsWith('AIza') || key.length < 30) {
-    box.style.display = 'block';
-    box.innerHTML = diagCard('error', '❌ Invalid Key Format', 'Key must start with "AIza" and be ~39 characters. Check you copied it fully from Google Cloud Console.');
-    return;
-  }
+      if (!key || !key.startsWith('AIza') || key.length < 30) {
+        box.style.display = 'block';
+        box.innerHTML = diagCard('error', '❌ Invalid Key Format', 'Key must start with "AIza" and be ~39 characters. Check you copied it fully from Google Cloud Console.');
+        return;
+      }
 
-  box.style.display = 'block';
-  box.innerHTML = diagCard('info', '⏳ Testing...', 'Making a live request to YouTube Data API v3 from this browser...');
+      box.style.display = 'block';
+      box.innerHTML = diagCard('info', '⏳ Testing...', 'Making a live request to YouTube Data API v3 from this browser...');
 
-  try {
-    const url  = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&chart=mostPopular&regionCode=US&maxResults=3&hl=en&key=${key}`;
-    const resp = await fetch(url, { method: 'GET' });
-    const data = await resp.json();
+      try {
+        const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&chart=mostPopular&regionCode=US&maxResults=3&hl=en&key=${key}`;
+        const resp = await fetch(url, { method: 'GET' });
+        const data = await resp.json();
 
-    if (data.error) {
-      const code   = data.error.code;
-      const status = data.error.status || '';
-      const msg    = data.error.message || '';
+        if (data.error) {
+          const code = data.error.code;
+          const status = data.error.status || '';
+          const msg = data.error.message || '';
 
-      if (code === 403 && msg.toLowerCase().includes('referrer')) {
-        box.innerHTML = diagCard('error', '❌ HTTP Referrer Blocked (403)',
-          `Your key has an HTTP referrer restriction that blocks <strong>${location.origin}</strong>.<br><br>
+          if (code === 403 && msg.toLowerCase().includes('referrer')) {
+            box.innerHTML = diagCard('error', '❌ HTTP Referrer Blocked (403)',
+              `Your key has an HTTP referrer restriction that blocks <strong>${location.origin}</strong>.<br><br>
           <strong>Fix:</strong> Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:#3B82F6;">Cloud Console → Credentials</a> → click your key → under "Application restrictions" either:<br>
           • Set to <strong>None</strong>, OR<br>
           • Add <code style="background:#1a1a1a;padding:2px 6px;border-radius:4px;">${location.origin}/*</code> to the allowed referrers`);
 
-      } else if (code === 403 && (msg.toLowerCase().includes('disabled') || msg.toLowerCase().includes('not been used'))) {
-        box.innerHTML = diagCard('error', '❌ YouTube Data API v3 Not Enabled (403)',
-          `The YouTube Data API v3 is not enabled in your Google Cloud project.<br><br>
+          } else if (code === 403 && (msg.toLowerCase().includes('disabled') || msg.toLowerCase().includes('not been used'))) {
+            box.innerHTML = diagCard('error', '❌ YouTube Data API v3 Not Enabled (403)',
+              `The YouTube Data API v3 is not enabled in your Google Cloud project.<br><br>
           <strong>Fix:</strong> Go to <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank" style="color:#3B82F6;">Cloud Console → Library → YouTube Data API v3</a> → click <strong>Enable</strong>, then wait ~1 minute.`);
 
-      } else if (code === 403) {
-        box.innerHTML = diagCard('error', `❌ Access Forbidden (403)`,
-          `YouTube rejected the request. Most likely cause: HTTP referrer restriction or API not enabled.<br><br>
+          } else if (code === 403) {
+            box.innerHTML = diagCard('error', `❌ Access Forbidden (403)`,
+              `YouTube rejected the request. Most likely cause: HTTP referrer restriction or API not enabled.<br><br>
           <strong>Error detail:</strong> <code style="background:#1a1a1a;padding:2px 6px;border-radius:4px;color:#ff6b6b;">${escHtml(msg)}</code><br><br>
           Check that: (1) YouTube Data API v3 is enabled, (2) Key has no referrer restriction blocking <strong>${location.origin}</strong>`);
 
-      } else if (code === 400) {
-        box.innerHTML = diagCard('error', '❌ Bad API Key (400)',
-          `YouTube does not recognise this key. It may be incorrect or from a different project.<br><br>
+          } else if (code === 400) {
+            box.innerHTML = diagCard('error', '❌ Bad API Key (400)',
+              `YouTube does not recognise this key. It may be incorrect or from a different project.<br><br>
           <strong>Error:</strong> <code style="background:#1a1a1a;padding:2px 6px;border-radius:4px;color:#ff6b6b;">${escHtml(msg)}</code><br><br>
           Double-check you copied the full key from <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:#3B82F6;">Cloud Console → Credentials</a>.`);
 
-      } else if (code === 429 || status === 'RESOURCE_EXHAUSTED') {
-        box.innerHTML = diagCard('warn', '⚠️ Quota Exhausted (429)',
-          `The key is valid and working, but its daily quota (10,000 units) is used up. It resets at midnight Pacific Time.<br><br>
+          } else if (code === 429 || status === 'RESOURCE_EXHAUSTED') {
+            box.innerHTML = diagCard('warn', '⚠️ Quota Exhausted (429)',
+              `The key is valid and working, but its daily quota (10,000 units) is used up. It resets at midnight Pacific Time.<br><br>
           <strong>Options:</strong> Wait for reset, add another key, or <a href="https://console.cloud.google.com/apis/api/youtube.googleapis.com/quotas" target="_blank" style="color:#3B82F6;">request a quota increase</a>.`);
 
-      } else {
-        box.innerHTML = diagCard('error', `❌ API Error ${code}`,
-          `<strong>Status:</strong> ${escHtml(status)}<br><strong>Message:</strong> ${escHtml(msg)}`);
-      }
+          } else {
+            box.innerHTML = diagCard('error', `❌ API Error ${code}`,
+              `<strong>Status:</strong> ${escHtml(status)}<br><strong>Message:</strong> ${escHtml(msg)}`);
+          }
 
-    } else if (data.items && data.items.length > 0) {
-      const sample = data.items[0].snippet;
-      box.innerHTML = diagCard('success', '✅ Key Working Perfectly!',
-        `Got <strong>${data.items.length} videos</strong> back from YouTube successfully.<br>
+        } else if (data.items && data.items.length > 0) {
+          const sample = data.items[0].snippet;
+          box.innerHTML = diagCard('success', '✅ Key Working Perfectly!',
+            `Got <strong>${data.items.length} videos</strong> back from YouTube successfully.<br>
         <strong>Sample:</strong> "${escHtml(sample.title)}" by ${escHtml(sample.channelTitle)}<br><br>
         If data is still not loading on the dashboard, go to <strong>Admin → API Keys</strong> and make sure this key is saved and active there.`);
 
-    } else {
-      box.innerHTML = diagCard('warn', '⚠️ Key Works But No Results',
-        `The API responded without error but returned 0 videos. This can happen if the key is newly created and still propagating. Try again in 1–2 minutes.`);
-    }
+        } else {
+          box.innerHTML = diagCard('warn', '⚠️ Key Works But No Results',
+            `The API responded without error but returned 0 videos. This can happen if the key is newly created and still propagating. Try again in 1–2 minutes.`);
+        }
 
-  } catch (err) {
-    box.innerHTML = diagCard('error', '❌ Network Error — Cannot Reach YouTube',
-      `The browser could not connect to the YouTube API at all.<br><br>
+      } catch (err) {
+        box.innerHTML = diagCard('error', '❌ Network Error — Cannot Reach YouTube',
+          `The browser could not connect to the YouTube API at all.<br><br>
       <strong>Error:</strong> <code style="background:#1a1a1a;padding:2px 6px;border-radius:4px;color:#ff6b6b;">${escHtml(err.message)}</code><br><br>
       This usually means a network/firewall issue, not the key. Try on a different network or check browser DevTools (F12 → Network tab) for the exact error.`);
-  }
-}
+      }
+    }
 
-function diagCard(type, title, body) {
-  const colors = {
-    success: { bg:'rgba(0,212,106,.08)',  border:'rgba(0,212,106,.3)',  title:'#00C853' },
-    warn:    { bg:'rgba(255,215,0,.07)',   border:'rgba(255,215,0,.25)', title:'#FFD700' },
-    error:   { bg:'rgba(255,31,31,.08)',   border:'rgba(255,31,31,.3)',  title:'#FF6B6B' },
-    info:    { bg:'rgba(59,130,246,.08)',  border:'rgba(59,130,246,.3)', title:'#3B82F6' },
-  };
-  const c = colors[type] || colors.info;
-  return `
+    function diagCard(type, title, body) {
+      const colors = {
+        success: { bg: 'rgba(0,212,106,.08)', border: 'rgba(0,212,106,.3)', title: '#00C853' },
+        warn: { bg: 'rgba(255,215,0,.07)', border: 'rgba(255,215,0,.25)', title: '#FFD700' },
+        error: { bg: 'rgba(255,31,31,.08)', border: 'rgba(255,31,31,.3)', title: '#FF6B6B' },
+        info: { bg: 'rgba(59,130,246,.08)', border: 'rgba(59,130,246,.3)', title: '#3B82F6' },
+      };
+      const c = colors[type] || colors.info;
+      return `
     <div style="padding:16px 18px;background:${c.bg};border:1px solid ${c.border};border-radius:10px;margin-top:4px;">
       <div style="font-weight:700;color:${c.title};margin-bottom:8px;font-size:14px;">${title}</div>
       <div style="font-size:13px;color:#999;line-height:1.7;">${body}</div>
     </div>`;
-}
-
-function initHourlyChart() {
-  const ctx = document.getElementById('hourlyChart')?.getContext('2d');
-  if (!ctx) return;
-  const labels = Array.from({length:24},(_,i)=>i+':00');
-  const colors = ['#FF1F1F','#3B82F6','#F97316'];
-  STATE.charts.hourly = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: STATE.apiKeys.map((k,i) => ({
-        label: k.name,
-        data: Array.from({length:24},()=>Math.floor(Math.random()*600)),
-        borderColor: colors[i], backgroundColor: colors[i]+'15',
-        borderWidth:2, fill:true, tension:.4, pointRadius:0, pointHoverRadius:4,
-      }))
-    },
-    options: {
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ labels:{color:'#666',font:{size:11}} }, tooltip:{ mode:'index', intersect:false, callbacks:{ label:c=>` ${fmtNum(c.raw)} units` } } },
-      scales:{
-        x:{grid:{color:'#181818'},ticks:{color:'#555',maxTicksLimit:12}},
-        y:{grid:{color:'#181818'},ticks:{color:'#555',callback:v=>fmtNum(v)}}
-      }
     }
-  });
-}
 
-// ═══════════════════════════════════════════════
-// USAGE LOGS VIEW
-// ═══════════════════════════════════════════════
-function renderUsage() {
-  const successCount = STATE.logs.filter(l=>l.status==='success').length;
-  const errorCount   = STATE.logs.filter(l=>l.status==='error').length;
-  const quotaHits    = STATE.logs.filter(l=>l.status==='quota_exceeded').length;
-  const totalUnits   = STATE.logs.reduce((s,l)=>s+l.units, 0);
+    function initHourlyChart() {
+      const ctx = document.getElementById('hourlyChart')?.getContext('2d');
+      if (!ctx) return;
+      const labels = Array.from({ length: 24 }, (_, i) => i + ':00');
+      const colors = ['#FF1F1F', '#3B82F6', '#F97316'];
+      STATE.charts.hourly = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: STATE.apiKeys.map((k, i) => ({
+            label: k.name,
+            data: Array.from({ length: 24 }, () => Math.floor(Math.random() * 600)),
+            borderColor: colors[i], backgroundColor: colors[i] + '15',
+            borderWidth: 2, fill: true, tension: .4, pointRadius: 0, pointHoverRadius: 4,
+          }))
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: '#666', font: { size: 11 } } }, tooltip: { mode: 'index', intersect: false, callbacks: { label: c => ` ${fmtNum(c.raw)} units` } } },
+          scales: {
+            x: { grid: { color: '#181818' }, ticks: { color: '#555', maxTicksLimit: 12 } },
+            y: { grid: { color: '#181818' }, ticks: { color: '#555', callback: v => fmtNum(v) } }
+          }
+        }
+      });
+    }
 
-  document.getElementById('content').innerHTML = `
+    // ═══════════════════════════════════════════════
+    // USAGE LOGS VIEW
+    // ═══════════════════════════════════════════════
+    function renderUsage() {
+      const successCount = STATE.logs.filter(l => l.status === 'success').length;
+      const errorCount = STATE.logs.filter(l => l.status === 'error').length;
+      const quotaHits = STATE.logs.filter(l => l.status === 'quota_exceeded').length;
+      const totalUnits = STATE.logs.reduce((s, l) => s + l.units, 0);
+
+      document.getElementById('content').innerHTML = `
     <div class="stats-row" style="grid-template-columns:repeat(4,1fr);">
       <div class="stat-card"><div class="stat-icon-wrap" style="background:rgba(0,212,106,.08);">✅</div><div class="stat-num">${successCount}</div><div class="stat-lbl">SUCCESSFUL CALLS</div></div>
       <div class="stat-card"><div class="stat-icon-wrap" style="background:rgba(255,31,31,.1);">❌</div><div class="stat-num">${errorCount}</div><div class="stat-lbl">ERRORS</div></div>
@@ -1218,7 +2023,7 @@ function renderUsage() {
         <div style="display:flex;gap:8px;">
           <select onchange="filterLogs(this.value)" style="background:var(--card2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:12px;outline:none;cursor:pointer;">
             <option value="">All Keys</option>
-            ${STATE.apiKeys.map(k=>`<option value="${k.id}">${k.name}</option>`).join('')}
+            ${STATE.apiKeys.map(k => `<option value="${k.id}">${k.name}</option>`).join('')}
           </select>
           <select onchange="filterLogStatus(this.value)" style="background:var(--card2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-size:12px;outline:none;cursor:pointer;">
             <option value="">All Status</option>
@@ -1242,43 +2047,43 @@ function renderUsage() {
     </div>
   `;
 
-  setTimeout(() => {
-    // Status chart
-    const s1 = document.getElementById('statusChart')?.getContext('2d');
-    if (s1) {
-      STATE.charts.status = new Chart(s1, {
-        type:'doughnut',
-        data:{ labels:['Success','Error','Quota Hit'], datasets:[{ data:[successCount,errorCount,quotaHits], backgroundColor:['#00D46A','#FF1F1F','#F97316'], borderWidth:0 }] },
-        options:{ responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{ legend:{ labels:{color:'#666',font:{size:11}} } } }
-      });
+      setTimeout(() => {
+        // Status chart
+        const s1 = document.getElementById('statusChart')?.getContext('2d');
+        if (s1) {
+          STATE.charts.status = new Chart(s1, {
+            type: 'doughnut',
+            data: { labels: ['Success', 'Error', 'Quota Hit'], datasets: [{ data: [successCount, errorCount, quotaHits], backgroundColor: ['#00D46A', '#FF1F1F', '#F97316'], borderWidth: 0 }] },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { labels: { color: '#666', font: { size: 11 } } } } }
+          });
+        }
+        // Calls by key
+        const s2 = document.getElementById('keyCallsChart')?.getContext('2d');
+        if (s2) {
+          const byKey = {};
+          STATE.logs.forEach(l => { byKey[l.keyName] = (byKey[l.keyName] || 0) + 1; });
+          const entries = Object.entries(byKey);
+          STATE.charts.keyCalls = new Chart(s2, {
+            type: 'bar',
+            data: { labels: entries.map(([k]) => k), datasets: [{ label: 'Calls', data: entries.map(([, v]) => v), backgroundColor: ['rgba(255,31,31,.7)', 'rgba(59,130,246,.7)', 'rgba(249,115,22,.7)'], borderRadius: 6 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#1a1a1a' }, ticks: { color: '#555' } }, y: { grid: { color: '#1a1a1a' }, ticks: { color: '#555' } } } }
+          });
+        }
+      }, 50);
     }
-    // Calls by key
-    const s2 = document.getElementById('keyCallsChart')?.getContext('2d');
-    if (s2) {
-      const byKey = {};
-      STATE.logs.forEach(l=>{ byKey[l.keyName]=(byKey[l.keyName]||0)+1; });
-      const entries = Object.entries(byKey);
-      STATE.charts.keyCalls = new Chart(s2, {
-        type:'bar',
-        data:{ labels:entries.map(([k])=>k), datasets:[{ label:'Calls', data:entries.map(([,v])=>v), backgroundColor:['rgba(255,31,31,.7)','rgba(59,130,246,.7)','rgba(249,115,22,.7)'], borderRadius:6 }] },
-        options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{grid:{color:'#1a1a1a'},ticks:{color:'#555'}}, y:{grid:{color:'#1a1a1a'},ticks:{color:'#555'}} } }
-      });
-    }
-  }, 50);
-}
 
-let _logKeyFilter = '', _logStatusFilter = '';
-function filterLogs(keyId) { _logKeyFilter = keyId; applyLogFilter(); }
-function filterLogStatus(status) { _logStatusFilter = status; applyLogFilter(); }
-function applyLogFilter() {
-  let logs = STATE.logs;
-  if (_logKeyFilter) logs = logs.filter(l=>String(l.keyId)===_logKeyFilter);
-  if (_logStatusFilter) logs = logs.filter(l=>l.status===_logStatusFilter);
-  document.getElementById('logBody').innerHTML = renderLogRows(logs);
-}
-function renderLogRows(logs) {
-  const statusMap = { success:'badge-ok', error:'badge-err', quota_exceeded:'badge-warn' };
-  return logs.map(l=>`
+    let _logKeyFilter = '', _logStatusFilter = '';
+    function filterLogs(keyId) { _logKeyFilter = keyId; applyLogFilter(); }
+    function filterLogStatus(status) { _logStatusFilter = status; applyLogFilter(); }
+    function applyLogFilter() {
+      let logs = STATE.logs;
+      if (_logKeyFilter) logs = logs.filter(l => String(l.keyId) === _logKeyFilter);
+      if (_logStatusFilter) logs = logs.filter(l => l.status === _logStatusFilter);
+      document.getElementById('logBody').innerHTML = renderLogRows(logs);
+    }
+    function renderLogRows(logs) {
+      const statusMap = { success: 'badge-ok', error: 'badge-err', quota_exceeded: 'badge-warn' };
+      return logs.map(l => `
     <tr>
       <td style="color:var(--muted);font-family:'Space Mono',monospace;">${l.id}</td>
       <td style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);">${new Date(l.ts).toLocaleTimeString()} <span style="opacity:.5">${new Date(l.ts).toLocaleDateString()}</span></td>
@@ -1286,46 +2091,46 @@ function renderLogRows(logs) {
       <td style="color:var(--blue);font-family:'Space Mono',monospace;font-size:11px;">${l.action}</td>
       <td><span style="background:var(--card2);border:1px solid var(--border);padding:2px 8px;border-radius:4px;font-size:11px;">${l.region}</span></td>
       <td style="font-family:'Space Mono',monospace;font-size:11px;">${l.units}</td>
-      <td><span class="status-badge ${statusMap[l.status]||'badge-skip'}">${l.status.replace('_',' ')}</span></td>
+      <td><span class="status-badge ${statusMap[l.status] || 'badge-skip'}">${l.status.replace('_', ' ')}</span></td>
     </tr>
   `).join('');
-}
+    }
 
-// ═══════════════════════════════════════════════
-// USERS VIEW
-// ═══════════════════════════════════════════════
-function renderUsers() {
-  const avatarColors = ['var(--red)','var(--blue)','var(--green)','var(--purple)','var(--orange)','#EC4899'];
-  const USER_LIMIT = 3;
-  const today = new Date().toDateString();
+    // ═══════════════════════════════════════════════
+    // USERS VIEW
+    // ═══════════════════════════════════════════════
+    function renderUsers() {
+      const avatarColors = ['var(--red)', 'var(--blue)', 'var(--green)', 'var(--purple)', 'var(--orange)', '#EC4899'];
+      const USER_LIMIT = 3;
+      const today = new Date().toDateString();
 
-  // Merge tp_users_db call data with STATE.users display data
-  const usersDb = JSON.parse(localStorage.getItem('tp_users_db') || '{}');
+      // Merge tp_users_db call data with STATE.users display data
+      const usersDb = JSON.parse(localStorage.getItem('tp_users_db') || '{}');
 
-  // Merge registered users from usersDb into STATE.users for display
-  const allEmails = new Set([...STATE.users.map(u=>u.email), ...Object.keys(usersDb)]);
-  const mergedUsers = [...allEmails].map(email => {
-    const base = STATE.users.find(u=>u.email===email) || {};
-    const db   = usersDb[email] || {};
-    const callsToday = db.calls?.[today] || 0;
-    return {
-      id:     base.id || email,
-      username: base.username || db.username || email.split('@')[0],
-      email,
-      region: base.region || '–',
-      joined: base.joined || (db.joinedAt ? db.joinedAt.split('T')[0] : '–'),
-      lastLogin: base.lastLogin || '–',
-      bookmarks: base.bookmarks || 0,
-      status: base.status || (db.username ? 'active' : 'active'),
-      callsToday,
-      blocked: callsToday >= USER_LIMIT,
-    };
-  });
+      // Merge registered users from usersDb into STATE.users for display
+      const allEmails = new Set([...STATE.users.map(u => u.email), ...Object.keys(usersDb)]);
+      const mergedUsers = [...allEmails].map(email => {
+        const base = STATE.users.find(u => u.email === email) || {};
+        const db = usersDb[email] || {};
+        const callsToday = db.calls?.[today] || 0;
+        return {
+          id: base.id || email,
+          username: base.username || db.username || email.split('@')[0],
+          email,
+          region: base.region || '–',
+          joined: base.joined || (db.joinedAt ? db.joinedAt.split('T')[0] : '–'),
+          lastLogin: base.lastLogin || '–',
+          bookmarks: base.bookmarks || 0,
+          status: base.status || (db.username ? 'active' : 'active'),
+          callsToday,
+          blocked: callsToday >= USER_LIMIT,
+        };
+      });
 
-  const activeCount = mergedUsers.filter(u=>!u.blocked).length;
-  const blockedToday = mergedUsers.filter(u=>u.blocked).length;
+      const activeCount = mergedUsers.filter(u => !u.blocked).length;
+      const blockedToday = mergedUsers.filter(u => u.blocked).length;
 
-  document.getElementById('content').innerHTML = `
+      document.getElementById('content').innerHTML = `
     <div class="stats-row" style="grid-template-columns:repeat(4,1fr);">
       <div class="stat-card"><div class="stat-icon-wrap" style="background:rgba(168,85,247,.08);">👥</div><div class="stat-num">${mergedUsers.length}</div><div class="stat-lbl">TOTAL USERS</div></div>
       <div class="stat-card"><div class="stat-icon-wrap" style="background:rgba(0,212,106,.08);">✅</div><div class="stat-num">${activeCount}</div><div class="stat-lbl">ACTIVE TODAY</div></div>
@@ -1343,11 +2148,11 @@ function renderUsers() {
             <tr><th>USER</th><th>EMAIL</th><th>REGION</th><th>JOINED</th><th>CALLS TODAY</th><th>STATUS</th><th>ACTION</th></tr>
           </thead>
           <tbody id="usersBody">
-            ${mergedUsers.map((u,i)=>`
+            ${mergedUsers.map((u, i) => `
               <tr>
                 <td>
                   <div style="display:flex;align-items:center;gap:10px;">
-                    <div class="u-av" style="background:${avatarColors[i%avatarColors.length]}">${u.username[0].toUpperCase()}</div>
+                    <div class="u-av" style="background:${avatarColors[i % avatarColors.length]}">${u.username[0].toUpperCase()}</div>
                     <span style="font-weight:600;">${escHtml(u.username)}</span>
                   </div>
                 </td>
@@ -1357,19 +2162,19 @@ function renderUsers() {
                 <td>
                   <div style="display:flex;align-items:center;gap:8px;">
                     <div style="flex:1;max-width:80px;height:5px;background:var(--border);border-radius:3px;overflow:hidden;">
-                      <div style="height:100%;width:${(u.callsToday/USER_LIMIT)*100}%;background:${u.blocked?'var(--red)':u.callsToday===2?'var(--orange)':'var(--green)'};border-radius:3px;"></div>
+                      <div style="height:100%;width:${(u.callsToday / USER_LIMIT) * 100}%;background:${u.blocked ? 'var(--red)' : u.callsToday === 2 ? 'var(--orange)' : 'var(--green)'};border-radius:3px;"></div>
                     </div>
-                    <span style="font-family:'Space Mono',monospace;font-size:11px;color:${u.blocked?'var(--red)':u.callsToday===2?'var(--orange)':'var(--muted)'};">${u.callsToday}/${USER_LIMIT}</span>
+                    <span style="font-family:'Space Mono',monospace;font-size:11px;color:${u.blocked ? 'var(--red)' : u.callsToday === 2 ? 'var(--orange)' : 'var(--muted)'};">${u.callsToday}/${USER_LIMIT}</span>
                   </div>
                 </td>
                 <td>
                   ${u.blocked
-                    ? `<span class="status-badge badge-err">blocked</span>`
-                    : `<span class="status-badge ${u.status==='active'?'badge-ok':'badge-skip'}">${u.status}</span>`
-                  }
+          ? `<span class="status-badge badge-err">blocked</span>`
+          : `<span class="status-badge ${u.status === 'active' ? 'badge-ok' : 'badge-skip'}">${u.status}</span>`
+        }
                 </td>
                 <td style="display:flex;gap:6px;">
-                  <button onclick="toggleUserStatus('${u.email}')" style="background:none;border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:5px;cursor:pointer;font-size:11px;transition:all .2s;" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">${u.status==='active'?'Suspend':'Activate'}</button>
+                  <button onclick="toggleUserStatus('${u.email}')" style="background:none;border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:5px;cursor:pointer;font-size:11px;transition:all .2s;" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">${u.status === 'active' ? 'Suspend' : 'Activate'}</button>
                   ${u.blocked ? `<button onclick="resetUserCalls('${u.email}')" style="background:none;border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:5px;cursor:pointer;font-size:11px;transition:all .2s;" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">↺ Unblock</button>` : ''}
                 </td>
               </tr>
@@ -1379,60 +2184,60 @@ function renderUsers() {
       </div>
     </div>
   `;
-}
+    }
 
-function searchUsers(q) {
-  const rows = document.querySelectorAll('#usersTable tbody tr');
-  rows.forEach(r => {
-    r.style.display = r.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
-  });
-}
-function toggleUserStatus(email) {
-  const db = JSON.parse(localStorage.getItem('tp_users_db') || '{}');
-  if (db[email]) {
-    db[email].suspended = !db[email].suspended;
-    localStorage.setItem('tp_users_db', JSON.stringify(db));
-    toast(`${email} ${db[email].suspended ? 'suspended' : 'activated'}`, 'i');
-    renderUsers();
-  }
-}
-function resetUserCalls(email) {
-  const db = JSON.parse(localStorage.getItem('tp_users_db') || '{}');
-  if (db[email]) {
-    const today = new Date().toDateString();
-    if (db[email].calls) db[email].calls[today] = 0;
-    localStorage.setItem('tp_users_db', JSON.stringify(db));
-    toast(`${email} unblocked — calls reset`, 's');
-    renderUsers();
-  }
-}
+    function searchUsers(q) {
+      const rows = document.querySelectorAll('#usersTable tbody tr');
+      rows.forEach(r => {
+        r.style.display = r.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+      });
+    }
+    function toggleUserStatus(email) {
+      const db = JSON.parse(localStorage.getItem('tp_users_db') || '{}');
+      if (db[email]) {
+        db[email].suspended = !db[email].suspended;
+        localStorage.setItem('tp_users_db', JSON.stringify(db));
+        toast(`${email} ${db[email].suspended ? 'suspended' : 'activated'}`, 'i');
+        renderUsers();
+      }
+    }
+    function resetUserCalls(email) {
+      const db = JSON.parse(localStorage.getItem('tp_users_db') || '{}');
+      if (db[email]) {
+        const today = new Date().toDateString();
+        if (db[email].calls) db[email].calls[today] = 0;
+        localStorage.setItem('tp_users_db', JSON.stringify(db));
+        toast(`${email} unblocked — calls reset`, 's');
+        renderUsers();
+      }
+    }
 
-// ═══════════════════════════════════════════════
-// REGIONS & CATEGORIES (simple views)
-// ═══════════════════════════════════════════════
-function renderRegions() {
-  const REGS = [
-    {code:'US',name:'United States',flag:'🇺🇸'},{code:'IN',name:'India',flag:'🇮🇳'},
-    {code:'GB',name:'United Kingdom',flag:'🇬🇧'},{code:'JP',name:'Japan',flag:'🇯🇵'},
-    {code:'BR',name:'Brazil',flag:'🇧🇷'},{code:'DE',name:'Germany',flag:'🇩🇪'},
-    {code:'KR',name:'South Korea',flag:'🇰🇷'},{code:'FR',name:'France',flag:'🇫🇷'},
-    {code:'AU',name:'Australia',flag:'🇦🇺'},{code:'MX',name:'Mexico',flag:'🇲🇽'},
-    {code:'CA',name:'Canada',flag:'🇨🇦'},{code:'IT',name:'Italy',flag:'🇮🇹'},
-    {code:'RU',name:'Russia',flag:'🇷🇺'},{code:'ES',name:'Spain',flag:'🇪🇸'},
-    {code:'AR',name:'Argentina',flag:'🇦🇷'},{code:'SG',name:'Singapore',flag:'🇸🇬'},
-    {code:'ID',name:'Indonesia',flag:'🇮🇩'},{code:'TR',name:'Turkey',flag:'🇹🇷'},
-    {code:'SA',name:'Saudi Arabia',flag:'🇸🇦'},{code:'AE',name:'UAE',flag:'🇦🇪'},
-    {code:'EG',name:'Egypt',flag:'🇪🇬'},{code:'PH',name:'Philippines',flag:'🇵🇭'},
-    {code:'PK',name:'Pakistan',flag:'🇵🇰'},{code:'TH',name:'Thailand',flag:'🇹🇭'},
-    {code:'NG',name:'Nigeria',flag:'🇳🇬'},{code:'ZA',name:'South Africa',flag:'🇿🇦'},
-    {code:'NL',name:'Netherlands',flag:'🇳🇱'},{code:'SE',name:'Sweden',flag:'🇸🇪'},
-    {code:'PL',name:'Poland',flag:'🇵🇱'},{code:'UA',name:'Ukraine',flag:'🇺🇦'},
-  ];
-  document.getElementById('content').innerHTML = `
+    // ═══════════════════════════════════════════════
+    // REGIONS & CATEGORIES (simple views)
+    // ═══════════════════════════════════════════════
+    function renderRegions() {
+      const REGS = [
+        { code: 'US', name: 'United States', flag: '🇺🇸' }, { code: 'IN', name: 'India', flag: '🇮🇳' },
+        { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' }, { code: 'JP', name: 'Japan', flag: '🇯🇵' },
+        { code: 'BR', name: 'Brazil', flag: '🇧🇷' }, { code: 'DE', name: 'Germany', flag: '🇩🇪' },
+        { code: 'KR', name: 'South Korea', flag: '🇰🇷' }, { code: 'FR', name: 'France', flag: '🇫🇷' },
+        { code: 'AU', name: 'Australia', flag: '🇦🇺' }, { code: 'MX', name: 'Mexico', flag: '🇲🇽' },
+        { code: 'CA', name: 'Canada', flag: '🇨🇦' }, { code: 'IT', name: 'Italy', flag: '🇮🇹' },
+        { code: 'RU', name: 'Russia', flag: '🇷🇺' }, { code: 'ES', name: 'Spain', flag: '🇪🇸' },
+        { code: 'AR', name: 'Argentina', flag: '🇦🇷' }, { code: 'SG', name: 'Singapore', flag: '🇸🇬' },
+        { code: 'ID', name: 'Indonesia', flag: '🇮🇩' }, { code: 'TR', name: 'Turkey', flag: '🇹🇷' },
+        { code: 'SA', name: 'Saudi Arabia', flag: '🇸🇦' }, { code: 'AE', name: 'UAE', flag: '🇦🇪' },
+        { code: 'EG', name: 'Egypt', flag: '🇪🇬' }, { code: 'PH', name: 'Philippines', flag: '🇵🇭' },
+        { code: 'PK', name: 'Pakistan', flag: '🇵🇰' }, { code: 'TH', name: 'Thailand', flag: '🇹🇭' },
+        { code: 'NG', name: 'Nigeria', flag: '🇳🇬' }, { code: 'ZA', name: 'South Africa', flag: '🇿🇦' },
+        { code: 'NL', name: 'Netherlands', flag: '🇳🇱' }, { code: 'SE', name: 'Sweden', flag: '🇸🇪' },
+        { code: 'PL', name: 'Poland', flag: '🇵🇱' }, { code: 'UA', name: 'Ukraine', flag: '🇺🇦' },
+      ];
+      document.getElementById('content').innerHTML = `
     <div class="panel grid-full">
       <div class="ph"><div class="pt">🌍 SUPPORTED REGIONS (${REGS.length}+)</div></div>
       <div class="pb" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;">
-        ${REGS.map((r,i)=>`
+        ${REGS.map((r, i) => `
           <div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:10px;transition:border-color .2s;cursor:default;" onmouseover="this.style.borderColor='var(--red)'" onmouseout="this.style.borderColor='var(--border)'">
             <span style="font-size:22px;">${r.flag}</span>
             <div>
@@ -1445,28 +2250,28 @@ function renderRegions() {
       </div>
     </div>
   `;
-}
+    }
 
-function renderCategories() {
-  const CATS = [
-    {id:1,name:'Film & Animation',icon:'🎬'},{id:10,name:'Music',icon:'🎵'},
-    {id:17,name:'Sports',icon:'⚽'},{id:20,name:'Gaming',icon:'🎮'},
-    {id:28,name:'Science & Tech',icon:'🔬'},{id:24,name:'Entertainment',icon:'🎭'},
-    {id:25,name:'News & Politics',icon:'📰'},{id:27,name:'Education',icon:'📚'},
-    {id:22,name:'People & Blogs',icon:'👤'},{id:23,name:'Comedy',icon:'😂'},
-    {id:26,name:'Howto & Style',icon:'💄'},{id:15,name:'Pets & Animals',icon:'🐾'},
-    {id:2,name:'Autos & Vehicles',icon:'🚗'},{id:19,name:'Travel & Events',icon:'✈️'},
-    {id:29,name:'Nonprofits',icon:'🌍'},{id:30,name:'Movies',icon:'🍿'},
-    {id:42,name:'Shorts',icon:'⚡'},{id:43,name:'Shows',icon:'📺'},
-  ];
-  document.getElementById('content').innerHTML = `
+    function renderCategories() {
+      const CATS = [
+        { id: 1, name: 'Film & Animation', icon: '🎬' }, { id: 10, name: 'Music', icon: '🎵' },
+        { id: 17, name: 'Sports', icon: '⚽' }, { id: 20, name: 'Gaming', icon: '🎮' },
+        { id: 28, name: 'Science & Tech', icon: '🔬' }, { id: 24, name: 'Entertainment', icon: '🎭' },
+        { id: 25, name: 'News & Politics', icon: '📰' }, { id: 27, name: 'Education', icon: '📚' },
+        { id: 22, name: 'People & Blogs', icon: '👤' }, { id: 23, name: 'Comedy', icon: '😂' },
+        { id: 26, name: 'Howto & Style', icon: '💄' }, { id: 15, name: 'Pets & Animals', icon: '🐾' },
+        { id: 2, name: 'Autos & Vehicles', icon: '🚗' }, { id: 19, name: 'Travel & Events', icon: '✈️' },
+        { id: 29, name: 'Nonprofits', icon: '🌍' }, { id: 30, name: 'Movies', icon: '🍿' },
+        { id: 42, name: 'Shorts', icon: '⚡' }, { id: 43, name: 'Shows', icon: '📺' },
+      ];
+      document.getElementById('content').innerHTML = `
     <div class="panel grid-full">
       <div class="ph"><div class="pt">🏷️ ALL CATEGORIES (${CATS.length}+)</div></div>
       <div class="pb">
         <table class="log-table" style="width:100%">
           <thead><tr><th>ID</th><th>ICON</th><th>CATEGORY NAME</th><th>STATUS</th></tr></thead>
           <tbody>
-            ${CATS.map(c=>`
+            ${CATS.map(c => `
               <tr>
                 <td style="font-family:'Space Mono',monospace;color:var(--muted);">${c.id}</td>
                 <td style="font-size:20px;">${c.icon}</td>
@@ -1479,56 +2284,56 @@ function renderCategories() {
       </div>
     </div>
   `;
-}
+    }
 
-// ═══════════════════════════════════════════════
-// PRE-FETCH DATA CACHE
-// ═══════════════════════════════════════════════
-const PREFETCH_CATS = [
-  { id: '',   name: 'Overall Trending',  icon: '🔥' },
-  { id: '17', name: 'Sports',            icon: '⚽' },
-  { id: '10', name: 'Music',             icon: '🎵' },
-  { id: '20', name: 'Gaming',            icon: '🎮' },
-  { id: '28', name: 'Science & Tech',    icon: '🔬' },
-  { id: '24', name: 'Entertainment',     icon: '🎭' },
-  { id: '25', name: 'News & Politics',   icon: '📰' },
-  { id: '27', name: 'Education',         icon: '📚' },
-  { id: '22', name: 'People & Blogs',    icon: '👤' },
-  { id: '23', name: 'Comedy',            icon: '😂' },
-  { id: '1',  name: 'Film & Animation',  icon: '🎬' },
-  { id: '2',  name: 'Autos & Vehicles',  icon: '🚗' },
-  { id: '15', name: 'Pets & Animals',    icon: '🐾' },
-  { id: '19', name: 'Travel & Events',   icon: '✈️' },
-  { id: '26', name: 'Howto & Style',     icon: '💄' },
-];
+    // ═══════════════════════════════════════════════
+    // PRE-FETCH DATA CACHE
+    // ═══════════════════════════════════════════════
+    const PREFETCH_CATS = [
+      { id: '', name: 'Overall Trending', icon: '🔥' },
+      { id: '17', name: 'Sports', icon: '⚽' },
+      { id: '10', name: 'Music', icon: '🎵' },
+      { id: '20', name: 'Gaming', icon: '🎮' },
+      { id: '28', name: 'Science & Tech', icon: '🔬' },
+      { id: '24', name: 'Entertainment', icon: '🎭' },
+      { id: '25', name: 'News & Politics', icon: '📰' },
+      { id: '27', name: 'Education', icon: '📚' },
+      { id: '22', name: 'People & Blogs', icon: '👤' },
+      { id: '23', name: 'Comedy', icon: '😂' },
+      { id: '1', name: 'Film & Animation', icon: '🎬' },
+      { id: '2', name: 'Autos & Vehicles', icon: '🚗' },
+      { id: '15', name: 'Pets & Animals', icon: '🐾' },
+      { id: '19', name: 'Travel & Events', icon: '✈️' },
+      { id: '26', name: 'Howto & Style', icon: '💄' },
+    ];
 
-let FETCH_ABORT = false;
+    let FETCH_ABORT = false;
 
-function renderPrefetch() {
-  const cache = JSON.parse(localStorage.getItem('tp_prefetch_cache') || 'null');
-  const lastFetch = cache?.fetchedAt ? new Date(cache.fetchedAt).toLocaleString() : 'Never';
-  const cachedRegion = cache?.region || '–';
-  const catsDone = cache?.categories ? Object.keys(cache.categories).length : 0;
+    function renderPrefetch() {
+      const cache = JSON.parse(localStorage.getItem('tp_prefetch_cache') || 'null');
+      const lastFetch = cache?.fetchedAt ? new Date(cache.fetchedAt).toLocaleString() : 'Never';
+      const cachedRegion = cache?.region || '–';
+      const catsDone = cache?.categories ? Object.keys(cache.categories).length : 0;
 
-  const activeKeys = STATE.apiKeys.filter(k => k.status !== 'disabled' && isRealKey(k.value));
-  const hasRealKeys = activeKeys.length > 0;
+      const activeKeys = STATE.apiKeys.filter(k => k.status !== 'disabled' && isRealKey(k.value));
+      const hasRealKeys = activeKeys.length > 0;
 
-  // Build region options for REGIONS list (reuse from dashboard context via hardcoded top ones)
-  const topRegions = [
-    ['US','🇺🇸 United States'],['IN','🇮🇳 India'],['GB','🇬🇧 United Kingdom'],
-    ['JP','🇯🇵 Japan'],['BR','🇧🇷 Brazil'],['DE','🇩🇪 Germany'],
-    ['FR','🇫🇷 France'],['KR','🇰🇷 South Korea'],['AU','🇦🇺 Australia'],
-    ['MX','🇲🇽 Mexico'],['CA','🇨🇦 Canada'],['ID','🇮🇩 Indonesia'],
-    ['RU','🇷🇺 Russia'],['TR','🇹🇷 Turkey'],['IT','🇮🇹 Italy'],
-  ];
+      // Build region options for REGIONS list (reuse from dashboard context via hardcoded top ones)
+      const topRegions = [
+        ['US', '🇺🇸 United States'], ['IN', '🇮🇳 India'], ['GB', '🇬🇧 United Kingdom'],
+        ['JP', '🇯🇵 Japan'], ['BR', '🇧🇷 Brazil'], ['DE', '🇩🇪 Germany'],
+        ['FR', '🇫🇷 France'], ['KR', '🇰🇷 South Korea'], ['AU', '🇦🇺 Australia'],
+        ['MX', '🇲🇽 Mexico'], ['CA', '🇨🇦 Canada'], ['ID', '🇮🇩 Indonesia'],
+        ['RU', '🇷🇺 Russia'], ['TR', '🇹🇷 Turkey'], ['IT', '🇮🇹 Italy'],
+      ];
 
-  document.getElementById('content').innerHTML = `
+      document.getElementById('content').innerHTML = `
     <div class="stats-row" style="grid-template-columns:repeat(4,1fr);">
       <div class="stat-card">
         <div class="stat-icon-wrap" style="background:rgba(0,212,106,.08);">📦</div>
         <div class="stat-num">${catsDone}</div>
         <div class="stat-lbl">CATEGORIES CACHED</div>
-        <div class="stat-delta ${catsDone===PREFETCH_CATS.length?'delta-up':'delta-down'}">${catsDone===PREFETCH_CATS.length?'✓ Complete':'of '+PREFETCH_CATS.length+' total'}</div>
+        <div class="stat-delta ${catsDone === PREFETCH_CATS.length ? 'delta-up' : 'delta-down'}">${catsDone === PREFETCH_CATS.length ? '✓ Complete' : 'of ' + PREFETCH_CATS.length + ' total'}</div>
       </div>
       <div class="stat-card">
         <div class="stat-icon-wrap" style="background:rgba(59,130,246,.08);">🌍</div>
@@ -1544,7 +2349,7 @@ function renderPrefetch() {
       </div>
       <div class="stat-card">
         <div class="stat-icon-wrap" style="background:rgba(168,85,247,.08);">📹</div>
-        <div class="stat-num">${cache ? Object.values(cache.categories||{}).reduce((s,v)=>s+v.length,0) : 0}</div>
+        <div class="stat-num">${cache ? Object.values(cache.categories || {}).reduce((s, v) => s + v.length, 0) : 0}</div>
         <div class="stat-lbl">TOTAL VIDEOS CACHED</div>
         <div class="stat-delta delta-up">20 per category</div>
       </div>
@@ -1569,7 +2374,7 @@ function renderPrefetch() {
           <div>
             <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;">Region to Fetch</label>
             <select id="prefetchRegion" style="width:100%;background:var(--dark);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:8px;font-size:13px;outline:none;">
-              ${topRegions.map(([code,label])=>`<option value="${code}" ${code==='US'?'selected':''}>${label}</option>`).join('')}
+              ${topRegions.map(([code, label]) => `<option value="${code}" ${code === 'US' ? 'selected' : ''}>${label}</option>`).join('')}
             </select>
           </div>
           <div>
@@ -1581,7 +2386,7 @@ function renderPrefetch() {
             </select>
           </div>
           <div style="display:flex;gap:8px;">
-            <button id="fetchBtn" onclick="startPrefetch()" ${!hasRealKeys?'disabled':''} style="padding:11px 24px;background:${hasRealKeys?'var(--red)':'#2a2a2a'};border:none;color:${hasRealKeys?'white':'var(--muted)'};border-radius:8px;font-size:13px;font-weight:600;cursor:${hasRealKeys?'pointer':'not-allowed'};font-family:'DM Sans',sans-serif;transition:all .2s;white-space:nowrap;">
+            <button id="fetchBtn" onclick="startPrefetch()" ${!hasRealKeys ? 'disabled' : ''} style="padding:11px 24px;background:${hasRealKeys ? 'var(--red)' : '#2a2a2a'};border:none;color:${hasRealKeys ? 'white' : 'var(--muted)'};border-radius:8px;font-size:13px;font-weight:600;cursor:${hasRealKeys ? 'pointer' : 'not-allowed'};font-family:'DM Sans',sans-serif;transition:all .2s;white-space:nowrap;">
               📡 Fetch All Categories
             </button>
             ${cache ? `<button onclick="clearCache()" style="padding:11px 16px;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">🗑 Clear</button>` : ''}
@@ -1616,11 +2421,11 @@ function renderPrefetch() {
       `}
     </div>
   `;
-}
+    }
 
-function renderCacheBrowser(cache) {
-  const cats = cache.categories || {};
-  return `
+    function renderCacheBrowser(cache) {
+      const cats = cache.categories || {};
+      return `
     <div class="panel grid-full">
       <div class="ph">
         <div class="pt">📦 CACHED DATA — ${cache.region || 'US'} · ${new Date(cache.fetchedAt).toLocaleString()}</div>
@@ -1629,43 +2434,43 @@ function renderCacheBrowser(cache) {
       <div class="pb">
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
           ${PREFETCH_CATS.map(cat => {
-            const vids = cats[cat.id] || [];
-            const ok   = vids.length > 0;
-            return `
-              <div style="background:var(--dark);border:1px solid ${ok?'var(--border)':'rgba(255,31,31,.15)'};border-radius:8px;padding:14px;cursor:pointer;" onclick="toggleCatPreview('cat_${cat.id.replace('','all')}')">
+        const vids = cats[cat.id] || [];
+        const ok = vids.length > 0;
+        return `
+              <div style="background:var(--dark);border:1px solid ${ok ? 'var(--border)' : 'rgba(255,31,31,.15)'};border-radius:8px;padding:14px;cursor:pointer;" onclick="toggleCatPreview('cat_${cat.id.replace('', 'all')}')">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
                   <div style="font-size:13px;font-weight:600;">${cat.icon} ${cat.name}</div>
-                  <span style="font-size:10px;font-family:'Space Mono',monospace;padding:2px 8px;border-radius:4px;background:${ok?'rgba(0,212,106,.1)':'rgba(255,31,31,.1)'};color:${ok?'var(--green)':'var(--red)'};">${ok?vids.length+' videos':'empty'}</span>
+                  <span style="font-size:10px;font-family:'Space Mono',monospace;padding:2px 8px;border-radius:4px;background:${ok ? 'rgba(0,212,106,.1)' : 'rgba(255,31,31,.1)'};color:${ok ? 'var(--green)' : 'var(--red)'};">${ok ? vids.length + ' videos' : 'empty'}</span>
                 </div>
                 ${ok ? `
                   <div style="display:flex;flex-direction:column;gap:3px;">
-                    ${vids.slice(0,3).map((v,i)=>`
+                    ${vids.slice(0, 3).map((v, i) => `
                       <div style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                        <span style="color:var(--red);font-family:'Space Mono',monospace;font-size:10px;">#${i+1}</span> ${escHtml(v.title)}
+                        <span style="color:var(--red);font-family:'Space Mono',monospace;font-size:10px;">#${i + 1}</span> ${escHtml(v.title)}
                       </div>
                     `).join('')}
-                    ${vids.length>3?`<div style="font-size:10px;color:var(--muted);">+${vids.length-3} more...</div>`:''}
+                    ${vids.length > 3 ? `<div style="font-size:10px;color:var(--muted);">+${vids.length - 3} more...</div>` : ''}
                   </div>
                 ` : '<div style="font-size:11px;color:var(--red);">Failed to fetch</div>'}
               </div>
-              <div id="cat_${cat.id.replace('','all')}" style="display:none;grid-column:1/-1;"></div>
+              <div id="cat_${cat.id.replace('', 'all')}" style="display:none;grid-column:1/-1;"></div>
             `;
-          }).join('')}
+      }).join('')}
         </div>
       </div>
     </div>
   `;
-}
+    }
 
-function toggleCatPreview(elId) {
-  const el = document.getElementById(elId);
-  if (!el) return;
-  if (el.style.display === 'none') {
-    const catId = elId.replace('cat_','').replace('all','');
-    const cache = JSON.parse(localStorage.getItem('tp_prefetch_cache') || 'null');
-    const vids  = cache?.categories?.[catId] || [];
-    el.style.display = 'block';
-    el.innerHTML = `
+    function toggleCatPreview(elId) {
+      const el = document.getElementById(elId);
+      if (!el) return;
+      if (el.style.display === 'none') {
+        const catId = elId.replace('cat_', '').replace('all', '');
+        const cache = JSON.parse(localStorage.getItem('tp_prefetch_cache') || 'null');
+        const vids = cache?.categories?.[catId] || [];
+        el.style.display = 'block';
+        el.innerHTML = `
       <div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:-8px;margin-bottom:4px;">
         <table style="width:100%;border-collapse:collapse;font-size:12px;">
           <thead>
@@ -1678,9 +2483,9 @@ function toggleCatPreview(elId) {
             </tr>
           </thead>
           <tbody>
-            ${vids.map((v,i)=>`
+            ${vids.map((v, i) => `
               <tr style="border-top:1px solid var(--border);">
-                <td style="padding:6px 8px;color:var(--red);font-family:'Space Mono',monospace;">${i+1}</td>
+                <td style="padding:6px 8px;color:var(--red);font-family:'Space Mono',monospace;">${i + 1}</td>
                 <td style="padding:6px 8px;max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(v.title)}</td>
                 <td style="padding:6px 8px;color:var(--muted);">${escHtml(v.channel)}</td>
                 <td style="padding:6px 8px;text-align:right;font-family:'Space Mono',monospace;">${fmtNum(v.views)}</td>
@@ -1691,263 +2496,263 @@ function toggleCatPreview(elId) {
         </table>
       </div>
     `;
-  } else {
-    el.style.display = 'none';
-  }
-}
-
-// ─── FETCH ENGINE ───
-async function startPrefetch() {
-  const activeKeys = STATE.apiKeys.filter(k => k.status !== 'disabled' && isRealKey(k.value));
-  if (!activeKeys.length) { toast('Add valid API keys first', 'e'); return; }
-
-  const region  = document.getElementById('prefetchRegion').value;
-  const maxVids = parseInt(document.getElementById('prefetchMax').value);
-  FETCH_ABORT   = false;
-
-  // ── Pre-flight: test that the key and network actually work ──
-  document.getElementById('fetchStatusText').textContent = 'Testing API connection...';
-  document.getElementById('fetchProgress').style.display = 'block';
-  document.getElementById('fetchBtn').disabled = true;
-  document.getElementById('fetchBtn').textContent = '⏳ Fetching...';
-
-  try {
-    const testUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&chart=mostPopular&regionCode=US&maxResults=1&hl=en&key=${activeKeys[0].value}`;
-    const testResp = await fetch(testUrl);
-    const testData = await testResp.json();
-    if (testData.error) {
-      const code = testData.error.code;
-      const msg  = testData.error.message || '';
-      if (code === 403 || code === 429) {
-        toast('API key quota exceeded. Add another key or wait 24h.', 'e');
-      } else if (code === 400) {
-        toast('API key rejected (400). Check the key in API Keys section.', 'e');
       } else {
-        toast('API error: ' + msg, 'e');
+        el.style.display = 'none';
       }
-      document.getElementById('fetchBtn').disabled = false;
-      document.getElementById('fetchBtn').textContent = '🚀 Fetch All Categories';
-      document.getElementById('fetchProgress').style.display = 'none';
-      return;
     }
-    console.log('[Admin] Pre-flight OK — API key works, items:', testData.items?.length);
-  } catch (preflightErr) {
-    toast('Cannot reach YouTube API. Check your internet connection.', 'e');
-    console.error('[Admin] Pre-flight failed:', preflightErr);
-    document.getElementById('fetchBtn').disabled = false;
-    document.getElementById('fetchBtn').textContent = '🚀 Fetch All Categories';
-    document.getElementById('fetchProgress').style.display = 'none';
-    return;
-  }
 
-  document.getElementById('fetchStatusText').textContent = 'Starting fetch...';
+    // ─── FETCH ENGINE ───
+    async function startPrefetch() {
+      const activeKeys = STATE.apiKeys.filter(k => k.status !== 'disabled' && isRealKey(k.value));
+      if (!activeKeys.length) { toast('Add valid API keys first', 'e'); return; }
 
-  // Init category pill grid
-  const grid = document.getElementById('fetchCatGrid');
-  grid.innerHTML = PREFETCH_CATS.map(cat => `
-    <div id="pill_${cat.id||'all'}" style="background:var(--dark);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:11px;display:flex;align-items:center;gap:6px;transition:all .3s;">
-      <span id="pill_icon_${cat.id||'all'}" style="font-size:14px;">⏳</span>
+      const region = document.getElementById('prefetchRegion').value;
+      const maxVids = parseInt(document.getElementById('prefetchMax').value);
+      FETCH_ABORT = false;
+
+      // ── Pre-flight: test that the key and network actually work ──
+      document.getElementById('fetchStatusText').textContent = 'Testing API connection...';
+      document.getElementById('fetchProgress').style.display = 'block';
+      document.getElementById('fetchBtn').disabled = true;
+      document.getElementById('fetchBtn').textContent = '⏳ Fetching...';
+
+      try {
+        const testUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&chart=mostPopular&regionCode=US&maxResults=1&hl=en&key=${activeKeys[0].value}`;
+        const testResp = await fetch(testUrl);
+        const testData = await testResp.json();
+        if (testData.error) {
+          const code = testData.error.code;
+          const msg = testData.error.message || '';
+          if (code === 403 || code === 429) {
+            toast('API key quota exceeded. Add another key or wait 24h.', 'e');
+          } else if (code === 400) {
+            toast('API key rejected (400). Check the key in API Keys section.', 'e');
+          } else {
+            toast('API error: ' + msg, 'e');
+          }
+          document.getElementById('fetchBtn').disabled = false;
+          document.getElementById('fetchBtn').textContent = '🚀 Fetch All Categories';
+          document.getElementById('fetchProgress').style.display = 'none';
+          return;
+        }
+        console.log('[Admin] Pre-flight OK — API key works, items:', testData.items?.length);
+      } catch (preflightErr) {
+        toast('Cannot reach YouTube API. Check your internet connection.', 'e');
+        console.error('[Admin] Pre-flight failed:', preflightErr);
+        document.getElementById('fetchBtn').disabled = false;
+        document.getElementById('fetchBtn').textContent = '🚀 Fetch All Categories';
+        document.getElementById('fetchProgress').style.display = 'none';
+        return;
+      }
+
+      document.getElementById('fetchStatusText').textContent = 'Starting fetch...';
+
+      // Init category pill grid
+      const grid = document.getElementById('fetchCatGrid');
+      grid.innerHTML = PREFETCH_CATS.map(cat => `
+    <div id="pill_${cat.id || 'all'}" style="background:var(--dark);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:11px;display:flex;align-items:center;gap:6px;transition:all .3s;">
+      <span id="pill_icon_${cat.id || 'all'}" style="font-size:14px;">⏳</span>
       <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${cat.name}</span>
     </div>
   `).join('');
 
-  let keyIndex = 0;
-  const result = { region, fetchedAt: new Date().toISOString(), categories: {} };
+      let keyIndex = 0;
+      const result = { region, fetchedAt: new Date().toISOString(), categories: {} };
 
-  for (let i = 0; i < PREFETCH_CATS.length; i++) {
-    if (FETCH_ABORT) { toast('Fetch stopped', 'i'); break; }
+      for (let i = 0; i < PREFETCH_CATS.length; i++) {
+        if (FETCH_ABORT) { toast('Fetch stopped', 'i'); break; }
 
-    const cat = PREFETCH_CATS[i];
-    const pillId = cat.id || 'all';
+        const cat = PREFETCH_CATS[i];
+        const pillId = cat.id || 'all';
 
-    // Update progress bar
-    const pct = Math.round((i / PREFETCH_CATS.length) * 100);
-    document.getElementById('fetchBar').style.width = pct + '%';
-    document.getElementById('fetchCounter').textContent = `${i} / ${PREFETCH_CATS.length}`;
-    document.getElementById('fetchStatusText').textContent = `Fetching: ${cat.icon} ${cat.name}...`;
-    setPillState(pillId, 'loading', cat.icon);
+        // Update progress bar
+        const pct = Math.round((i / PREFETCH_CATS.length) * 100);
+        document.getElementById('fetchBar').style.width = pct + '%';
+        document.getElementById('fetchCounter').textContent = `${i} / ${PREFETCH_CATS.length}`;
+        document.getElementById('fetchStatusText').textContent = `Fetching: ${cat.icon} ${cat.name}...`;
+        setPillState(pillId, 'loading', cat.icon);
 
-    try {
-      let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&chart=mostPopular&regionCode=${region}&maxResults=${maxVids}&hl=en_US`;
-      if (cat.id) url += `&videoCategoryId=${cat.id}`;
+        try {
+          let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&chart=mostPopular&regionCode=${region}&maxResults=${maxVids}&hl=en_US`;
+          if (cat.id) url += `&videoCategoryId=${cat.id}`;
 
-      const data = await adminFetchWithRotation(url, activeKeys, keyIndex);
-      keyIndex = data._keyIndex;
+          const data = await adminFetchWithRotation(url, activeKeys, keyIndex);
+          keyIndex = data._keyIndex;
 
-      const videos = (data.items || []).map((item, idx) => ({
-        id:          item.id,
-        title:       item.snippet.title,
-        channel:     item.snippet.channelTitle,
-        thumbnail:   item.snippet.thumbnails.maxres?.url || item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || '',
-        views:       parseInt(item.statistics?.viewCount  || 0),
-        likes:       parseInt(item.statistics?.likeCount  || 0),
-        comments:    parseInt(item.statistics?.commentCount || 0),
-        duration:    adminFmtDuration(item.contentDetails?.duration),
-        durationSec: adminParseDurSec(item.contentDetails?.duration),
-        categoryId:  item.snippet.categoryId,
-        publishedAt: item.snippet.publishedAt,
-        url:         `https://www.youtube.com/watch?v=${item.id}`,
-        rank:        idx + 1,
-      }));
+          const videos = (data.items || []).map((item, idx) => ({
+            id: item.id,
+            title: item.snippet.title,
+            channel: item.snippet.channelTitle,
+            thumbnail: item.snippet.thumbnails.maxres?.url || item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || '',
+            views: parseInt(item.statistics?.viewCount || 0),
+            likes: parseInt(item.statistics?.likeCount || 0),
+            comments: parseInt(item.statistics?.commentCount || 0),
+            duration: adminFmtDuration(item.contentDetails?.duration),
+            durationSec: adminParseDurSec(item.contentDetails?.duration),
+            categoryId: item.snippet.categoryId,
+            publishedAt: item.snippet.publishedAt,
+            url: `https://www.youtube.com/watch?v=${item.id}`,
+            rank: idx + 1,
+          }));
 
-      result.categories[cat.id] = videos;
-      setPillState(pillId, 'done', cat.icon, videos.length);
+          result.categories[cat.id] = videos;
+          setPillState(pillId, 'done', cat.icon, videos.length);
 
-      // Track units used on admin key
-      const usedKey = activeKeys[keyIndex % activeKeys.length];
-      const adminKey = STATE.apiKeys.find(k => k.value === usedKey?.value);
-      if (adminKey) { adminKey.used += 100; adminKey.requests += 1; adminKey.lastUsed = new Date().toISOString(); }
+          // Track units used on admin key
+          const usedKey = activeKeys[keyIndex % activeKeys.length];
+          const adminKey = STATE.apiKeys.find(k => k.value === usedKey?.value);
+          if (adminKey) { adminKey.used += 100; adminKey.requests += 1; adminKey.lastUsed = new Date().toISOString(); }
 
-    } catch (err) {
-      result.categories[cat.id] = [];
-      setPillState(pillId, 'error', cat.icon);
-      console.error('[Admin Prefetch] Category failed:', cat.name, err);
-      const msg = err.message || 'Unknown error';
-      toast(`${cat.name}: ${msg}`, 'e');
+        } catch (err) {
+          result.categories[cat.id] = [];
+          setPillState(pillId, 'error', cat.icon);
+          console.error('[Admin Prefetch] Category failed:', cat.name, err);
+          const msg = err.message || 'Unknown error';
+          toast(`${cat.name}: ${msg}`, 'e');
+        }
+
+        // Small delay to avoid hammering API
+        await new Promise(r => setTimeout(r, 300));
+      }
+
+      if (!FETCH_ABORT) {
+        // Save to localStorage for user dashboard
+        localStorage.setItem('tp_prefetch_cache', JSON.stringify(result));
+        saveKeys(); // update quota counters
+
+        document.getElementById('fetchBar').style.width = '100%';
+        document.getElementById('fetchCounter').textContent = `${PREFETCH_CATS.length} / ${PREFETCH_CATS.length}`;
+        document.getElementById('fetchStatusText').innerHTML = '<span style="color:var(--green);">✓ All categories fetched and cached!</span>';
+        document.getElementById('abortBtn').style.display = 'none';
+
+        setTimeout(() => {
+          toast(`✓ ${Object.keys(result.categories).length} categories cached for ${region}!`, 's');
+          updateCacheCount();
+          renderPrefetch();
+        }, 800);
+      }
+
+      document.getElementById('fetchBtn').disabled = false;
+      document.getElementById('fetchBtn').textContent = '📡 Fetch All Categories';
     }
 
-    // Small delay to avoid hammering API
-    await new Promise(r => setTimeout(r, 300));
-  }
+    function abortPrefetch() {
+      FETCH_ABORT = true;
+      document.getElementById('fetchBtn').disabled = false;
+      document.getElementById('fetchBtn').textContent = '📡 Fetch All Categories';
+    }
 
-  if (!FETCH_ABORT) {
-    // Save to localStorage for user dashboard
-    localStorage.setItem('tp_prefetch_cache', JSON.stringify(result));
-    saveKeys(); // update quota counters
-
-    document.getElementById('fetchBar').style.width = '100%';
-    document.getElementById('fetchCounter').textContent = `${PREFETCH_CATS.length} / ${PREFETCH_CATS.length}`;
-    document.getElementById('fetchStatusText').innerHTML = '<span style="color:var(--green);">✓ All categories fetched and cached!</span>';
-    document.getElementById('abortBtn').style.display = 'none';
-
-    setTimeout(() => {
-      toast(`✓ ${Object.keys(result.categories).length} categories cached for ${region}!`, 's');
+    function clearCache() {
+      if (!confirm('Clear the pre-fetched cache? Users will see demo data until you fetch again.')) return;
+      localStorage.removeItem('tp_prefetch_cache');
       updateCacheCount();
+      toast('Cache cleared', 'i');
       renderPrefetch();
-    }, 800);
-  }
-
-  document.getElementById('fetchBtn').disabled = false;
-  document.getElementById('fetchBtn').textContent = '📡 Fetch All Categories';
-}
-
-function abortPrefetch() {
-  FETCH_ABORT = true;
-  document.getElementById('fetchBtn').disabled = false;
-  document.getElementById('fetchBtn').textContent = '📡 Fetch All Categories';
-}
-
-function clearCache() {
-  if (!confirm('Clear the pre-fetched cache? Users will see demo data until you fetch again.')) return;
-  localStorage.removeItem('tp_prefetch_cache');
-  updateCacheCount();
-  toast('Cache cleared', 'i');
-  renderPrefetch();
-}
-
-function setPillState(id, state, icon, count) {
-  const pill = document.getElementById('pill_' + id);
-  const iconEl = document.getElementById('pill_icon_' + id);
-  if (!pill || !iconEl) return;
-  if (state === 'loading') {
-    pill.style.borderColor = 'var(--orange)';
-    iconEl.textContent = '⟳';
-  } else if (state === 'done') {
-    pill.style.borderColor = 'var(--green)';
-    pill.style.background  = 'rgba(0,212,106,.05)';
-    iconEl.textContent = icon;
-    if (count !== undefined) {
-      const span = pill.querySelector('span:last-child');
-      if (span) span.textContent += ` (${count})`;
-    }
-  } else if (state === 'error') {
-    pill.style.borderColor = 'var(--red)';
-    pill.style.background  = 'rgba(255,31,31,.05)';
-    iconEl.textContent = '✕';
-  }
-}
-
-async function adminFetchWithRotation(url, keys, startIndex) {
-  let lastErr = 'Unknown error';
-
-  for (let attempt = 0; attempt < keys.length; attempt++) {
-    const idx = (startIndex + attempt) % keys.length;
-    const key = keys[idx].value;
-    // key appended cleanly — URL already has ?params
-    const full = url + '&key=' + key;
-
-    let resp, data;
-    try {
-      resp = await fetch(full, { method: 'GET' });
-    } catch (netErr) {
-      lastErr = 'Network error: ' + netErr.message;
-      console.error('[Admin] Network error:', netErr);
-      continue;
     }
 
-    try {
-      data = await resp.json();
-    } catch (parseErr) {
-      lastErr = 'Bad response (HTTP ' + resp.status + ')';
-      continue;
-    }
-
-    if (data.error) {
-      const code   = data.error.code;
-      const status = (data.error.status  || '').toUpperCase();
-      const msg    = (data.error.message || '').toLowerCase();
-      console.warn('[Admin] API error:', code, status, msg);
-
-      // Quota / rate limit / forbidden — rotate
-      if (code === 403 || code === 429 ||
-          status === 'RESOURCE_EXHAUSTED' || status === 'FORBIDDEN' ||
-          msg.includes('quota') || msg.includes('forbidden') || msg.includes('rate')) {
-        lastErr = 'quota';
-        continue;
+    function setPillState(id, state, icon, count) {
+      const pill = document.getElementById('pill_' + id);
+      const iconEl = document.getElementById('pill_icon_' + id);
+      if (!pill || !iconEl) return;
+      if (state === 'loading') {
+        pill.style.borderColor = 'var(--orange)';
+        iconEl.textContent = '⟳';
+      } else if (state === 'done') {
+        pill.style.borderColor = 'var(--green)';
+        pill.style.background = 'rgba(0,212,106,.05)';
+        iconEl.textContent = icon;
+        if (count !== undefined) {
+          const span = pill.querySelector('span:last-child');
+          if (span) span.textContent += ` (${count})`;
+        }
+      } else if (state === 'error') {
+        pill.style.borderColor = 'var(--red)';
+        pill.style.background = 'rgba(255,31,31,.05)';
+        iconEl.textContent = '✕';
       }
-      // Bad key / bad request — skip key
-      if (code === 400 || code === 401) {
-        lastErr = msg || `HTTP ${code}`;
-        continue;
-      }
-      throw new Error(data.error.message || `API error ${code}`);
     }
 
-    data._keyIndex = idx;
-    return data;
-  }
+    async function adminFetchWithRotation(url, keys, startIndex) {
+      let lastErr = 'Unknown error';
 
-  throw new Error(lastErr === 'quota' ? 'All API keys quota exhausted' : lastErr);
-}
+      for (let attempt = 0; attempt < keys.length; attempt++) {
+        const idx = (startIndex + attempt) % keys.length;
+        const key = keys[idx].value;
+        // key appended cleanly — URL already has ?params
+        const full = url + '&key=' + key;
 
-function adminFmtDuration(iso) {
-  if (!iso) return '0:00';
-  const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-  const h = parseInt(m?.[1]||0), mi = parseInt(m?.[2]||0), s = parseInt(m?.[3]||0);
-  return h > 0 ? `${h}:${String(mi).padStart(2,'0')}:${String(s).padStart(2,'0')}` : `${mi}:${String(s).padStart(2,'0')}`;
-}
+        let resp, data;
+        try {
+          resp = await fetch(full, { method: 'GET' });
+        } catch (netErr) {
+          lastErr = 'Network error: ' + netErr.message;
+          console.error('[Admin] Network error:', netErr);
+          continue;
+        }
 
-function adminParseDurSec(iso) {
-  if (!iso) return 0;
-  const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
-  return parseInt(m?.[1]||0)*3600 + parseInt(m?.[2]||0)*60 + parseInt(m?.[3]||0);
-}
+        try {
+          data = await resp.json();
+        } catch (parseErr) {
+          lastErr = 'Bad response (HTTP ' + resp.status + ')';
+          continue;
+        }
 
-// ═══════════════════════════════════════════════
-// SETTINGS
-// ═══════════════════════════════════════════════
-function renderSettings() {
-  document.getElementById('content').innerHTML = `
+        if (data.error) {
+          const code = data.error.code;
+          const status = (data.error.status || '').toUpperCase();
+          const msg = (data.error.message || '').toLowerCase();
+          console.warn('[Admin] API error:', code, status, msg);
+
+          // Quota / rate limit / forbidden — rotate
+          if (code === 403 || code === 429 ||
+            status === 'RESOURCE_EXHAUSTED' || status === 'FORBIDDEN' ||
+            msg.includes('quota') || msg.includes('forbidden') || msg.includes('rate')) {
+            lastErr = 'quota';
+            continue;
+          }
+          // Bad key / bad request — skip key
+          if (code === 400 || code === 401) {
+            lastErr = msg || `HTTP ${code}`;
+            continue;
+          }
+          throw new Error(data.error.message || `API error ${code}`);
+        }
+
+        data._keyIndex = idx;
+        return data;
+      }
+
+      throw new Error(lastErr === 'quota' ? 'All API keys quota exhausted' : lastErr);
+    }
+
+    function adminFmtDuration(iso) {
+      if (!iso) return '0:00';
+      const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+      const h = parseInt(m?.[1] || 0), mi = parseInt(m?.[2] || 0), s = parseInt(m?.[3] || 0);
+      return h > 0 ? `${h}:${String(mi).padStart(2, '0')}:${String(s).padStart(2, '0')}` : `${mi}:${String(s).padStart(2, '0')}`;
+    }
+
+    function adminParseDurSec(iso) {
+      if (!iso) return 0;
+      const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+      return parseInt(m?.[1] || 0) * 3600 + parseInt(m?.[2] || 0) * 60 + parseInt(m?.[3] || 0);
+    }
+
+    // ═══════════════════════════════════════════════
+    // SETTINGS
+    // ═══════════════════════════════════════════════
+    function renderSettings() {
+      document.getElementById('content').innerHTML = `
     <div class="grid-2">
       <div class="panel">
         <div class="ph"><div class="pt">⚙️ API ROTATION SETTINGS</div></div>
         <div class="pb" style="display:flex;flex-direction:column;gap:16px;">
           ${[
-            ['Quota Threshold for Rotation','80','% — Switch key when usage exceeds this'],
-            ['Cache Duration','60','minutes — How long to cache trending data'],
-            ['Max Results Per Request','50','videos per API call'],
-            ['Auto-Reset Quota','Daily at','midnight (auto-detected)'],
-          ].map(([label,val,hint])=>`
+          ['Quota Threshold for Rotation', '80', '% — Switch key when usage exceeds this'],
+          ['Cache Duration', '60', 'minutes — How long to cache trending data'],
+          ['Max Results Per Request', '50', 'videos per API call'],
+          ['Auto-Reset Quota', 'Daily at', 'midnight (auto-detected)'],
+        ].map(([label, val, hint]) => `
             <div>
               <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;">${label}</label>
               <div style="display:flex;gap:8px;">
@@ -1983,150 +2788,153 @@ function renderSettings() {
       </div>
     </div>
   `;
-}
+    }
 
-// ═══════════════════════════════════════════════
-// KEY MODAL
-// ═══════════════════════════════════════════════
-function openAddKeyModal() {
-  STATE.editingKeyId = null;
-  document.getElementById('modalTitle').textContent = 'ADD API KEY';
-  document.getElementById('modalSub').textContent = 'Add a new YouTube Data API v3 key to the rotation pool';
-  document.getElementById('mKeyName').value = '';
-  document.getElementById('mKeyValue').value = '';
-  document.getElementById('mKeyPriority').value = '1';
-  document.getElementById('mKeyQuota').value = '10000';
-  document.getElementById('keyModal').classList.add('open');
-}
+    // ═══════════════════════════════════════════════
+    // KEY MODAL
+    // ═══════════════════════════════════════════════
+    function openAddKeyModal() {
+      STATE.editingKeyId = null;
+      document.getElementById('modalTitle').textContent = 'ADD API KEY';
+      document.getElementById('modalSub').textContent = 'Add a new YouTube Data API v3 key to the rotation pool';
+      document.getElementById('mKeyName').value = '';
+      document.getElementById('mKeyValue').value = '';
+      document.getElementById('mKeyPriority').value = '1';
+      document.getElementById('mKeyQuota').value = '10000';
+      document.getElementById('keyModal').classList.add('open');
+    }
 
-function openEditKeyModal(id) {
-  const k = STATE.apiKeys.find(x=>x.id===id);
-  if (!k) return;
-  STATE.editingKeyId = id;
-  document.getElementById('modalTitle').textContent = 'EDIT API KEY';
-  document.getElementById('modalSub').textContent = 'Update the key details';
-  document.getElementById('mKeyName').value = k.name;
-  document.getElementById('mKeyValue').value = k.value;
-  document.getElementById('mKeyPriority').value = k.priority;
-  document.getElementById('mKeyQuota').value = k.quota;
-  document.getElementById('keyModal').classList.add('open');
-}
+    function openEditKeyModal(id) {
+      const k = STATE.apiKeys.find(x => x.id === id);
+      if (!k) return;
+      STATE.editingKeyId = id;
+      document.getElementById('modalTitle').textContent = 'EDIT API KEY';
+      document.getElementById('modalSub').textContent = 'Update the key details';
+      document.getElementById('mKeyName').value = k.name;
+      document.getElementById('mKeyValue').value = k.value;
+      document.getElementById('mKeyPriority').value = k.priority;
+      document.getElementById('mKeyQuota').value = k.quota;
+      document.getElementById('keyModal').classList.add('open');
+    }
 
-function closeModal() { document.getElementById('keyModal').classList.remove('open'); }
+    function closeModal() { document.getElementById('keyModal').classList.remove('open'); }
 
-function saveKey() {
-  const name     = document.getElementById('mKeyName').value.trim();
-  const value    = document.getElementById('mKeyValue').value.trim();
-  const priority = parseInt(document.getElementById('mKeyPriority').value);
-  const quota    = parseInt(document.getElementById('mKeyQuota').value);
+    async function saveKey() {
+      const name = document.getElementById('mKeyName').value.trim();
+      const value = document.getElementById('mKeyValue').value.trim();
+      const priority = parseInt(document.getElementById('mKeyPriority').value);
+      const quota = parseInt(document.getElementById('mKeyQuota').value);
 
-  if (!name || !value) { toast('Fill in all fields', 'e'); return; }
-  if (!value.startsWith('AIza')) { toast('API key must start with "AIza"', 'e'); return; }
-  if (value.length < 30)         { toast('API key looks too short — check it', 'e'); return; }
+      if (!name || !value) { toast('Fill in all fields', 'e'); return; }
+      if (!value.startsWith('AIza')) { toast('API key must start with "AIza"', 'e'); return; }
 
-  if (STATE.editingKeyId) {
-    const k = STATE.apiKeys.find(x => x.id === STATE.editingKeyId);
-    if (k) { k.name = name; k.value = value; k.priority = priority; k.quota = quota; }
-    toast('Key updated!', 's');
-  } else {
-    const newId = Math.max(0, ...STATE.apiKeys.map(k => k.id)) + 1;
-    STATE.apiKeys.push({
-      id: newId, name, value, priority, quota,
-      used: 0, status: 'active', requests: 0, errors: 0,
-      lastUsed: new Date().toISOString(),
-      addedAt: new Date().toISOString().split('T')[0],
+      const keyData = {
+        key_name: name,
+        api_key: value,
+        priority: priority,
+        quota_limit: quota,
+        status: 'active'
+      };
+
+      if (STATE.editingKeyId) {
+        const { error } = await sb.from('api_keys').update(keyData).eq('id', STATE.editingKeyId);
+        if (error) { toast('Update failed: ' + error.message, 'e'); return; }
+        toast('Key updated!', 's');
+      } else {
+        const { error } = await sb.from('api_keys').insert([keyData]);
+        if (error) { toast('Insert failed: ' + error.message, 'e'); return; }
+        toast('Key added!', 's');
+      }
+
+      await loadData();
+      closeModal();
+      renderApiKeys();
+    }
+
+    function toggleReveal(id) {
+      const k = STATE.apiKeys.find(x => x.id === id);
+      if (!k) return;
+      const el = document.getElementById('keyval' + id);
+      if (!el) return;
+      if (el.dataset.revealed === '1') {
+        el.textContent = k.value.substring(0, 8) + '••••••••' + k.value.slice(-4);
+        el.dataset.revealed = '0';
+      } else {
+        el.textContent = k.value;
+        el.dataset.revealed = '1';
+        navigator.clipboard.writeText(k.value).catch(() => { });
+        toast('Key revealed & copied!', 'i');
+      }
+    }
+
+    function resetQuota(id) {
+      const k = STATE.apiKeys.find(x => x.id === id);
+      if (!k || !confirm(`Reset quota for "${k.name}"?`)) return;
+      k.used = 0;
+      k.status = 'active';
+      saveKeys();
+      renderApiKeys();
+      toast(`Quota reset for ${k.name}`, 's');
+    }
+
+    function toggleKeyStatus(id) {
+      const k = STATE.apiKeys.find(x => x.id === id);
+      if (!k) return;
+      k.status = k.status === 'disabled' ? 'active' : 'disabled';
+      saveKeys();
+      renderApiKeys();
+      toast(`${k.name} ${k.status}`, 'i');
+    }
+
+    // ═══════════════════════════════════════════════
+    // UTILS
+    // ═══════════════════════════════════════════════
+    function fmtNum(n) {
+      if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
+      if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+      if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+      return String(n || 0);
+    }
+    function timeSince(iso) {
+      const s = Math.floor((Date.now() - new Date(iso)) / 1000);
+      if (s < 60) return s + 's ago';
+      if (s < 3600) return Math.floor(s / 60) + 'm ago';
+      if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+      return Math.floor(s / 86400) + 'd ago';
+    }
+    function escHtml(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function toast(msg, type = 'i') {
+      const c = document.getElementById('toasts');
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      t.innerHTML = `<span>${{ s: '✓', e: '✕', i: 'ℹ' }[type] || 'ℹ'}</span>${msg}`;
+      c.appendChild(t);
+      setTimeout(() => t.classList.add('show'), 40);
+      setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3200);
+    }
+    function exportData() {
+      const data = { keys: STATE.apiKeys, users: STATE.users, logs: STATE.logs, exported: new Date().toISOString() };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'trendpulse_admin_export.json';
+      a.click();
+      toast('Export downloaded!', 's');
+    }
+    function logout() {
+      localStorage.removeItem('tp_token');
+      localStorage.removeItem('tp_user');
+      window.location.href = 'index.html';
+    }
+
+    // Close modal on backdrop
+    document.getElementById('keyModal').addEventListener('click', e => {
+      if (e.target === document.getElementById('keyModal')) closeModal();
     });
-    toast('Key added!', 's');
-  }
-
-  saveKeys(); // persists to admin_api_keys AND syncs real keys to tp_api_keys
-  closeModal();
-  renderApiKeys();
-}
-
-function toggleReveal(id) {
-  const k = STATE.apiKeys.find(x=>x.id===id);
-  if (!k) return;
-  const el = document.getElementById('keyval'+id);
-  if (!el) return;
-  if (el.dataset.revealed === '1') {
-    el.textContent = k.value.substring(0,8)+'••••••••'+k.value.slice(-4);
-    el.dataset.revealed = '0';
-  } else {
-    el.textContent = k.value;
-    el.dataset.revealed = '1';
-    navigator.clipboard.writeText(k.value).catch(()=>{});
-    toast('Key revealed & copied!', 'i');
-  }
-}
-
-function resetQuota(id) {
-  const k = STATE.apiKeys.find(x=>x.id===id);
-  if (!k || !confirm(`Reset quota for "${k.name}"?`)) return;
-  k.used = 0;
-  k.status = 'active';
-  saveKeys();
-  renderApiKeys();
-  toast(`Quota reset for ${k.name}`, 's');
-}
-
-function toggleKeyStatus(id) {
-  const k = STATE.apiKeys.find(x=>x.id===id);
-  if (!k) return;
-  k.status = k.status === 'disabled' ? 'active' : 'disabled';
-  saveKeys();
-  renderApiKeys();
-  toast(`${k.name} ${k.status}`, 'i');
-}
-
-// ═══════════════════════════════════════════════
-// UTILS
-// ═══════════════════════════════════════════════
-function fmtNum(n) {
-  if (n >= 1e9) return (n/1e9).toFixed(1)+'B';
-  if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
-  if (n >= 1e3) return (n/1e3).toFixed(1)+'K';
-  return String(n||0);
-}
-function timeSince(iso) {
-  const s = Math.floor((Date.now() - new Date(iso))/1000);
-  if (s < 60) return s+'s ago';
-  if (s < 3600) return Math.floor(s/60)+'m ago';
-  if (s < 86400) return Math.floor(s/3600)+'h ago';
-  return Math.floor(s/86400)+'d ago';
-}
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-function toast(msg, type='i') {
-  const c = document.getElementById('toasts');
-  const t = document.createElement('div');
-  t.className = `toast ${type}`;
-  t.innerHTML = `<span>${{s:'✓',e:'✕',i:'ℹ'}[type]||'ℹ'}</span>${msg}`;
-  c.appendChild(t);
-  setTimeout(()=>t.classList.add('show'), 40);
-  setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(),300); }, 3200);
-}
-function exportData() {
-  const data = { keys: STATE.apiKeys, users: STATE.users, logs: STATE.logs, exported: new Date().toISOString() };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'trendpulse_admin_export.json';
-  a.click();
-  toast('Export downloaded!', 's');
-}
-function logout() {
-  localStorage.removeItem('tp_token');
-  localStorage.removeItem('tp_user');
-  window.location.href = 'index.html';
-}
-
-// Close modal on backdrop
-document.getElementById('keyModal').addEventListener('click', e => {
-  if (e.target === document.getElementById('keyModal')) closeModal();
-});
-document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
-</script>
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+  </script>
 </body>
+
 </html>
